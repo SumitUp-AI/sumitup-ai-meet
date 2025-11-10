@@ -38,8 +38,8 @@ source env/bin/activate
 ```bat
 
 python -m venv env
-env\bin\activate.bat # On CMD
-env\bin\activate # if using Powershell
+env\Scripts\activate.bat # On CMD
+env\Scripts\activate # if using Powershell
 
 ```
 
