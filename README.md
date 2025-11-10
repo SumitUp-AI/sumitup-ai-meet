@@ -3,13 +3,26 @@ SumitUp is an AI Powered SaaS and Meeting Assistant , that manages meetings effe
 
 ## For team those who have no understanding in what these folders are
 
--- config (the config for api keys)
--- middleware (for middlewares)
--- models (for MongoDB Dict serializers and deserializers)
--- schemas (for MongoDB Schema)
--- core (the business logic, AI Layer)
--- db (connection configuration for MongoDB)
--- client (the app frontend)
+```bash
+SumitUp/
+│
+├── client/          # React frontend for user interface
+│
+├── db/              # MongoDB connection and utilities
+│
+├── auth/            # Handles user authentication and authorization
+│
+├── integrations/    # External service integrations (Zoom, Google Meet, Microsoft Teams)
+│
+├── models/          # Pydantic models for request/response validation
+│
+├── schemas/         # MongoDB schema definitions and document structure
+│
+├── config/          # Application configuration, environment variables, constants
+│
+└── core/            # Core business logic and AI processing layer
+
+```
 
 Make sure create virtual environment before creating your first push in FastAPI
 
