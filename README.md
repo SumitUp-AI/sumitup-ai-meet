@@ -35,7 +35,7 @@ source env/bin/activate
 ```
 
 # For Windows:
-```bat
+```psd1
 
 python -m venv env
 env\Scripts\activate.bat # On CMD
