@@ -3,13 +3,13 @@ SumitUp is an AI Powered SaaS and Meeting Assistant , that manages meetings effe
 
 ## For team those who have no understanding in what these folders are
 
--- config (the config for api keys)
--- middleware (for middlewares)
--- models (for MongoDB Dict serializers and deserializers)
--- schemas (for MongoDB Schema)
--- core (the business logic, AI Layer)
--- db (connection configuration for MongoDB)
--- client (the app frontend)
+- config (the config for api keys)
+- auth (authentication configuration)
+- models (for MongoDB Dict serializers and deserializers)
+- schemas (for MongoDB Schema)
+- core (the business logic, AI Layer)
+- db (connection configuration for MongoDB)
+- client (the app frontend)
 
 Make sure create virtual environment before creating your first push in FastAPI
 
@@ -22,11 +22,11 @@ source env/bin/activate
 ```
 
 # For Windows:
-```bat
+```psd1
 
 python -m venv env
-env\bin\activate.bat # On CMD
-env\bin\activate # if using Powershell
+env\Scripts\activate.bat # On CMD
+env\Scripts\activate # if using Powershell
 
 ```
 
