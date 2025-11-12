@@ -208,3 +208,6 @@ __marimo__/
 
 # Intellij Idea
 .idea/
+
+# VS Code
+.vscode/
