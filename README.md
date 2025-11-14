@@ -1,6 +1,7 @@
 # sumitup-ai-meet
 SumitUp is an AI Powered SaaS and Meeting Assistant , that manages meetings effectively and helpful for different organizations of any size.
 
+blashdbahdsbsak
 ## For team those who have no understanding in what these folders are
 
 ```bash
