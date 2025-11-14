@@ -21,7 +21,9 @@ SumitUp/
 │
 ├── config/          # Application configuration, environment variables, constants
 │
-└── core/            # Core business logic and AI processing layer
+└── core/            # Core business logic of the application
+|
+|__ pipelines/       # AI Summarization, LLM, LangChain files here
 
 ```
 
