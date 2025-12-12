@@ -80,7 +80,7 @@ def summarize_meeting_transcripts(transcript: str):
         question_prompt=initial_prompt,
         refine_prompt=refine_template,
         return_intermediate_steps=False,
-        verbose=True
+        verbose=False # Set to True if you want to see logs what's going on
     )
     
     result = refine_chain.invoke({"input_documents": docs})
