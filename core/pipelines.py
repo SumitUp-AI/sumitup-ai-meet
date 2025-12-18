@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from pipelines import create_action_items_json, summarize_meeting_transcripts
 from pydantic import BaseModel
 
+# Schema for submitting transcripts
 class MeetingTranscriptPayload(BaseModel):
     transcript: str
 
@@ -15,7 +16,7 @@ router = APIRouter(
     tags=["Summarization", "Action Items API"]
 )
 
-# Schema for submitting transcripts
+
 
 
 @router.post("/create_summary", response_model=MeetingTranscriptOutput)
