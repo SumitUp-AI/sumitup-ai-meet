@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
+from limiter.limiter import limiter
 from core.pipelines import router as pipeline_router
 
 app = FastAPI()
@@ -29,5 +30,6 @@ app.add_middleware(
 app.include_router(pipeline_router)
 
 @app.get("/")
-async def root():
+@limiter.limit("5/minute")
+async def root(request: Request):
     return {"message": "Server running on port 8000!"}
