@@ -4,8 +4,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from limiter.limiter import limiter
 from core.pipelines import router as pipeline_router
+from contextlib import asynccontextmanager
+from database.connection import init_db
 
-app = FastAPI()
+
+# This is responsible for initializing ODM models when startup
+# using FastAPI Lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
@@ -29,7 +39,14 @@ app.add_middleware(
 
 app.include_router(pipeline_router)
 
+
+
+
+
+
+
 @app.get("/")
 @limiter.limit("5/minute")
 async def root(request: Request):
     return {"message": "Server running on port 8000!"}
+
