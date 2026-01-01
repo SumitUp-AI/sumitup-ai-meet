@@ -16,4 +16,3 @@ class Tenant(Document):
     class Settings:
         name = "tenants"
 
-Tenant.model_rebuild()
