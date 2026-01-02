@@ -40,13 +40,15 @@ app.add_middleware(
 app.include_router(pipeline_router)
 
 
-
-
-
-
-
 @app.get("/")
 @limiter.limit("5/minute")
 async def root(request: Request):
     return {"message": "Server running on port 8000!"}
+
+@app.webhooks.post("api/v1/webhooks/get_transcription")
+@limiter.limit("5/minute")
+async def get_transcription(request: Request):
+    res = await request.json()
+    print(res)
+    return JSONResponse({"message": "Transcription Recevied"})
 
