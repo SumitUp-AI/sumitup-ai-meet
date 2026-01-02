@@ -1,1 +1,10 @@
-# Business Logic and AI Implementation will be done here
+# Business Logic
+
+class ProcessMeeting:
+    
+    def __init__(self, info):
+        self.info = info
+        
+    def process_meeting(self):
+        pass
+    
