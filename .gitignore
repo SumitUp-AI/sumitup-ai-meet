@@ -211,12 +211,3 @@ __marimo__/
 
 # VS Code
 .vscode/
-
-pipelines/
-limiter/
-models/
-auth/
-config/
-core/
-database/
-integrations/
