@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pipelines import create_action_items_json, summarize_meeting_transcripts
-from limiter.limiter import limiter
+from middlewares.limiter import limiter
 from pydantic import BaseModel
 from typing import List, Optional
 

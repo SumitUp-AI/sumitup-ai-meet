@@ -2,8 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
-from limiter.limiter import limiter
-from core.pipelines import router as pipeline_router
+from middlewares.limiter import limiter
+from controllers.pipeline_controllers import router as pipeline_router
+from controllers.meeting_controllers import router as meeting_router
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
@@ -38,7 +39,7 @@ app.add_middleware(
     )
 
 app.include_router(pipeline_router)
-
+app.include_router(meeting_router)
 
 @app.get("/")
 @limiter.limit("5/minute")
