@@ -1,1 +1,0 @@
-# Schemas for serializing and deserializing BSON into Dict for Python
