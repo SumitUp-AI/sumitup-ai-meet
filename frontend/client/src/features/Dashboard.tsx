@@ -1,4 +1,4 @@
-import { DashboardContainer } from "../layouts/DashboardContainer";
+import { DashboardContainer } from "../layouts/dashboard/DashboardContainer";
 import { MeetingCard } from "../components/MeetingCard";
 import { StatCard } from "../components/StatCard";
 
