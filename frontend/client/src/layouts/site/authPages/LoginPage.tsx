@@ -1,6 +1,32 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+interface DummyUser  {
+  email: string
+  password: string
+}
 
 const LoginPage = () => {
+  const originalUser: DummyUser = { email: '', password: '' }
+  const [user, setUser] = useState<DummyUser>(originalUser)
+  const navigate = useNavigate()
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setUser({ ...user, [name]: value })
+  }
+
+  const loginUserWithEmailAndPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    if (user.email.trim() === "admin@example.com" && user.password.trim() === "admin123") {
+      alert("Login successful!")
+      navigate('/dashboard', { replace: true })
+      
+    } else { 
+      alert("Invalid email or password.")
+      return
+    }
+  } 
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Form */}
@@ -59,6 +85,8 @@ const LoginPage = () => {
                 id="email"
                 name="email"
                 type="email"
+                value={user.email}
+                onChange={handleChange}
                 required
                 className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="name@company.com"
@@ -74,6 +102,8 @@ const LoginPage = () => {
                 name="password"
                 type="password"
                 required
+                value={user.password}
+                onChange={handleChange}
                 className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Enter your password"
               />
@@ -87,6 +117,7 @@ const LoginPage = () => {
             <div>
               <button
                 type="submit"
+                onClick={loginUserWithEmailAndPassword}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 Log in
