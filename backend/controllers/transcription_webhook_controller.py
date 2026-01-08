@@ -48,7 +48,7 @@ async def get_transcription(request: Request, x_webhook_signature: str = Header(
 
     # This code should not be included in Production, It is for testing purpose
     if WEBHOOK_SECRET is None:
-        raise HTTPException(status_code=400, detail="Error Webhook Secret Not Found! Kindly update your environment variables")
+        raise HTTPException(status_code=400, detail="Error Webhook Secret Not Found! Kindly update your environment variab")
 
     # Verify Signature Integrity
     if not verify_signature(body_bytes, WEBHOOK_SECRET, x_webhook_signature):
