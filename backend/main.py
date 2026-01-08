@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -7,7 +7,6 @@ from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
 from contextlib import asynccontextmanager
 from database.connection import init_db
-
 
 # This is responsible for initializing ODM models when startup
 # using FastAPI Lifespan
@@ -45,11 +44,4 @@ app.include_router(meeting_router)
 @limiter.limit("5/minute")
 async def root(request: Request):
     return {"message": "Server running on port 8000!"}
-
-@app.webhooks.post("api/v1/webhooks/get_transcription")
-@limiter.limit("5/minute")
-async def get_transcription(request: Request):
-    res = await request.json()
-    print(res)
-    return JSONResponse({"message": "Transcription Recevied"})
 
