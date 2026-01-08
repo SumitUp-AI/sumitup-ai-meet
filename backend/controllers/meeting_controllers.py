@@ -6,7 +6,7 @@ router = APIRouter(
     tags=["Meeting Processing and Action Items"]
 )
 
-@router.post("/create_meeting")
+@router.post("/create_meeting/{meeting_url}")
 async def create_meeting(request: Request):
     pass
 

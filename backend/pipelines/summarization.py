@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
-from huggingface_hub import InferenceClient
+
 from typing import List
 
 import os
