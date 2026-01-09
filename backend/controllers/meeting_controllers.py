@@ -29,7 +29,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         raise HTTPException(status_code=400, detail="Url invalid or Platform not supported")
     
     meeting = Meeting(
-        name=payload.name
+        name=payload.name,
         platform=detected_platform,
         started_at=datetime.now(timezone.utc),
         ended_at=None
