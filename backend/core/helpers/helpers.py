@@ -72,7 +72,9 @@ class AttendeeBot(STTServiceProvider):
     def _get_language(self): 
         return self._language
  
-    async def join_meeting(self):
+    async def join_meeting(self): 
+        # From here Danish you should add the logic to join the meeting using the bot.
+        # This is a placeholder implementation.
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
@@ -104,6 +106,7 @@ class AttendeeBot(STTServiceProvider):
                 )
  
     async def leave_meeting(self, bot_id):
+        # Leave it as it is for now, we will implement this later
         pass
  
  
