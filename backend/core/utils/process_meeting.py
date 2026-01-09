@@ -20,13 +20,6 @@ class ProcessMeeting:
                 
         return "Invalid URL"
 
-    def process_meeting(self):
-        platform = self.detect_meeting_platform()
-        if platform == "Invalid URL":
-            return "Cannot process: Invalid meeting link."
-        
-        # For Testing Purposes
-        print(f"Processing {platform} meeting...")
         
 
 

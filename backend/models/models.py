@@ -66,12 +66,13 @@ class MeetingLanguage(str, Enum):
 class Meeting(Document):
     created_by: "Link[User]"
     tenant_id: "Link[Tenant]"
+    name: str
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
     participant_id: "Link[Participants]"
     transcript_id: "Link[Transcripts]"
-    started_at: datetime
-    ended_at: datetime
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
     mermaid_syntax: str
     
     class Settings:
