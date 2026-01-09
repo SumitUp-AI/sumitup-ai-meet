@@ -1,6 +1,6 @@
 from fastapi import HTTPException, APIRouter, Request
 from fastapi.responses import JSONResponse
-from core import ProcessMeeting
+from core import ProcessMeeting, AttendeeBot
 from models.models import MeetingPlatform, Meeting
 from typing import Optional
 from pydantic import BaseModel
