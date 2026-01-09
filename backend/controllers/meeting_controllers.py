@@ -1,11 +1,12 @@
 from fastapi import HTTPException, APIRouter, Request
 from fastapi.responses import JSONResponse
-from core import ProcessMeeting, AttendeeBot
+from core.helpers.helpers import AttendeeBot
+from core.utils.process_meeting import ProcessMeeting
 from models.models import MeetingPlatform, Meeting
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
-import httpx
+
 
 router = APIRouter(
     prefix="/api/v1/",
@@ -24,7 +25,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     detected_platform = processor.detect_meeting_platform()
 
     try: 
-        selected_platform = MeetingPlatform(detected_platform)
+        detected_platform = MeetingPlatform(detected_platform)
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Url invalid or Platform not supported")
     
