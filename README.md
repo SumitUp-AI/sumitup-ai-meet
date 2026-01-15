@@ -16,7 +16,7 @@ sumitup-ai-meet/
 │   ├── pipelines/          # LLM Orchestration Pipelines such as Summarization, RAG
 │   ├── integrations/       # External APIs (Zoom, Google Meet, etc.)
 │   ├── middlewares/        # Rate Limiting Config
-│   ├── models/             # Pydantic models for data validation
+│   ├── models/             # Beanie ODM models for data validation
 │   └── integrations/       # Integrations with services such as Email, WhatsApp, Slack in future work
 ├── frontend/
 │   └── client/             # React.js frontend application (Typescript + Tailwind Configured)
