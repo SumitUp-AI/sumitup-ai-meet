@@ -1,62 +1,30 @@
 # sumitup-ai-meet
-SumitUp is an AI Powered SaaS and Meeting Assistant , that manages meetings effectively and helpful for different organizations of any size.
+SumitUp is an AI Powered Meeting Assistant that is helpful for small businesses, universities and interviewers who not only want meetings summary but clarity. Not only action items but tasks that are actually doable, not only summary but visual summaries.
+
+This is the official repo for contributing. To get started first understand the modular parts of the code.
 
 ## For team those who have no understanding in what these folders are
 
 ```bash
-SumitUp/
-│
-├── client/          # React frontend for user interface
-│
-├── db/              # MongoDB connection and utilities
-│
-├── auth/            # Handles user authentication and authorization
-│
-├── integrations/    # External service integrations (Zoom, Google Meet, Microsoft Teams)
-│
-├── models/          # Pydantic models for request/response validation
-│
-├── schemas/         # MongoDB schema definitions and document structure
-│
-├── config/          # Application configuration, environment variables, constants
-│
-└── core/            # Business Logic
-└── pipelines/             # AI Pipelines
+sumitup-ai-meet/
+├── backend/                # FastAPI / Python backend service
+│   ├── auth/               # Authentication logic
+│   ├── config/             # Environment & App configurations
+│   ├── core/               # Main business logic
+│   ├── controllers/        # API Endpoints
+│   ├── database/           # Database connection and setup
+│   ├── pipelines/          # LLM Orchestration Pipelines such as Summarization, RAG
+│   ├── integrations/       # External APIs (Zoom, Google Meet, etc.)
+│   ├── middlewares/        # Rate Limiting Config
+│   ├── models/             # Pydantic models for data validation
+│   └── integrations/       # Integrations with services such as Email, WhatsApp, Slack in future work
+├── frontend/
+│   └── client/             # React.js frontend application (Typescript + Tailwind Configured)
+├── .gitignore              # Git ignore file
+└── README.md               # Current documentation
 
 ```
 
-Make sure create virtual environment before creating your first push in FastAPI
-
-# Instructions:
-
-```bash
-python3 -m venv env
-source env/bin/activate
-
-```
-
-# For Windows:
-```psd1
-
-python -m venv env
-env\Scripts\activate.bat # On CMD
-env\Scripts\activate # if using Powershell
-
-```
-
-# Installation for React Frontend:
-
-```bash
-cd client
-npm install
-npm run dev
-
-```
-
-# Before Running FastAPI Application, make sure install all dependencies:
-
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
+The application is FARM Stack App, Basically (FastAPI as backend, React as Frontend and MongoDB as the DB).
+Make sure you have installed nodejs, npm, python and mongodb to get started :)
 
