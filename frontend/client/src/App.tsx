@@ -24,6 +24,7 @@ function App() {
           <Route path="signup" element={<SignupPage />} />
         </Route>
         <Route path="/dashboard" element={<Dashboard />} />
+        
       </Routes>
     </Router>
   )
