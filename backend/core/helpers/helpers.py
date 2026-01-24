@@ -46,9 +46,6 @@ class AttendeeBot(STTServiceProvider):
     _bot_id: str
     _api_key: str
  
-
- 
- 
     def __init__(self, bot_id, bot, api_key, meeting_url, provider):
         super().__init__(provider=provider)
         self.bot = bot

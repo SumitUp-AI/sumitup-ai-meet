@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 
 router = APIRouter(
-    prefix="/api/v1/",
+    prefix="/api/v1",
     tags=["Meeting Processing and Action Items"]
 )
 

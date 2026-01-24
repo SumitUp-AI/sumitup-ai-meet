@@ -11,7 +11,7 @@ load_dotenv(find_dotenv())
 
 
 router = APIRouter(
-    prefix="/api/v1/",
+    prefix="/api/v1/webhooks",
     tags=["Attendee Webhooks for Transcription"]
 )
 
@@ -26,7 +26,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         canonical_json = json.dumps(payload_json, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
         
         signature = hmac.new(
-            secret_decoded, 
+            secret_decoded,
             canonical_json.encode("utf-8"), 
             hashlib.sha256
         ).digest()
@@ -37,7 +37,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return False
 
 
-@router.post("webhooks/get_transcription")
+@router.post("/get_transcription")
 async def get_transcription(request: Request, x_webhook_signature: str = Header(None)):
     # Get raw body for signature verification
     body_bytes = await request.body()

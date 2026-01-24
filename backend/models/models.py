@@ -114,10 +114,9 @@ class Mode(str, Enum):
     partial_self_hosted = "Partial_Self_Hosted"
 
 class MinimumHour(int, Enum):
-    cloud_version: 6
-    self_hosted: 0 # For Users, using in Self Hosted Version
-    pro_plan: 24
-    super_plan: 0 # For Users in Super Plan
+    cloud_version = 6
+    self_hosted = 0 # For Users, using in Self Hosted Version
+    pro_plan = 24
     
 class Billing(Document):
     user_id: "Link[User]"
@@ -127,3 +126,5 @@ class Billing(Document):
     mode: Mode = Mode.cloud
     limited_hours: MinimumHour = MinimumHour.cloud_version
     
+    class Settings:
+        name = "Billing"

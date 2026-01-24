@@ -5,6 +5,7 @@ from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
+from controllers.transcription_webhook_controller import router as transcription_webhook
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
@@ -39,6 +40,7 @@ app.add_middleware(
 
 app.include_router(pipeline_router)
 app.include_router(meeting_router)
+app.include_router(transcription_webhook)
 
 @app.get("/")
 @limiter.limit("5/minute")
