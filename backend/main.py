@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
+from controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
 from controllers.transcription_webhook_controller import router as transcription_webhook
@@ -38,6 +39,7 @@ app.add_middleware(
     allow_credentials=True
     )
 
+app.include_router(auth_router)
 app.include_router(pipeline_router)
 app.include_router(meeting_router)
 app.include_router(transcription_webhook)

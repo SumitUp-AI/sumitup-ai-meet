@@ -24,11 +24,26 @@ class User(Document):
         name = "users"
         
 # Models for Tenant
+
+DEFAULT_SETTINGS = {
+   "max_meetings": 6,
+   "recording_enabled" : False,
+   "realtime_transcription": False,
+   "summarization_and_action_items": True,
+   "max_team_members": 2,
+   "dark_theme": False
+}
+
+
+class TenantType(str, Enum):
+    normal = "normal"
+    education = "education"
+    organization = "organization"
+
 class Tenant(Document):
-    user_id: "Link[User]"
-    tenant_type: str
-    domain: Optional[str] = None
-    settings: None
+    tenant_type: TenantType = TenantType.normal
+    domain: str
+    settings: dict = Field(default_factory=lambda: DEFAULT_SETTINGS)
     
     class Settings:
         name = "tenants"
@@ -119,7 +134,7 @@ class MinimumHour(int, Enum):
     pro_plan = 24
     
 class Billing(Document):
-    user_id: "Link[User]"
+    tenant_id: "Link[Tenant]"
     stripe_id: str
     payment_processed: bool
     plan_selected: str
