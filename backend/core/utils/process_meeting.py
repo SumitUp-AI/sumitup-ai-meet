@@ -9,13 +9,13 @@ class ProcessMeeting:
         url = self.meeting_url.lower().strip()
         
         patterns = {
-            "GMEET": r"meet\.google\.com\/[a-z0-9\-]+",
-            "ZOOM": r"zoom\.us\/(j|my|s)\/[a-z0-9]+",
-            "MSTEAMS": r"teams\.microsoft\.com\/l\/meetup-join\/",
+            "GMEET": r"(https?://)?meet\.google\.com\/[a-z0-9\-]+",
+            "ZOOM": r"(https?://)?zoom\.us\/(j|my|s)\/[a-z0-9]+",
+            "MSTEAMS": r"(https?://)?teams\.microsoft\.com\/l\/meetup-join\/",
         }
 
         for platform_name, pattern in patterns.items():
-            if re.search(pattern, url):
+            if re.search(pattern, url, re.IGNORECASE):
                 return platform_name 
                 
         return "Invalid URL"
