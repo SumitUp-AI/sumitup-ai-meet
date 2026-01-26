@@ -76,6 +76,13 @@ class MeetingLanguage(str, Enum):
     spanish = "Spanish"
     russian = "Russian"
     korean = "Korean"
+
+class MeetingState(str, Enum):
+    scheduled = "SCHEDULED"
+    ongoing = "ONGOING"
+    completed = "COMPLETED"
+    processing = "PROCESSING"
+    failed = "FAILED"
     
     
 class Meeting(Document):
@@ -86,6 +93,10 @@ class Meeting(Document):
     language: MeetingLanguage = MeetingLanguage.english
     participant_id: "Link[Participants]"
     transcript_id: "Link[Transcripts]"
+    bot_id: Optional[str] = None
+    meeting_link: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    state: MeetingState = MeetingState.scheduled
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
     mermaid_syntax: str
