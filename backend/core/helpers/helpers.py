@@ -29,7 +29,7 @@ class STTServiceProvider:
                 raise ValueError("ASSEMBLYAI_API_KEY is required for Assembly.ai Service")
             
             self.provider = provider
-            self._assemblyai_api_key = os.getenv("ASSEBLYAI_API_KEY")
+            self._assemblyai_api_key = os.getenv("ASSEMBLYAI_API_KEY")
         
         elif provider == "whisper":
             
@@ -46,13 +46,16 @@ class AttendeeBot(STTServiceProvider):
     _bot_id: str
     _api_key: str
  
+
+ 
+ 
     def __init__(self, bot_id, bot, api_key, meeting_url, provider):
         super().__init__(provider=provider)
-        self.bot = bot
+        self._bot = bot
         self._bot_id = bot_id
         self._api_key = api_key
         self._model_name = "nova-2" # By Default
-        self.meeting_url = meeting_url
+        self._meeting_url = meeting_url
  
     def set_model(self, model_name):
         self._model_name = model_name
@@ -66,23 +69,29 @@ class AttendeeBot(STTServiceProvider):
     def set_language(self, language):
         self._language = language
   
-    def _get_language(self): 
+    def get_language(self): 
         return self._language
  
     async def join_meeting(self): 
-        # From here Danish you should add the logic to join the meeting using the bot.
-        # This is a placeholder implementation.
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
-                    "https://localhost:8000/api/v1/bots",
+                    "http://localhost:8000/api/v1/bots",
                     headers={
-                        "Authorization": f"Token {self.api_key}",
+                        "Authorization": f"Token {self._api_key}",
                         "Content-Type": "application/json",
                     },
                     json={
-                        "meeting_url": self.meeting_url,
-                        "bot_name": self.bot,  # or whatever is correct
+                        "meeting_url": self._meeting_url,
+                        "bot_name": self._bot,
+                        "transcription_settings": {
+                            "assembly_ai": {
+                                "language_detection": True,
+                                "language_detection_options": {
+                                    "expected_languages": ["en", "ur"]
+                                }
+                            }
+                        }
                     }
                 )
 
@@ -103,8 +112,29 @@ class AttendeeBot(STTServiceProvider):
                 )
  
     async def leave_meeting(self, bot_id):
-        # Leave it as it is for now, we will implement this later
-        pass
+        async with httpx.AsyncClient(timeout=10) as client:
+            try:
+                response = await client.post(
+                    f"http://localhost:8000//api/v1/bots/{bot_id}/leave",
+                    headers={
+                        "Authorization": f"Token {self._api_key}",
+                        "Content-Type": "application/json",
+                    }
+                )
+                response.raise_for_status()
+                return response.json()
+
+            except httpx.HTTPStatusError as e:
+                raise RuntimeError(
+                    f"Failed to leave the meeting "
+                    f"(status={e.response.status_code}): {e.response.text}"
+                )
+
+            except httpx.RequestError as e:
+            # Network / DNS / connection issues
+                raise RuntimeError(
+                    f"Could not connect to Bot: {str(e)}"
+                )
  
  
  
