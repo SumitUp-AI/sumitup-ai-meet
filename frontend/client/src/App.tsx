@@ -6,8 +6,8 @@ import AboutPage from './layouts/site/pages/AboutPage'
 import HowItWorksPage from './layouts/site/pages/HowItWorksPage'
 import FeaturesPage from './layouts/site/pages/FeaturesPage'
 import PricingPage from './layouts/site/pages/PricingPage'
-import LoginPage from './layouts/site/authPages/LoginPage'
-import SignupPage from './layouts/site/authPages/SignupPage'
+import LoginPage from './layouts/site/authentication/LoginPage'
+import SignupPage from './layouts/site/authentication/SignupPage'
 import Dashboard from './features/Dashboard'
 
 function App() {

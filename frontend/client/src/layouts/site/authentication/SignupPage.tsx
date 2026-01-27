@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 const SignupPage = () => {
 
@@ -21,8 +21,16 @@ const SignupPage = () => {
       return {...prev, [e.target.name] : e.target.value}
     })
   }
-  const handleUserRegistration = () : void => {
-    console.log(user)
+  const handleUserRegistration = async (e: React.FormEvent<HTMLFormElement>) : Promise<void> => {
+    e.preventDefault()
+    try {
+      const baseUrl = "http://localhost:8000/api/v1/signup"
+      await fetch(baseUrl, {
+        "method": "POST"
+      })
+    } catch (error) {
+      console.error(error)
+    }
   }
 
 
@@ -76,7 +84,7 @@ const SignupPage = () => {
           </div>
 
           {/* Email Form */}
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleUserRegistration}>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name

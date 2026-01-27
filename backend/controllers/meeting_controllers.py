@@ -39,7 +39,11 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     # Save to DB Later
     # Trigger Bot action using HTTPx
     
-
+    # Instructions: Pehle Bot ki utility ko call krogey, and then if meeting starts
+    # phir acknowledge krogey JSONRespnse me ke meeting start hogyi hai.
+    # Transcriptions ke lye webhook ka istemaal krogey, jitne bhi transcripts aayengay sab Database me save krogey
+    # Make sure MongoDB installed ho tumhaare system me, mongosh and mongodb compass
+    # Bro code ki video dekhlena
 
 
 @router.post("/create_physical_meeting")

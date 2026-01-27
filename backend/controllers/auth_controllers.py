@@ -70,6 +70,7 @@ async def login_user(payload: LoginUser):
 async def me(user=Depends(get_current_user)):
     return JSONResponse({
         "id": str(user.id),
+        "name": user.name,
         "email": user.email,
         "tenant_id": str(user.tenant_id.id)
     })
