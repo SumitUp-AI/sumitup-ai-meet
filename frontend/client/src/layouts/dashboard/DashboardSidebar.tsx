@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Settings,
   X,
+  Plus,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -31,6 +32,11 @@ export const DashboardSidebar: React.FC<{
       icon: <Calendar className="w-5 h-5" />,
       label: "Meetings",
       path: "/dashboard/meetings",
+    },
+    {
+      icon: <Plus className="w-5 h-5" />,
+      label: "New Meeting",
+      path: "/dashboard/new-meetings",
     },
     {
       icon: <MessageSquare className="w-5 h-5" />,
