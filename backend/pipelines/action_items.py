@@ -14,6 +14,7 @@ class ActionItemObject(BaseModel):
     assignee: Optional[str] = None
     deadline: Optional[str] = None
     feedback: Optional[str] = None
+    confidence: float
     
 class ActionItems(BaseModel):
     items: List[ActionItemObject]

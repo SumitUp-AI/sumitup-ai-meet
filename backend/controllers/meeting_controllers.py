@@ -2,10 +2,11 @@ from fastapi import HTTPException, APIRouter, Request
 from fastapi.responses import JSONResponse
 from core.helpers.helpers import AttendeeBot
 from core.utils.process_meeting import ProcessMeeting
-from models.models import MeetingPlatform, Meeting
+from models.models import MeetingPlatform, Meeting, User, Tenant, Participants, MeetingState
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
+import os
 
 
 router = APIRouter(
@@ -13,9 +14,14 @@ router = APIRouter(
     tags=["Meeting Processing and Action Items"]
 )
 
+
 class CreateMeeting(BaseModel):
     name: str
     meeting_url: str
+
+class LeaveMeetingPayload(BaseModel):
+    meeting_id: str
+
 
 
 @router.post("/create_meeting")
@@ -29,21 +35,92 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Url invalid or Platform not supported")
     
+    # 1. Resolve Dependencies (Picking first available for now)
+    user = await User.find_one()
+    tenant = await Tenant.find_one()
+    
+    if not user or not tenant:
+        raise HTTPException(status_code=500, detail="User or Tenant configuration missing in DB")
+
+    # 2. Create Participant Entry (The Host/Bot Requestor)
+    participant = Participants(user_id=user.id, role="host")
+    await participant.save()
+    
+    # 3. Save Meeting to DB
     meeting = Meeting(
         name=payload.name,
+        meeting_link=meeting_url,
         platform=detected_platform,
+        created_by=user.id,
+        tenant_id=tenant.id,
+        participant_id=participant.id,
         started_at=datetime.now(timezone.utc),
-        ended_at=None
+        ended_at=None,
     )
+    await meeting.save()
 
-    # Save to DB Later
-    # Trigger Bot action using HTTPx
+    # 4. Trigger Bot
+    bot_api_key = os.getenv("ATTENDEE_API_KEY") 
+    if not bot_api_key:
+         raise HTTPException(status_code=500, detail="ATTENDEE_API_KEY not configured")
+
+    try:
+        bot = AttendeeBot(
+            bot="SumitUp Bot",
+            api_key=bot_api_key,
+            meeting_url=meeting_url,
+            provider="assemblyai", # Defaulting provider
+            meeting=meeting
+        )
+        
+        result = await bot.join_meeting()
+        # The bot_id is automatically saved to 'meeting' object by join_meeting() logic
+        
+        return JSONResponse(content={
+            "message": "Bot Initiated", 
+            "meeting_id": str(meeting.id), 
+            "bot_data": result
+        })
+    except Exception as e:
+        # If bot fails, we might want to update meeting state to error
+        meeting.state = MeetingState.fatal_error
+        await meeting.save()
+        raise HTTPException(status_code=500, detail=f"Bot failed to join: {str(e)}")
     
     # Instructions: Pehle Bot ki utility ko call krogey, and then if meeting starts
     # phir acknowledge krogey JSONRespnse me ke meeting start hogyi hai.
     # Transcriptions ke lye webhook ka istemaal krogey, jitne bhi transcripts aayengay sab Database me save krogey
     # Make sure MongoDB installed ho tumhaare system me, mongosh and mongodb compass
     # Bro code ki video dekhlena
+
+
+
+@router.post("/leave_meeting")
+async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
+    # 1. Fetch Meeting
+    meeting = await Meeting.get(payload.meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # 2. Re-init Bot to perform action
+    bot_api_key = os.getenv("ATTENDEE_API_KEY") 
+    if not bot_api_key:
+         raise HTTPException(status_code=500, detail="ATTENDEE_API_KEY requested but not found")
+
+    bot = AttendeeBot(
+        bot="SumitUp Bot", 
+        api_key=bot_api_key, 
+        meeting_url=meeting.meeting_link, 
+        provider="assemblyai", 
+        meeting=meeting
+    )
+
+    # 3. Call Leave
+    try:
+        await bot.leave_meeting()
+        return JSONResponse(content={"message": "Bot left the meeting"})
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Failed to leave: {str(e)}")
 
 
 @router.post("/create_physical_meeting")

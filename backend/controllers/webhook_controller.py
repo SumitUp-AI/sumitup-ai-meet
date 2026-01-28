@@ -4,6 +4,8 @@ import hashlib
 import base64
 import json
 from dotenv import load_dotenv, find_dotenv
+from models.models import Meeting, Transcripts, MeetingState
+from datetime import datetime, timezone
 
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException, APIRouter, Request, Header
@@ -12,7 +14,7 @@ load_dotenv(find_dotenv())
 
 router = APIRouter(
     prefix="/api/v1/webhooks",
-    tags=["Attendee Webhooks for Transcription"]
+    tags=["Attendee Webhooks for Transcription and Meeting State"]
 )
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
@@ -37,7 +39,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return False
 
 
-@router.post("/get_transcription")
+@router.post("/get_transcription_and_state")
 async def get_transcription(request: Request, x_webhook_signature: str = Header(None)):
     # Get raw body for signature verification
     body_bytes = await request.body()
@@ -56,6 +58,43 @@ async def get_transcription(request: Request, x_webhook_signature: str = Header(
 
     # 3. Process validated data
     payload = json.loads(body_bytes)
-    # print(f"Verified Webhook Received: {payload}")
+    print(f"Verified Webhook Received: {payload}")
     
+    # Process Database Update
+    bot_id = payload.get("bot_id")
+    
+    if bot_id:
+        meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
+
+        if meeting:
+            # Update State
+            # Check for nested data structure (e.g. from state_change trigger)
+            if "bot.state_change" in payload["trigger"] and "new_state" in payload["data"]:
+                meeting.state = payload["data"]["new_state"]
+                await meeting.save()
+                
+            # Save Transcript
+            elif "transcript.update" in payload["trigger"]:
+                # This assumes payload["transcript"] is the text content
+                # If it's a structure with speaker/time, parse accordingly.
+                # For now, implementing basic storage as requested.
+                new_transcript = Transcripts(
+                    meeting_id=meeting.id,
+                    speaker_id=payload["data"]["speaker_uuid"],
+                    speaker_name=payload["data"]["speaker_name"],
+                    duration_ms=payload["data"]["duration_ms"],
+                    timestamp_ms=payload["data"]["timestamp_ms"],
+                    transcript=payload["data"]["transcription"]["transcript"]
+                )
+                await new_transcript.save()
+
+            else:
+                raise HTTPException(status_code=200, detail="Trigger not found")
+                
+        else:
+            raise HTTPException(status_code=200, detail="Meeting not found for bot_id")
+
+    else:
+        raise HTTPException(status_code=200, detail="Invalid bot_id")
+
     return JSONResponse(content={"message": "Transcription Received and Verified"}, status_code=200)
