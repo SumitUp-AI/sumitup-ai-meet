@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import {
   BarChart3,
@@ -23,6 +24,34 @@ export const DashboardSidebar: React.FC<{
       setMenuOpen(false);
     }
   }, [isOpen]);
+=======
+import React from "react";
+import { BarChart3, Calendar, MessageSquare, TrendingUp, Settings, X} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+
+interface NavItem {
+  icon: React.ReactNode;
+  label: string;
+  path: string;
+}
+
+export const DashboardSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const location = useLocation();
+  
+  const navItems: NavItem[] = [
+    { icon: <BarChart3 className="w-5 h-5" />, label: 'Dashboard', path: '/dashboard' },
+    { icon: <Calendar className="w-5 h-5" />, label: 'Meetings', path: '/dashboard/meetings' },
+    { icon: <MessageSquare className="w-5 h-5" />, label: 'AI Chat', path: '/dashboard/ai-chat' },
+    { icon: <TrendingUp className="w-5 h-5" />, label: 'Insights', path: '/dashboard/insights' },
+  ];
+>>>>>>> 570b8d6fc3075da7cbb3b04684e7d142ef6b0e46
+
+  const isActive = (path: string) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    return location.pathname === path;
+  };
 
   return (
     <>
@@ -50,6 +79,7 @@ export const DashboardSidebar: React.FC<{
             <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
+<<<<<<< HEAD
 
         {/* MENU SECTION */}
         <div className="flex-1 px-4 py-6">
@@ -86,6 +116,40 @@ export const DashboardSidebar: React.FC<{
             <Settings className="w-5 h-5" />
             Settings
           </button>
+=======
+        
+        <div className="flex-1 py-6">
+          {navItems.map((item, index) => (
+            <Link
+              key={index}
+              to={item.path}
+              onClick={() => onClose()}
+              className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
+                isActive(item.path)
+                  ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+        
+        <div className="p-6 border-t border-gray-200">
+          <Link 
+            to="/dashboard/settings"
+            onClick={() => onClose()}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              isActive('/dashboard/settings')
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span>Settings</span>
+          </Link>
+>>>>>>> 570b8d6fc3075da7cbb3b04684e7d142ef6b0e46
         </div>
       </aside>
     </>
