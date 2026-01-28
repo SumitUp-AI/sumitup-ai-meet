@@ -97,12 +97,11 @@ async def create_meeting(request: Request, payload: CreateMeeting):
 
 @router.post("/leave_meeting")
 async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
-    # 1. Fetch Meeting
+
     meeting = await Meeting.get(payload.meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    # 2. Re-init Bot to perform action
     bot_api_key = os.getenv("ATTENDEE_API_KEY") 
     if not bot_api_key:
          raise HTTPException(status_code=500, detail="ATTENDEE_API_KEY requested but not found")
@@ -115,7 +114,6 @@ async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload)
         meeting=meeting
     )
 
-    # 3. Call Leave
     try:
         await bot.leave_meeting()
         return JSONResponse(content={"message": "Bot left the meeting"})
