@@ -6,7 +6,7 @@ from middlewares.limiter import limiter
 from controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
-from controllers.transcription_webhook_controller import router as transcription_webhook
+from controllers.webhook_controller import router as transcription_webhook
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
@@ -46,5 +46,5 @@ app.include_router(transcription_webhook)
 @app.get("/")
 @limiter.limit("5/minute")
 async def root(request: Request):
-    return {"message": "Server running on port 8000!"}
+    return {"message": "Server running!"}
 

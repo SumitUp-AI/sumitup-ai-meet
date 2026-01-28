@@ -13,7 +13,7 @@ load_dotenv(find_dotenv())
 
 
 router = APIRouter(
-    prefix="/api/v1/webhooks",
+    prefix="",
     tags=["Attendee Webhooks for Transcription and Meeting State"]
 )
 
@@ -39,7 +39,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return False
 
 
-@router.post("/get_transcription_and_state")
+@router.post("/webhook")
 async def get_transcription(request: Request, x_webhook_signature: str = Header(None)):
     # Get raw body for signature verification
     body_bytes = await request.body()
