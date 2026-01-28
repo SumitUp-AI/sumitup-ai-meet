@@ -68,9 +68,6 @@ class MeetingPlatform(str, Enum):
 
 class MeetingLanguage(str, Enum):
     english = "English"
-    urdu = "Urdu"
-    hindi = "Hindi"
-    sinhalese = "Sinhalese"
     chinese = "Chinese"
     latin = "Latin"
     spanish = "Spanish"
@@ -78,28 +75,38 @@ class MeetingLanguage(str, Enum):
     korean = "Korean"
 
 class MeetingState(str, Enum):
-    scheduled = "SCHEDULED"
-    ongoing = "ONGOING"
-    completed = "COMPLETED"
-    processing = "PROCESSING"
-    failed = "FAILED"
+    ready="ready"
+    joining="joining"
+    joined_not_recording="joined_not_recording"
+    joined_recording="joined_recording"
+    leaving="leaving"
+    post_processing="post_processing"
+    fatal_error="fatal_error"
+    waiting_room="waiting_room"
+    ended="ended"
+    data_deleted="data_deleted"
+    scheduled="scheduled"
+    staged="staged"
+    joined_recording_paused="joined_recording_paused"
+    joining_breakout_room="joining_breakout_room"
+    leaving_breakout_room="leaving_breakout_room"
+    joined_recording_permission_denied="joined_recording_permission_denied"
     
     
 class Meeting(Document):
     created_by: "Link[User]"
     tenant_id: "Link[Tenant]"
-    name: str
+    name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
     participant_id: "Link[Participants]"
-    transcript_id: "Link[Transcripts]"
     bot_id: Optional[str] = None
     meeting_link: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    state: MeetingState = MeetingState.scheduled
+    state: Optional[MeetingState] = None
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
-    mermaid_syntax: str
+    mermaid_syntax: Optional[str] = None
     
     class Settings:
         name = "meeting"
@@ -115,9 +122,11 @@ class Participants(Document):
 
 # Model for Transcripts
 class Transcripts(Document):
-     speaker_id: "Link[User]"
-     start: datetime
-     end: datetime
+     meeting_id: "Link[Meeting]"
+     speaker_id: str
+     speaker_name: str
+     duration_ms: int
+     timestamp_ms: int
      transcript: str
      
      class Settings:

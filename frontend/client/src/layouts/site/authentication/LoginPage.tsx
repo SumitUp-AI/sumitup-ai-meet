@@ -189,15 +189,15 @@ const LoginPage = () => {
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                 <img
-                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80"
-                  alt="Sarah Jenkins"
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSU74dxUJ2qEgHbDCDFHwC0Pt5283saAngzxA&s"
+                  alt="Filip Verstratein"
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
               </div>
               <div>
                 <div className="text-white font-medium text-sm">
-                  Sarah Jenkins
+                  Filip Verstratein
                 </div>
                 <div className="text-slate-400 text-xs">
                   Director of Ops at TechFlow
