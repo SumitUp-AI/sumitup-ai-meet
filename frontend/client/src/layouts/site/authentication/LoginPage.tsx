@@ -1,40 +1,38 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-interface LoginUser {
-  email: string;
-  password: string;
-}
 
 const LoginPage = () => {
-  const originalUser: LoginUser = { email: "", password: "" };
-  const [user, setUser] = useState<LoginUser>(originalUser);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, fetchUser } = useAuth();
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
-  };
+  const { login, user } = useAuth();
 
-  const loginUserWithEmailAndPassword = async (
-    e: React.FormEvent<HTMLFormElement>,
-  ) => {
+  // Redirect if already authenticated
+  if (user) {
+    navigate("/dashboard", { replace: true });
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (user.email.trim() === "" && user.password.trim() === "") {
-      window.alert("Please provide complete credentials!!");
+    setError("");
+    setIsLoading(true);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please provide both email and password");
+      setIsLoading(false);
+      return;
     }
 
-    const payload: LoginUser = {
-      email: user.email,
-      password: user.password,
-    };
-
     try {
-      await login();
-    } catch (error) {
-      console.error(error);
-      return;
+      await login(email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.");
+      setIsLoading(false);
     }
   };
   return (
@@ -100,22 +98,28 @@ const LoginPage = () => {
           </div>
 
           {/* Email Form */}
-          <form onSubmit={loginUserWithEmailAndPassword} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Work Email
+                Email
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                value={user.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="name@company.com"
               />
             </div>
@@ -129,30 +133,23 @@ const LoginPage = () => {
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                value={user.password}
-                onChange={handleChange}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Enter your password"
               />
-              <div className="text-right mt-2">
-                <a
-                  href="#"
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  Forgot password?
-                </a>
-              </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Log in
+                {isLoading ? "Logging in..." : "Log in"}
               </button>
             </div>
 

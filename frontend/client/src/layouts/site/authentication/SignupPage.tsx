@@ -1,63 +1,45 @@
 import { Link, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import { useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
 
 const SignupPage = () => {
-  interface SignupUser {
-    name: string;
-    email: string;
-    password: string;
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signup, user } = useAuth();
+
+  // Redirect if already authenticated
+  if (user) {
+    navigate("/dashboard", { replace: true });
+    return null;
   }
 
-  const registerUser: SignupUser = {
-    name: "",
-    email: "",
-    password: "",
-  };
-
-  const [user, setUser] = useState<SignupUser>(registerUser);
-  const navigate = useNavigate();
-  const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUser((prev: any) => {
-      return { ...prev, [e.target.name]: e.target.value };
-    });
-  };
-  const handleUserRegistration = async (
-    e: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (
-      user.name.trim() === "" ||
-      user.email.trim() === "" ||
-      user.password.trim() === ""
-    ) {
-      window.alert("Please provide complete credentials!!");
+    setError("");
+    setIsLoading(true);
+
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Please provide name, email, and password");
+      setIsLoading(false);
       return;
     }
-    const payload: SignupUser = {
-      name: user.name,
-      email: user.email,
-      password: user.password,
-    };
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      const baseUrl = "http://localhost:8000/api/v1/signup";
-      const res = await fetch(baseUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const responseData = await res.json();
-      if (res.ok) {
-        window.alert(responseData.message);
-        navigate("/login", { replace: true });
-      } else {
-        window.alert(responseData.detail);
-      }
-    } catch (error) {
-      console.error(error);
-      return;
+      await signup(name, email, password);
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Signup failed. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -111,7 +93,13 @@ const SignupPage = () => {
           </div>
 
           {/* Email Form */}
-          <form className="space-y-6" onSubmit={handleUserRegistration}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="name"
@@ -121,11 +109,12 @@ const SignupPage = () => {
               </label>
               <input
                 id="name"
-                name="name"
                 type="text"
-                onChange={onChangeHandler}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Enter your full name"
               />
             </div>
@@ -135,16 +124,17 @@ const SignupPage = () => {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Your Email or Workspace
+                Email
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                onChange={onChangeHandler}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="emailorworkspace@domain.com"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                placeholder="name@company.com"
               />
             </div>
 
@@ -157,11 +147,12 @@ const SignupPage = () => {
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
-                onChange={onChangeHandler}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Min. 8 characters"
               />
             </div>
@@ -169,15 +160,16 @@ const SignupPage = () => {
             <div>
               <button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {isLoading ? "Creating account..." : "Create Account"}
               </button>
             </div>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                Already have an Account?{" "}
+                Already have an account?{" "}
                 <Link
                   to="/login"
                   className="font-medium text-blue-600 hover:text-blue-500"
