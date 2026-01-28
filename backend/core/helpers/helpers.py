@@ -2,6 +2,8 @@
 import httpx
 import asyncio
 import os
+from datetime import datetime
+from models import models
 
 class STTServiceProvider:
     #  We are supporting these inferences for the cloud providers and for the self hosted
@@ -43,16 +45,18 @@ class STTServiceProvider:
 class AttendeeBot(STTServiceProvider):
     _model_name: str
     _language: str
-    _bot_id: str
     _api_key: str
  
-    def __init__(self, bot_id, bot, api_key, meeting_url, provider):
+
+ 
+ 
+    def __init__(self, bot, api_key, meeting_url, provider, meeting=None):
         super().__init__(provider=provider)
         self._bot = bot
-        self._bot_id = bot_id
         self._api_key = api_key
         self._model_name = "nova-2" # By Default
         self._meeting_url = meeting_url
+        self.meeting = meeting
  
     def set_model(self, model_name):
         self._model_name = model_name
@@ -88,13 +92,32 @@ class AttendeeBot(STTServiceProvider):
                                     "expected_languages": ["en", "ur"]
                                 }
                             }
+                        },
+                        "recording_settings":{
+                            "format":"none"
                         }
                     }
                 )
 
                 response.raise_for_status()
+                data = response.json()
 
-                return response.json()
+                if self.meeting:
+                    if "id" in data:
+                        self.meeting.bot_id = data["id"]
+                    if "meeting_url" in data:
+                        self.meeting.meeting_link = data["meeting_url"]
+                    if "state" in data:
+                        self.meeting.state = data["state"]
+                    if "created_at" in data:
+                        try:
+                            # handling simple iso format
+                            dt = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+                            self.meeting.created_at = dt
+                        except ValueError:
+                            pass # Fallback if format is unexpected
+                    await self.meeting.save()
+                return data
 
             except httpx.HTTPStatusError as e:
                 raise RuntimeError(
@@ -108,11 +131,16 @@ class AttendeeBot(STTServiceProvider):
                     f"Could not connect to Bot: {str(e)}"
                 )
  
-    async def leave_meeting(self, bot_id):
+    async def leave_meeting(self):
+        if not self.meeting or not self.meeting.bot_id:
+            raise ValueError("No meeting object with bot_id found.")
+        
+        effective_bot_id = self.meeting.bot_id
+
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
-                    f"http://localhost:8000//api/v1/bots/{bot_id}/leave",
+                    f"http://localhost:8000/api/v1/bots/{effective_bot_id}/leave",
                     headers={
                         "Authorization": f"Token {self._api_key}",
                         "Content-Type": "application/json",
