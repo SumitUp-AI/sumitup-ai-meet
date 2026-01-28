@@ -1,88 +1,83 @@
-import { Plus, Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
+import { Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const MeetingsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleNewMeeting = () => {
-    navigate('/dashboard/new-meeting');
-  };
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Dummy meeting data
   const meetings = [
     {
       id: 1,
-      title: 'Q3 Roadmap Sync',
-      team: 'Product Team',
-      date: 'Oct 24, 2:00 PM',
-      duration: '45m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '🚀',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600'
+      title: "Q3 Roadmap Sync",
+      team: "Product Team",
+      date: "Oct 24, 2:00 PM",
+      duration: "45m",
+      status: "Processed",
+      statusColor: "green",
+      icon: "🚀",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
     },
     {
       id: 2,
-      title: 'Weekly Design Sync',
-      team: 'Design Team',
-      date: 'Oct 24, 10:00 AM',
-      duration: '32m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '✏️',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600'
+      title: "Weekly Design Sync",
+      team: "Design Team",
+      date: "Oct 24, 10:00 AM",
+      duration: "32m",
+      status: "Processed",
+      statusColor: "green",
+      icon: "✏️",
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
     },
     {
       id: 3,
-      title: 'Client Intro: Acme Corp',
-      team: 'Sales',
-      date: 'Oct 23, 4:00 PM',
-      duration: '1h 10m',
-      status: 'Processing',
-      statusColor: 'blue',
-      icon: '💎',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600'
+      title: "Client Intro: Acme Corp",
+      team: "Sales",
+      date: "Oct 23, 4:00 PM",
+      duration: "1h 10m",
+      status: "Processing",
+      statusColor: "blue",
+      icon: "💎",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
     },
     {
       id: 4,
-      title: 'Product Marketing Sync',
-      team: 'Marketing',
-      date: 'Oct 22, 11:30 AM',
-      duration: '50m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '🧡',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600'
+      title: "Product Marketing Sync",
+      team: "Marketing",
+      date: "Oct 22, 11:30 AM",
+      duration: "50m",
+      status: "Processed",
+      statusColor: "green",
+      icon: "🧡",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
     },
     {
       id: 5,
-      title: 'Engineering Standup',
-      team: 'Engineering',
-      date: 'Oct 22, 9:00 AM',
-      duration: '15m',
-      status: 'Failed',
-      statusColor: 'red',
-      icon: '🔴',
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600'
-    }
+      title: "Engineering Standup",
+      team: "Engineering",
+      date: "Oct 22, 9:00 AM",
+      duration: "15m",
+      status: "Failed",
+      statusColor: "red",
+      icon: "🔴",
+      iconBg: "bg-red-100",
+      iconColor: "text-red-600",
+    },
   ];
 
   const getStatusBadge = (status: string, color: string) => {
-    const baseClasses = "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium";
-    
+    const baseClasses =
+      "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium";
+
     switch (color) {
-      case 'green':
+      case "green":
         return `${baseClasses} bg-green-100 text-green-800`;
-      case 'blue':
+      case "blue":
         return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'red':
+      case "red":
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -90,14 +85,14 @@ const MeetingsPage: React.FC = () => {
   };
 
   const getActionButton = (status: string) => {
-    if (status === 'Failed') {
+    if (status === "Failed") {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
           <RotateCcw className="w-4 h-4 mr-1" />
           Retry
         </button>
       );
-    } else if (status === 'Processing') {
+    } else if (status === "Processing") {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
           <Clock className="w-4 h-4 mr-1" />
@@ -121,15 +116,11 @@ const MeetingsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Meetings</h1>
-            <p className="text-gray-600 mt-1">Access your past recordings, transcripts, and AI-generated insights.</p>
+            <p className="text-gray-600 mt-1">
+              Access your past recordings, transcripts, and AI-generated
+              insights.
+            </p>
           </div>
-          <button 
-            onClick={handleNewMeeting}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Meeting
-          </button>
         </div>
 
         {/* Search and Filters */}
@@ -146,7 +137,7 @@ const MeetingsPage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             {/* Filter Buttons */}
             <div className="flex gap-3">
               <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
@@ -175,14 +166,21 @@ const MeetingsPage: React.FC = () => {
           {/* Table Body */}
           <div className="divide-y divide-gray-200">
             {meetings.map((meeting) => (
-              <div key={meeting.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+              <div
+                key={meeting.id}
+                className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+              >
                 {/* Meeting Title */}
                 <div className="col-span-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 ${meeting.iconBg} rounded-lg flex items-center justify-center text-lg`}>
+                  <div
+                    className={`w-10 h-10 ${meeting.iconBg} rounded-lg flex items-center justify-center text-lg`}
+                  >
                     {meeting.icon}
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">{meeting.title}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {meeting.title}
+                    </h3>
                     <p className="text-sm text-gray-500">{meeting.team}</p>
                   </div>
                 </div>
@@ -194,13 +192,20 @@ const MeetingsPage: React.FC = () => {
 
                 {/* Duration */}
                 <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-900">{meeting.duration}</span>
+                  <span className="text-sm text-gray-900">
+                    {meeting.duration}
+                  </span>
                 </div>
 
                 {/* Status */}
                 <div className="col-span-2 flex items-center">
-                  <span className={getStatusBadge(meeting.status, meeting.statusColor)}>
-                    {meeting.status === 'Processed' && '●'} {meeting.status}
+                  <span
+                    className={getStatusBadge(
+                      meeting.status,
+                      meeting.statusColor,
+                    )}
+                  >
+                    {meeting.status === "Processed" && "●"} {meeting.status}
                   </span>
                 </div>
 
@@ -216,7 +221,8 @@ const MeetingsPage: React.FC = () => {
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of{' '}
+                Showing <span className="font-medium">1</span> to{" "}
+                <span className="font-medium">5</span> of{" "}
                 <span className="font-medium">24</span> results
               </p>
               <div className="flex gap-2">

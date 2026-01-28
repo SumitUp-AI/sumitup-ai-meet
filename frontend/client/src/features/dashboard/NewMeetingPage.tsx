@@ -1,24 +1,33 @@
-import { Upload, Folder, Video, Sparkles, Shield, ChevronRight } from "lucide-react";
+import {
+  Upload,
+  Folder,
+  Video,
+  Sparkles,
+  Shield,
+  ChevronRight,
+} from "lucide-react";
 import { useState } from "react";
 
 const NewMeetingPage: React.FC = () => {
   const [showGoogleMeetModal, setShowGoogleMeetModal] = useState(false);
-  const [meetingLink, setMeetingLink] = useState('');
-
+  const [meetingLink, setMeetingLink] = useState("");
+  const [meetingTitle, setMeetingTitle] = useState("");
   const handleGoogleMeetConnect = () => {
     setShowGoogleMeetModal(true);
   };
 
   const handleModalClose = () => {
     setShowGoogleMeetModal(false);
-    setMeetingLink('');
+    setMeetingLink("");
+    setMeetingTitle("");
   };
 
   const handleSubmitMeetingLink = (e: React.FormEvent) => {
     e.preventDefault();
-    if (meetingLink.trim()) {
+    if (meetingLink.trim() || meetingTitle.trim()) {
       // Handle the meeting link submission
-      console.log('Meeting link:', meetingLink);
+      console.log("Meeting link:", meetingLink);
+      console.log("Meeting Title", meetingTitle);
       handleModalClose();
     }
   };
@@ -29,8 +38,13 @@ const NewMeetingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">New Meeting Session</h1>
-            <p className="text-gray-600">Upload a recording or connect your calendar to get started with AI insights</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              New Meeting Session
+            </h1>
+            <p className="text-gray-600">
+              Upload a recording or connect your calendar to get started with AI
+              insights
+            </p>
           </div>
 
           {/* File Upload Area */}
@@ -38,22 +52,30 @@ const NewMeetingPage: React.FC = () => {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Upload className="w-8 h-8 text-blue-600" />
             </div>
-            
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Drag & drop video or audio files here</h3>
-            <p className="text-gray-500 mb-6">Supports MP4, MOV, MP3, WAV up to 500MB</p>
-            
+
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Drag & drop video or audio files here
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Supports MP4, MOV, MP3, WAV up to 500MB
+            </p>
+
             <button className="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
               <Folder className="w-5 h-5 mr-2" />
               Browse Files
             </button>
-            
-            <p className="text-xs text-gray-400 mt-4">AI Processing ~2 mins per hour of video</p>
+
+            <p className="text-xs text-gray-400 mt-4">
+              AI Processing ~2 mins per hour of video
+            </p>
           </div>
 
           {/* Import Options */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Import directly from</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Import directly from
+            </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Zoom Connect */}
               <button className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:border-blue-300 hover:shadow-sm transition-all group">
@@ -63,8 +85,12 @@ const NewMeetingPage: React.FC = () => {
                       <Video className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Connect Zoom</h4>
-                      <p className="text-sm text-gray-500">Import cloud recordings automatically</p>
+                      <h4 className="font-semibold text-gray-900">
+                        Connect Zoom
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        Import cloud recordings automatically
+                      </p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
@@ -72,7 +98,7 @@ const NewMeetingPage: React.FC = () => {
               </button>
 
               {/* Google Meet Connect */}
-              <button 
+              <button
                 onClick={handleGoogleMeetConnect}
                 className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:border-green-300 hover:shadow-sm transition-all group"
               >
@@ -84,8 +110,12 @@ const NewMeetingPage: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Connect Google Meet</h4>
-                      <p className="text-sm text-gray-500">Sync from your calendar events</p>
+                      <h4 className="font-semibold text-gray-900">
+                        Connect Google Meet
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        Sync from your calendar events
+                      </p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" />
@@ -105,7 +135,10 @@ const NewMeetingPage: React.FC = () => {
           {/* Security Notice */}
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <Shield className="w-4 h-4" />
-            <span>Your data is encrypted (AES-256) and never used for training public models.</span>
+            <span>
+              Your data is encrypted (AES-256) and never used for training
+              public models.
+            </span>
           </div>
         </div>
       </div>
@@ -120,13 +153,20 @@ const NewMeetingPage: React.FC = () => {
                   <Video className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect Google Meet</h3>
-              <p className="text-gray-600">Enter your Google Meet link to import the recording</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Connect Google Meet
+              </h3>
+              <p className="text-gray-600">
+                Enter your Google Meet link to import the recording
+              </p>
             </div>
 
             <form onSubmit={handleSubmitMeetingLink} className="space-y-4">
               <div>
-                <label htmlFor="meetingLink" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="meetingLink"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Meeting Link
                 </label>
                 <input
@@ -135,6 +175,23 @@ const NewMeetingPage: React.FC = () => {
                   value={meetingLink}
                   onChange={(e) => setMeetingLink(e.target.value)}
                   placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="meetingTitle"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Title
+                </label>
+                <input
+                  id="meetingTitle"
+                  type="text"
+                  value={meetingTitle}
+                  onChange={(e) => setMeetingTitle(e.target.value)}
+                  placeholder="e.g: Product Review Meeting"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   required
                 />

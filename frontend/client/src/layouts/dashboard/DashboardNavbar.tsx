@@ -1,5 +1,14 @@
-import { BarChart3, Menu, Search, Bell, Settings, LogOut } from "lucide-react";
+import {
+  BarChart3,
+  Menu,
+  Search,
+  Bell,
+  Settings,
+  LogOut,
+  CircleUser,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,
@@ -18,7 +27,7 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <span className="font-semibold text-base sm:text-lg">SumItUP</span>
+          <span className="font-semibold text-base sm:text-lg">Sumitup.ai</span>
         </div>
 
         <div className="hidden md:flex flex-1 max-w-xl">
@@ -50,6 +59,7 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
 };
 
 const ProfileDropdown: React.FC = () => {
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +84,7 @@ const ProfileDropdown: React.FC = () => {
 
   const handleLogout = () => {
     // Add logout logic here
-    console.log("Logging out...");
+    logout();
     setIsOpen(false);
   };
 
@@ -92,11 +102,13 @@ const ProfileDropdown: React.FC = () => {
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                AM
+                <CircleUser />
               </div>
               <div>
-                <div className="font-medium text-sm">Alex Morgan</div>
-                <div className="text-gray-500 text-xs">Product Lead</div>
+                <div className="font-medium text-sm">
+                  {user ? user?.name : ""}
+                </div>
+                <div className="text-gray-500 text-xs">Member</div>
               </div>
             </div>
           </div>
