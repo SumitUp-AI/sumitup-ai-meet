@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
       date: formatDate(meeting.created_at),
       duration: "N/A",
       participants: ["JD", "SK"],
-      status: uiStatus as const,
+      status: uiStatus,
       statusColor,
     };
   });
