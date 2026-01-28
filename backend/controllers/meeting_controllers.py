@@ -17,6 +17,8 @@ class CreateMeeting(BaseModel):
     name: str
     meeting_url: str
 
+class GetMeeting(BaseModel):
+    meeting_id: str
 
 @router.post("/create_meeting")
 async def create_meeting(request: Request, payload: CreateMeeting):
@@ -49,4 +51,25 @@ async def create_meeting(request: Request, payload: CreateMeeting):
 @router.post("/create_physical_meeting")
 async def create_physical_meeting(request: Request):
     pass
+
+@router.get("/get_all_meetings")
+async def get_all_meetings_information(request: Request):
+    meetings = Meeting.all()
+    
+    if not meetings:
+        raise HTTPException(status_code=400, detail="Meetings Not Found!")
+    
+    all_meetings_data = [{
+        "name": m["name"],
+        "created_at": m["started_at"].isoformat(),
+        "state": m["state"],
+    } for m in meetings]
+    
+    return all_meetings_data;
+    
+
+@router.get("/get_meeting_status/{meeting_id}")
+async def get_current_meeting_status(request: Request, meeting_id: str):
+    pass
+
 

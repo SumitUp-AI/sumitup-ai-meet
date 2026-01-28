@@ -1,6 +1,7 @@
-import { DashboardContainer } from "../layouts/dashboard/DashboardContainer";
+import { useLoaderData } from "react-router-dom";
 import { MeetingCard } from "../components/MeetingCard";
 import { StatCard } from "../components/StatCard";
+import { formatDate } from "../utils/dateFormatter";
 
 import {
   BarChart3,
@@ -11,7 +12,16 @@ import {
   Clock,
 } from "lucide-react";
 
+interface Meeting {
+  name: string;
+  created_at: string;
+  state: string;
+}
+
 const Dashboard: React.FC = () => {
+  // Load meetings data from API using React Router loader
+  const meetingsData = useLoaderData() as Meeting[] | null;
+
   const stats = [
     {
       icon: <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />,
@@ -43,44 +53,38 @@ const Dashboard: React.FC = () => {
     },
   ];
 
-  const meetings = [
-    {
-      logo: <Calendar className="w-6 h-6 text-blue-600" />,
-      title: "Q3 Product Roadmap",
-      date: "Oct 15, 3:00 PM",
-      duration: "45m",
-      participants: ["JD", "SK", "AM"],
-      status: "Processed" as const,
-      statusColor: "green",
-    },
-    {
-      logo: <Users className="w-6 h-6 text-purple-600" />,
-      title: "Design Team Weekly Sync",
-      date: "Yesterday, 2:00 PM",
-      duration: "30m",
-      participants: ["LM", "RT"],
-      status: "Processing" as const,
-      statusColor: "blue",
-    },
-    {
-      logo: <TrendingUp className="w-6 h-6 text-purple-600" />,
-      title: "Client Discovery - Acme Corp",
-      date: "Oct 14, 10:00 AM",
-      duration: "1h 15m",
-      participants: ["JD", "AM", "SK"],
-      status: "Processed" as const,
-      statusColor: "green",
-    },
-    {
-      logo: <BarChart3 className="w-6 h-6 text-orange-600" />,
-      title: "Marketing Campaign Review",
-      date: "Oct 13, 4:00 PM",
-      duration: "40m",
-      participants: ["TC", "PK"],
-      status: "Processed" as const,
-      statusColor: "green",
-    },
-  ];
+  // Transform API data to meeting card format
+  const meetings = (meetingsData || []).map((meeting: Meeting) => {
+    // Map status from API to UI status
+    const statusMap: { [key: string]: "Processed" | "Processing" } = {
+      completed: "Processed",
+      in_progress: "Processing",
+      pending: "Processing",
+      failed: "Processed",
+    };
+
+    const uiStatus = statusMap[meeting.state] || "Processing";
+    const statusColor = meeting.state === "completed" ? "green" : "blue";
+
+    // Get random icon for variety (you can improve this logic)
+    const icons = [
+      <Calendar className="w-6 h-6 text-blue-600" />,
+      <Users className="w-6 h-6 text-purple-600" />,
+      <TrendingUp className="w-6 h-6 text-purple-600" />,
+      <BarChart3 className="w-6 h-6 text-orange-600" />,
+    ];
+    const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+
+    return {
+      logo: randomIcon,
+      title: meeting.name,
+      date: formatDate(meeting.created_at),
+      duration: "N/A",
+      participants: ["JD", "SK"],
+      status: uiStatus as const,
+      statusColor,
+    };
+  });
 
   return (
     <>
@@ -119,9 +123,17 @@ const Dashboard: React.FC = () => {
               <div className="w-32 text-center">Status</div>
               <div className="w-28 text-center">Action</div>
             </div>
-            {meetings.map((meeting, index) => (
-              <MeetingCard key={index} {...meeting} />
-            ))}
+            {meetings.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">
+                  No meetings yet. Start by creating a new meeting!
+                </p>
+              </div>
+            ) : (
+              meetings.map((meeting, index) => (
+                <MeetingCard key={index} {...meeting} />
+              ))
+            )}
           </div>
         </div>
       </div>

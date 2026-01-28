@@ -68,9 +68,6 @@ class MeetingPlatform(str, Enum):
 
 class MeetingLanguage(str, Enum):
     english = "English"
-    urdu = "Urdu"
-    hindi = "Hindi"
-    sinhalese = "Sinhalese"
     chinese = "Chinese"
     latin = "Latin"
     spanish = "Spanish"

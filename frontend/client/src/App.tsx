@@ -1,36 +1,31 @@
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import PublicRoutes from "./routes/PublicRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import DashboardRoutes from "./routes/DashboardRoutes";
 
-function AppContent() {
-  return (
-    <Routes>
-      {/* Protected Routes */}
-      <Route
-        path="/dashboard/*"
-        element={
-          <ProtectedRoute>
-            <DashboardRoutes />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Public Routes - must be last */}
-      <Route path="/*" element={<PublicRoutes />} />
-    </Routes>
-  );
-}
+// Create router with loaders support
+const router = createBrowserRouter([
+  {
+    path: "/dashboard/*",
+    element: (
+      <ProtectedRoute>
+        <DashboardRoutes />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/*",
+    element: <PublicRoutes />,
+  },
+]);
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 

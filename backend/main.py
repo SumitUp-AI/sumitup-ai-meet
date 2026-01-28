@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Header
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -10,14 +10,13 @@ from controllers.transcription_webhook_controller import router as transcription
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
-# This is responsible for initializing ODM models when startup
-# using FastAPI Lifespan
+# Connect to DB and disconnect when server shutdown from Connection pool
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="SumitUp AI Powered Meeting Assistant API Docs", description="RESTful APIs and Webhooks for Sumitup.ai Application")
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
