@@ -1,5 +1,5 @@
-import React  from 'react';
-import { CheckCircle, Clock } from 'lucide-react';
+import React from "react";
+import { CheckCircle, Clock } from "lucide-react";
 
 interface MeetingCardProps {
   logo: React.ReactNode;
@@ -7,11 +7,10 @@ interface MeetingCardProps {
   date: string;
   duration: string;
   participants: string[];
-  status: 'Processed' | 'Processing' | 'Analyzing';
+  status: "Processed" | "Processing" | "Analyzing";
   statusColor: string;
   onViewSummary?: () => void;
 }
-
 
 export const MeetingCard: React.FC<MeetingCardProps> = ({
   logo,
@@ -20,13 +19,12 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({
   duration,
   participants,
   status,
-  statusColor,
-  onViewSummary
+  onViewSummary,
 }) => {
   const statusStyles = {
-    Processed: 'bg-green-50 text-green-700 border-green-200',
-    Processing: 'bg-blue-50 text-blue-700 border-blue-200',
-    Analyzing: 'bg-gray-50 text-gray-600 border-gray-200'
+    Processed: "bg-green-50 text-green-700 border-green-200",
+    Processing: "bg-blue-50 text-blue-700 border-blue-200",
+    Analyzing: "bg-gray-50 text-gray-600 border-gray-200",
   };
 
   return (
@@ -36,16 +34,16 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({
         <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0">
           {logo}
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="font-medium text-gray-900 mb-1">{title}</div>
           <div className="text-sm text-gray-500">{date}</div>
         </div>
-        
+
         <div className="text-sm text-gray-600 font-medium w-16 text-center">
           {duration}
         </div>
-        
+
         <div className="flex -space-x-2 w-20">
           {participants.map((participant, index) => (
             <div
@@ -61,15 +59,17 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({
             </div>
           )}
         </div>
-        
+
         <div className="w-32">
-          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${statusStyles[status]}`}>
-            {status === 'Processed' && <CheckCircle className="w-3 h-3" />}
-            {status === 'Processing' && <Clock className="w-3 h-3" />}
+          <span
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${statusStyles[status]}`}
+          >
+            {status === "Processed" && <CheckCircle className="w-3 h-3" />}
+            {status === "Processing" && <Clock className="w-3 h-3" />}
             {status}
           </span>
         </div>
-        
+
         <button
           onClick={onViewSummary}
           className="text-blue-600 text-sm font-medium hover:text-blue-700 whitespace-nowrap"
@@ -91,15 +91,17 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({
               <span className="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded">
                 {duration}
               </span>
-              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusStyles[status]}`}>
-                {status === 'Processed' && <CheckCircle className="w-3 h-3" />}
-                {status === 'Processing' && <Clock className="w-3 h-3" />}
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusStyles[status]}`}
+              >
+                {status === "Processed" && <CheckCircle className="w-3 h-3" />}
+                {status === "Processing" && <Clock className="w-3 h-3" />}
                 {status}
               </span>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex -space-x-2">
             {participants.map((participant, index) => (
@@ -116,7 +118,7 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({
               </div>
             )}
           </div>
-          
+
           <button
             onClick={onViewSummary}
             className="text-blue-600 text-sm font-medium hover:text-blue-700"

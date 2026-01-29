@@ -169,7 +169,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-500">
-              &copy; 2024 SumItUp AI. Inc. All rights reserved.
+              &copy; 2025 Sumitup-Labs, All rights and reserved.
             </p>
           </div>
         </div>
@@ -181,7 +181,7 @@ const LoginPage = () => {
           {/* Testimonial */}
           <div className="max-w-md">
             <blockquote className="text-lg font-medium text-white mb-6 leading-relaxed">
-              "SumItUp saves our team 15 hours a week. It captures the nuance in
+              "Sumitup saves our team 15 hours a week. It captures the nuance in
               every discussion, so we can focus on decisions, not notes."
             </blockquote>
 
