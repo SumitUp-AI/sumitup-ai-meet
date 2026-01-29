@@ -5,30 +5,87 @@ import {
   Sparkles,
   Shield,
   ChevronRight,
+  Loader,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMeeting } from "../../context/MeetingContext";
 
 const NewMeetingPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { setCurrentMeeting } = useMeeting();
   const [showGoogleMeetModal, setShowGoogleMeetModal] = useState(false);
   const [meetingLink, setMeetingLink] = useState("");
   const [meetingTitle, setMeetingTitle] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleGoogleMeetConnect = () => {
     setShowGoogleMeetModal(true);
+    setError(null);
   };
 
   const handleModalClose = () => {
     setShowGoogleMeetModal(false);
     setMeetingLink("");
     setMeetingTitle("");
+    setError(null);
   };
 
-  const handleSubmitMeetingLink = (e: React.FormEvent) => {
+  const handleSubmitMeetingLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (meetingLink.trim() || meetingTitle.trim()) {
-      // Handle the meeting link submission
-      console.log("Meeting link:", meetingLink);
-      console.log("Meeting Title", meetingTitle);
+    if (!meetingLink.trim() || !meetingTitle.trim()) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/v1/create_meeting",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: meetingTitle,
+            meeting_url: meetingLink,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to create meeting");
+      }
+
+      const data = await response.json();
+      const meetingId = data.meeting_id;
+
+      // Store meeting data in context
+      setCurrentMeeting({
+        id: meetingId,
+        name: meetingTitle,
+        meeting_link: meetingLink,
+        state: "joining",
+      });
+
       handleModalClose();
+
+      // Navigate to dashboard after successful creation
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+      console.error("Error creating meeting:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -161,6 +218,12 @@ const NewMeetingPage: React.FC = () => {
               </p>
             </div>
 
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmitMeetingLink} className="space-y-4">
               <div>
                 <label
@@ -177,6 +240,7 @@ const NewMeetingPage: React.FC = () => {
                   placeholder="https://meet.google.com/xxx-xxxx-xxx"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div>
@@ -194,6 +258,7 @@ const NewMeetingPage: React.FC = () => {
                   placeholder="e.g: Product Review Meeting"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -201,15 +266,24 @@ const NewMeetingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleModalClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  disabled={isLoading}
                 >
-                  Connect
+                  {isLoading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Connect"
+                  )}
                 </button>
               </div>
             </form>

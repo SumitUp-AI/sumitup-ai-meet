@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { MeetingCard } from "../components/MeetingCard";
 import { StatCard } from "../components/StatCard";
 import { formatDate } from "../utils/dateFormatter";
@@ -16,11 +16,13 @@ interface Meeting {
   name: string;
   created_at: string;
   state: string;
+  id?: string;
 }
 
 const Dashboard: React.FC = () => {
   // Load meetings data from API using React Router loader
   const meetingsData = useLoaderData() as Meeting[] | null;
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -61,6 +63,9 @@ const Dashboard: React.FC = () => {
       in_progress: "Processing",
       pending: "Processing",
       failed: "Processed",
+      ended: "Processed",
+      joined_recording: "Processing",
+      joining: "Processing",
     };
 
     const uiStatus = statusMap[meeting.state] || "Processing";
@@ -83,8 +88,15 @@ const Dashboard: React.FC = () => {
       participants: ["JD", "SK"],
       status: uiStatus,
       statusColor,
+      meetingId: meeting.id,
     };
   });
+
+  const handleViewSummary = (meetingId?: string) => {
+    if (meetingId) {
+      navigate(`/summary/${meetingId}`);
+    }
+  };
 
   return (
     <>
@@ -131,7 +143,11 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               meetings.map((meeting, index) => (
-                <MeetingCard key={index} {...meeting} />
+                <MeetingCard
+                  key={index}
+                  {...meeting}
+                  onViewSummary={() => handleViewSummary(meeting.meetingId)}
+                />
               ))
             )}
           </div>
