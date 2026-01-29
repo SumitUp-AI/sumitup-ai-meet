@@ -27,9 +27,8 @@ const SummaryPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch meeting details first to get transcript
-        const meetingResponse = await fetch(
-          `http://localhost:3000/api/v1/get_meeting_status/${meetingId}`,
+        const response = await fetch(
+          `http://localhost:3000/api/v1/create_summary?meeting_id=${meetingId}`,
           {
             method: "GET",
             headers: {
@@ -38,36 +37,15 @@ const SummaryPage: React.FC = () => {
           }
         );
 
-        if (!meetingResponse.ok) {
-          throw new Error("Failed to fetch meeting details");
+        if (!response.ok) {
+          throw new Error("Failed to generate summary");
         }
 
-        const meetingData = await meetingResponse.json();
-
-        // If we have transcripts in the meeting data, generate summary
-        if (meetingData.transcripts && meetingData.transcripts.length > 0) {
-          const summaryResponse = await fetch(
-            `http://localhost:3000/api/v1/create_summary`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                transcript: meetingData.transcripts,
-              }),
-            }
-          );
-
-          if (!summaryResponse.ok) {
-            throw new Error("Failed to generate summary");
-          }
-
-          const summaryData = await summaryResponse.json();
-          setSummary(summaryData);
-        } else {
-          setError("No transcripts available for this meeting yet");
-        }
+        const data = await response.json();
+        setSummary({
+          summary: data.summary,
+          // Optional: Add other fields if backend provides them later
+        });
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "An error occurred";

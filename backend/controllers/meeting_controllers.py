@@ -127,18 +127,22 @@ async def create_physical_meeting(request: Request):
 
 @router.get("/get_all_meetings")
 async def get_all_meetings_information(request: Request):
-    meetings = Meeting.all()
+    meetings = await Meeting.find_all().sort(-Meeting.started_at).to_list()
     
     if not meetings:
-        raise HTTPException(status_code=400, detail="Meetings Not Found!")
+        return []
+        # raise HTTPException(status_code=404, detail="Meetings Not Found!") # Changing to empty list is friendlier for UI
     
     all_meetings_data = [{
-        "name": m["name"],
-        "created_at": m["started_at"].isoformat(),
-        "state": m["state"],
+        "id": str(m.id),
+        "name": m.name,
+        "platform": m.platform,
+        "meeting_link": m.meeting_link,
+        "started_at": m.started_at.isoformat() if m.started_at else None,
+        "state": m.state,
     } for m in meetings]
     
-    return all_meetings_data;
+    return all_meetings_data
     
 
 @router.get("/get_meeting_status/{meeting_id}")

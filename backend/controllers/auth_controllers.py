@@ -52,8 +52,8 @@ async def create_user_account(payload: CreateUserRequest):
 async def login_user(payload: LoginUser):
     # CHeck if password is correct or user exists
     user = await User.find_one(User.email == payload.email)
-    if not user and not verify_user(payload.password, user.hashed_password):
-        raise HTTPException(stauts_code=401, detail="Invalid Credentials or User not found")
+    if not user or not verify_user(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid Credentials or User not found")
     
     # Else Create Access Token with a time
     token = create_access_token({
