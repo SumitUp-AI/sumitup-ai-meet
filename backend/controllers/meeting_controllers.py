@@ -2,7 +2,7 @@ from fastapi import HTTPException, APIRouter, Request
 from fastapi.responses import JSONResponse
 from core.helpers.helpers import AttendeeBot
 from core.utils.process_meeting import ProcessMeeting
-from models.models import MeetingPlatform, Meeting, User, Tenant, Participants, MeetingState
+from models.models import MeetingPlatform, Meeting, User, Tenant, Participants, MeetingState, Transcripts
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -146,3 +146,49 @@ async def get_current_meeting_status(request: Request, meeting_id: str):
     pass
 
 
+
+@router.get("/transcript")
+async def get_transcript(meeting_id: str):
+    # 1. Fetch meeting to ensure it exists
+    meeting = await Meeting.get(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # 2. Fetch all transcript segments sorted by timestamp
+    transcripts = await Transcripts.find(Transcripts.meeting_id.id == meeting.id).sort(+Transcripts.timestamp_ms).to_list()
+
+    if not transcripts:
+        return JSONResponse(content={"transcript": "No transcript available yet."})
+
+    # 3. Concatenate with Speaker Grouping and Timestamps
+    formatted_transcript = []
+    current_speaker = None
+    current_buffer = []
+
+    for t in transcripts:
+        # Format timestamp for this specific segment
+        time_str = datetime.fromtimestamp(t.timestamp_ms / 1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        segment_text = f"[{time_str}] {t.transcript}"
+
+        if t.speaker_name != current_speaker:
+            # Flush previous speaker's text
+            if current_speaker is not None:
+                formatted_transcript.append(f"{current_speaker}: {' '.join(current_buffer)}")
+            
+            # Start new speaker
+            current_speaker = t.speaker_name
+            current_buffer = [segment_text]
+        else:
+            # Continue same speaker
+            current_buffer.append(segment_text)
+    
+    # Flush last buffer
+    if current_speaker is not None:
+        formatted_transcript.append(f"{current_speaker}: {' '.join(current_buffer)}")
+
+    full_text = "\n\n".join(formatted_transcript)
+
+    return JSONResponse(content={
+        "meeting_id": meeting_id,
+        "transcript": full_text
+    })
