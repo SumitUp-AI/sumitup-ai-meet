@@ -61,10 +61,20 @@ async def login_user(payload: LoginUser):
         "tenant_id": str(user.tenant_id.id)
     })
 
-    return JSONResponse({
-        "access_token": token,
+    response = JSONResponse({
+        "message": "User Created Successfully",
         "token_type": "bearer"
     }, status_code=200)
+    
+    response.set_cookie(
+        key=token,
+        httponly=True,
+        max_age=60 * 30,
+        secure=False, # Change this False to True in Production
+        samesite='lax' # Same site is Lax due to React Frontend, so you might people understand it properly
+    )
+    
+    return response
 
 @router.get("/me")
 async def me(user=Depends(get_current_user)):
