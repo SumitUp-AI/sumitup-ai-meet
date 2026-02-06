@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from core.helpers.helpers import AttendeeBot
 from core.utils.process_meeting import ProcessMeeting
 from models.models import MeetingPlatform, Meeting, User, Tenant, Participants, MeetingState, Transcripts
-from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import os
@@ -82,18 +81,11 @@ async def create_meeting(request: Request, payload: CreateMeeting):
             "bot_data": result
         })
     except Exception as e:
-        # If bot fails, we might want to update meeting state to error
+
         meeting.state = MeetingState.fatal_error
         await meeting.save()
         raise HTTPException(status_code=500, detail=f"Bot failed to join: {str(e)}")
     
-    # Instructions: Pehle Bot ki utility ko call krogey, and then if meeting starts
-    # phir acknowledge krogey JSONRespnse me ke meeting start hogyi hai.
-    # Transcriptions ke lye webhook ka istemaal krogey, jitne bhi transcripts aayengay sab Database me save krogey
-    # Make sure MongoDB installed ho tumhaare system me, mongosh and mongodb compass
-    # Bro code ki video dekhlena
-
-
 
 @router.post("/leave_meeting")
 async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
@@ -131,7 +123,6 @@ async def get_all_meetings_information(request: Request):
     
     if not meetings:
         return []
-        # raise HTTPException(status_code=404, detail="Meetings Not Found!") # Changing to empty list is friendlier for UI
     
     all_meetings_data = [{
         "id": str(m.id),
@@ -147,6 +138,7 @@ async def get_all_meetings_information(request: Request):
 
 @router.get("/get_meeting_status/{meeting_id}")
 async def get_current_meeting_status(request: Request, meeting_id: str):
+    # We have to implement Websocket here for realtime update for status of meeting
     pass
 
 
