@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from core.helpers.helpers import AttendeeBot
 from core.utils.process_meeting import ProcessMeeting
 from models.models import MeetingPlatform, Meeting, User, Tenant, Participants, MeetingState, Transcripts
-from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import os
@@ -82,18 +81,11 @@ async def create_meeting(request: Request, payload: CreateMeeting):
             "bot_data": result
         })
     except Exception as e:
-        # If bot fails, we might want to update meeting state to error
+
         meeting.state = MeetingState.fatal_error
         await meeting.save()
         raise HTTPException(status_code=500, detail=f"Bot failed to join: {str(e)}")
     
-    # Instructions: Pehle Bot ki utility ko call krogey, and then if meeting starts
-    # phir acknowledge krogey JSONRespnse me ke meeting start hogyi hai.
-    # Transcriptions ke lye webhook ka istemaal krogey, jitne bhi transcripts aayengay sab Database me save krogey
-    # Make sure MongoDB installed ho tumhaare system me, mongosh and mongodb compass
-    # Bro code ki video dekhlena
-
-
 
 @router.post("/leave_meeting")
 async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
@@ -127,22 +119,26 @@ async def create_physical_meeting(request: Request):
 
 @router.get("/get_all_meetings")
 async def get_all_meetings_information(request: Request):
-    meetings = Meeting.all()
+    meetings = await Meeting.find_all().sort(-Meeting.started_at).to_list()
     
     if not meetings:
-        raise HTTPException(status_code=400, detail="Meetings Not Found!")
+        return []
     
     all_meetings_data = [{
-        "name": m["name"],
-        "created_at": m["started_at"].isoformat(),
-        "state": m["state"],
+        "id": str(m.id),
+        "name": m.name,
+        "platform": m.platform,
+        "meeting_link": m.meeting_link,
+        "started_at": m.started_at.isoformat() if m.started_at else None,
+        "state": m.state,
     } for m in meetings]
     
-    return all_meetings_data;
+    return all_meetings_data
     
 
 @router.get("/get_meeting_status/{meeting_id}")
 async def get_current_meeting_status(request: Request, meeting_id: str):
+    # We have to implement Websocket here for realtime update for status of meeting
     pass
 
 

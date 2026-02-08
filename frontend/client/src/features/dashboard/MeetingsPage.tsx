@@ -1,72 +1,42 @@
 import { Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
-import { useState } from "react";
+
+
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const MeetingsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Dummy meeting data
-  const meetings = [
-    {
-      id: 1,
-      title: "Q3 Roadmap Sync",
-      team: "Product Team",
-      date: "Oct 24, 2:00 PM",
-      duration: "45m",
-      status: "Processed",
-      statusColor: "green",
-      icon: "🚀",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      id: 2,
-      title: "Weekly Design Sync",
-      team: "Design Team",
-      date: "Oct 24, 10:00 AM",
-      duration: "32m",
-      status: "Processed",
-      statusColor: "green",
-      icon: "✏️",
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-    },
-    {
-      id: 3,
-      title: "Client Intro: Acme Corp",
-      team: "Sales",
-      date: "Oct 23, 4:00 PM",
-      duration: "1h 10m",
-      status: "Processing",
-      statusColor: "blue",
-      icon: "💎",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      id: 4,
-      title: "Product Marketing Sync",
-      team: "Marketing",
-      date: "Oct 22, 11:30 AM",
-      duration: "50m",
-      status: "Processed",
-      statusColor: "green",
-      icon: "🧡",
-      iconBg: "bg-orange-100",
-      iconColor: "text-orange-600",
-    },
-    {
-      id: 5,
-      title: "Engineering Standup",
-      team: "Engineering",
-      date: "Oct 22, 9:00 AM",
-      duration: "15m",
-      status: "Failed",
-      statusColor: "red",
-      icon: "🔴",
-      iconBg: "bg-red-100",
-      iconColor: "text-red-600",
-    },
-  ];
+
+
+  useEffect(() => {
+    fetch("http://localhost:3000/api/v1/get_all_meetings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch meetings");
+        return res.json();
+      })
+      .then((data) => {
+        // Map backend data to frontend format
+        const mappedMeetings = data.map((m: any, index: number) => ({
+          id: m.id,
+          title: m.name,
+          team: "General", // Placeholder
+          date: new Date(m.started_at).toLocaleString(),
+          duration: "N/A", // Backend doesn't return duration yet
+          status: m.state,
+          statusColor: m.state === "completed" ? "green" : "blue",
+          icon: "🎥",
+          iconBg: "bg-blue-100",
+          iconColor: "text-blue-600",
+        }));
+        setMeetings(mappedMeetings);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const getStatusBadge = (status: string, color: string) => {
     const baseClasses =
@@ -84,7 +54,11 @@ const MeetingsPage: React.FC = () => {
     }
   };
 
-  const getActionButton = (status: string) => {
+  const traverseToSummary = (id: string) => {
+    navigate(`/dashboard/summary/${id}`);
+  };
+
+  const getActionButton = (status: string, id: string) => {
     if (status === "Failed") {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
@@ -92,22 +66,27 @@ const MeetingsPage: React.FC = () => {
           Retry
         </button>
       );
-    } else if (status === "Processing") {
+    } else if (status === "Processing" || status === "joining" || status === "joined_recording") {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
           <Clock className="w-4 h-4 mr-1" />
-          Wait...
+          Live
         </button>
       );
     } else {
       return (
-        <button className="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors">
+        <button
+          onClick={() => traverseToSummary(id)}
+          className="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+        >
           <Eye className="w-4 h-4 mr-1" />
           View Summary
         </button>
       );
     }
   };
+
+  if (loading) return <div className="p-6">Loading meetings...</div>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -205,13 +184,13 @@ const MeetingsPage: React.FC = () => {
                       meeting.statusColor,
                     )}
                   >
-                    {meeting.status === "Processed" && "●"} {meeting.status}
+                    {meeting.status === "completed" ? "●" : ""} {meeting.status}
                   </span>
                 </div>
 
                 {/* Action */}
                 <div className="col-span-2 flex items-center">
-                  {getActionButton(meeting.status)}
+                  {getActionButton(meeting.status, meeting.id)}
                 </div>
               </div>
             ))}
@@ -222,8 +201,8 @@ const MeetingsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-700">
                 Showing <span className="font-medium">1</span> to{" "}
-                <span className="font-medium">5</span> of{" "}
-                <span className="font-medium">24</span> results
+                <span className="font-medium">{meetings.length}</span> of{" "}
+                <span className="font-medium">{meetings.length}</span> results
               </p>
               <div className="flex gap-2">
                 <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">

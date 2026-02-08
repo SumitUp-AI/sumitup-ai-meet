@@ -14,7 +14,7 @@ import {
 
 interface Meeting {
   name: string;
-  created_at: string;
+  started_at: string;
   state: string;
   id?: string;
 }
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
     return {
       logo: randomIcon,
       title: meeting.name,
-      date: formatDate(meeting.created_at),
+      date: formatDate(meeting.started_at),
       duration: "N/A",
       participants: ["JD", "SK"],
       status: uiStatus,

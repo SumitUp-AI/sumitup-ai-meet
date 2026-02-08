@@ -17,11 +17,3 @@ db = client[DB_NAME]
 async def init_db():
     await init_beanie(db, document_models=[User, Tenant, ActionItems, Meeting, Participants, Transcripts, Team, Billing])
     
-    # This was used for testing only when data is inserted
-    # if await User.count() == 0:
-    #     await User(
-    #         name="system",
-    #         email="system@local",
-    #         hashed_password="x",
-    #         tenant_id=None,
-    #     ).insert()

@@ -77,7 +77,7 @@ const NewMeetingPage: React.FC = () => {
 
       // Navigate to dashboard after successful creation
       setTimeout(() => {
-        navigate("/");
+        navigate("/dashboard/meetings");
       }, 500);
     } catch (err) {
       const errorMessage =
