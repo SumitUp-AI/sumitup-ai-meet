@@ -56,26 +56,61 @@ async def login_user(payload: LoginUser, response: Response):
     if not user or not verify_user(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid Credentials or User not found")
     
-    # Else Create Access Token with a time
+    
     token = create_access_token({
         "user_id": str(user.id),
         "tenant_id": str(user.tenant_id.id)
     })
 
-    response = JSONResponse({
-        "message": "User Created Successfully",
+    duration = 7 if payload.remember_me else 1
+
+    refresh_token = create_refresh_token({
+        "user_id": str(user.id),
+        "tenant_id": str(user.tenant_id.id)
+    }, duration=duration)
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        max_age=(7*24*60*60) if payload.remember_me else (1*24*60*60),
+        secure=False,
+        samesite='lax' 
+    )
+    
+    return JSONResponse({
+        "access_token": token,
         "token_type": "bearer"
     }, status_code=200)
     
-    response.set_cookie(
-        key=token,
-        httponly=True,
-        max_age=60 * 30,
-        secure=False, # Change this False to True in Production
-        samesite='lax' # Same site is Lax due to React Frontend, so you might people understand it properly
-    )
     
-    return response
+
+@router.post("/refresh")
+async def refresh_access_token(request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+    
+    payload = decode_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    
+    # Create new access token
+    new_access_token = create_access_token({
+        "user_id": payload["user_id"],
+        "tenant_id": payload["tenant_id"]
+    })
+
+    return JSONResponse({
+        "access_token": new_access_token,
+        "token_type": "bearer"
+    }, status_code=200)
+
+
+@router.post("/logout")
+async def logout_user(response: Response):
+    response.delete_cookie("refresh_token")
+    return JSONResponse({"message": "Logged out successfully"}, status_code=200)
 
 @router.get("/me")
 async def me(user=Depends(get_current_user)):
