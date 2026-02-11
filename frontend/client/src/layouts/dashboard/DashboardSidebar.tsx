@@ -110,23 +110,19 @@ export const DashboardSidebar: React.FC<{
         </div>
 
         {/* Settings */}
-        <div className="p-4 border-t">
-          <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">
-            <div className="p-6 border-t border-gray-200">
-              <Link
-                to="/dashboard/settings"
-                onClick={() => onClose()}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive("/dashboard/settings")
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span>Settings</span>
-              </Link>
-            </div>
-          </button>
+        <div className="p-6 border-t border-gray-200">
+          <Link
+            to="/dashboard/settings"
+            onClick={() => onClose()}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              isActive("/dashboard/settings")
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span>Settings</span>
+          </Link>
         </div>
       </aside>
     </>

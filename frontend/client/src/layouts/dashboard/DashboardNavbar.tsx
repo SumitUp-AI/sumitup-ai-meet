@@ -83,9 +83,8 @@ const ProfileDropdown: React.FC = () => {
   }, [isOpen]);
 
   const handleLogout = () => {
-    // Add logout logic here
-    logout();
     setIsOpen(false);
+    logout();
   };
 
   return (
