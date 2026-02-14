@@ -20,12 +20,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(
-    localStorage.getItem("accessToken"),
-  );
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
   const [loading, setLoading] = useState<boolean>(true);
 
   const BASE_URL = "http://localhost:8000/api/v1";
+
+  const fetchUser = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${BASE_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error("Backend connection failed", err);
+    } finally {
+      setLoading(false); // Yeh line app ko white screen se bachati hai
+    }
+  };
 
   const login = async (email: string, password: string) => {
     const res = await fetch(`${BASE_URL}/login`, {
@@ -33,57 +54,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.detail || "Login failed");
-    }
-
+    if (!res.ok) throw new Error("Login failed");
     const data = await res.json();
     setAccessToken(data.access_token);
     localStorage.setItem("accessToken", data.access_token);
     await fetchUser();
   };
 
-  const fetchUser = async () => {
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await fetch(`${BASE_URL}/me`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch user");
-
-      const data = await res.json();
-      setUser(data);
-    } catch {
-      setUser(null);
-      setAccessToken(null);
-      localStorage.removeItem("accessToken");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const logout = () => {
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem("accessToken");
+    setLoading(false);
   };
 
   useEffect(() => {
-    if (accessToken) fetchUser();
-    else setLoading(false);
+    fetchUser();
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{ user, accessToken, loading, login, logout, fetchUser }}
-    >
+    <AuthContext.Provider value={{ user, accessToken, loading, login, logout, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -91,5 +81,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
