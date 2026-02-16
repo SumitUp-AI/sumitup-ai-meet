@@ -1,7 +1,11 @@
-// DashboardContainer.tsx
 import React, { useState } from "react";
+import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardNavbar } from "./DashboardNavbar";
-import { Menu, Settings, BarChart3 } from "lucide-react";
+
+export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
 export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const [menuOpen, setMenuOpen] = useState(false); // ✅ starts fully open

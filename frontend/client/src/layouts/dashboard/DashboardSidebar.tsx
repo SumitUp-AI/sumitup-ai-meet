@@ -1,19 +1,61 @@
 import React from "react";
-import { BarChart3, Calendar, MessageSquare, TrendingUp, Settings, X} from "lucide-react";
+import {
+  BarChart3,
+  Calendar,
+  MessageSquare,
+  TrendingUp,
+  Settings,
+  X,
+  Plus,
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 interface NavItem {
   icon: React.ReactNode;
   label: string;
-  active?: boolean;
+  path: string;
 }
 
-export const DashboardSidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+export const DashboardSidebar: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ isOpen, onClose }) => {
+  const location = useLocation();
+
   const navItems: NavItem[] = [
-    { icon: <BarChart3 className="w-5 h-5" />, label: 'Dashboard', active: true },
-    { icon: <Calendar className="w-5 h-5" />, label: 'Meetings' },
-    { icon: <MessageSquare className="w-5 h-5" />, label: 'AI Chat' },
-    { icon: <TrendingUp className="w-5 h-5" />, label: 'Insights' },
+    {
+      icon: <BarChart3 className="w-5 h-5" />,
+      label: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      icon: <Calendar className="w-5 h-5" />,
+      label: "Meetings",
+      path: "/dashboard/meetings",
+    },
+    {
+      icon: <Plus className="w-5 h-5" />,
+      label: "New Meeting",
+      path: "/dashboard/new-meetings",
+    },
+    {
+      icon: <MessageSquare className="w-5 h-5" />,
+      label: "AI Chat",
+      path: "/dashboard/ai-chat",
+    },
+    {
+      icon: <TrendingUp className="w-5 h-5" />,
+      label: "Insights",
+      path: "/dashboard/insights",
+    },
   ];
+
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard";
+    }
+    return location.pathname === path;
+  };
 
   return (
     <>

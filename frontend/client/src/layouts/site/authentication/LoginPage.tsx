@@ -1,32 +1,41 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-
-interface DummyUser  {
-  email: string
-  password: string
-}
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../../context/AuthContext";
 
 const LoginPage = () => {
-  const originalUser: DummyUser = { email: '', password: '' }
-  const [user, setUser] = useState<DummyUser>(originalUser)
-  const navigate = useNavigate()
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setUser({ ...user, [name]: value })
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
 
-  const loginUserWithEmailAndPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    if (user.email.trim() === "admin@example.com" && user.password.trim() === "admin123") {
-      alert("Login successful!")
-      navigate('/dashboard', { replace: true })
-      
-    } else { 
-      alert("Invalid email or password.")
-      return
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
     }
-  } 
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please provide both email and password");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await login(email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.");
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Form */}
@@ -76,19 +85,28 @@ const LoginPage = () => {
           </div>
 
           {/* Email Form */}
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Work Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Email
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                value={user.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="name@company.com"
               />
             </div>
@@ -99,28 +117,23 @@ const LoginPage = () => {
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                value={user.password}
-                onChange={handleChange}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Enter your password"
               />
-              <div className="text-right mt-2">
-                <a href="#" className="text-sm text-blue-600 hover:text-blue-500">
-                  Forgot password?
-                </a>
-              </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                onClick={loginUserWithEmailAndPassword}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Log in
+                {isLoading ? "Logging in..." : "Log in"}
               </button>
             </div>
 
@@ -137,7 +150,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-500">
-              © 2024 SumItUp AI. Inc. All rights reserved.
+              &copy; 2025 Sumitup-Labs, All rights and reserved.
             </p>
           </div>
         </div>
@@ -150,21 +163,26 @@ const LoginPage = () => {
           {/* Testimonial */}
           <div className="max-w-md">
             <blockquote className="text-lg font-medium text-white mb-6 leading-relaxed">
-              "SumItUp saves our team 15 hours a week. It captures the nuance in every discussion, so we can focus on decisions, not notes."
+              "Sumitup saves our team 15 hours a week. It captures the nuance in
+              every discussion, so we can focus on decisions, not notes."
             </blockquote>
 
             {/* Author */}
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" 
-                  alt="Sarah Jenkins"
+                <img
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSU74dxUJ2qEgHbDCDFHwC0Pt5283saAngzxA&s"
+                  alt="Filip Verstratein"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <div className="text-white font-medium text-sm">Sarah Jenkins</div>
-                <div className="text-slate-400 text-xs">Director of Ops at TechFlow</div>
+                <div className="text-white font-medium text-sm">
+                  Filip Verstratein
+                </div>
+                <div className="text-slate-400 text-xs">
+                  Director of Ops at TechFlow
+                </div>
               </div>
             </div>
           </div>
