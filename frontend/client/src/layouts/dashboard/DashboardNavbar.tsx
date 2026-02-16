@@ -15,24 +15,21 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
 }) => {
   return (
     <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-2 sm:gap-4 flex-1">
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <Menu className="w-5 h-5 text-gray-600" />
-        </button>
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-          </div>
-          <span className="font-semibold text-base sm:text-lg">Sumitup.ai</span>
-        </div>
+      {/* LEFT SIDE */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-1">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-transform duration-300"
+          >
+            <Menu className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
 
         <div className="hidden md:flex flex-1 max-w-xl">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search transcripts, meetings, insights..."
@@ -54,6 +51,7 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
         {/* Profile Photo and Dropdown with Settings Icon and Logout */}
         <ProfileDropdown />
       </div>
+
     </nav>
   );
 };
