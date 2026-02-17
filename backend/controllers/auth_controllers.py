@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Response, Request
 from fastapi.responses import JSONResponse
 from models.models import User, Tenant, DEFAULT_SETTINGS
 from auth.security import hash_password, verify_user
@@ -78,15 +78,15 @@ async def login_user(payload: LoginUser, response: Response):
         samesite='lax' 
     )
     
-    return JSONResponse({
+    return {
         "access_token": token,
         "token_type": "bearer"
-    }, status_code=200)
+    }
     
     
 
 @router.post("/refresh")
-async def refresh_access_token(request, response: Response):
+async def refresh_access_token(request: Request, response: Response):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
@@ -108,9 +108,15 @@ async def refresh_access_token(request, response: Response):
 
 
 @router.post("/logout")
-async def logout_user(response: Response):
-    response.delete_cookie("refresh_token")
-    return JSONResponse({"message": "Logged out successfully"}, status_code=200)
+async def logout_user(request: Request, response: Response):
+    response.delete_cookie(
+        "refresh_token",
+        path="/",
+        secure=False,
+        httponly=True,
+        samesite='lax'
+    )
+    return {"message": "Logged out successfully"}
 
 @router.get("/me")
 async def me(user=Depends(get_current_user)):
