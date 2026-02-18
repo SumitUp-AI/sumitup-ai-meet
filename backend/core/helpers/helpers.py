@@ -61,9 +61,6 @@ class AttendeeBot(STTServiceProvider):
     def set_model(self, model_name):
         self._model_name = model_name
  
-    def define_service(self):
-        pass
-
     def get_model(self):
         return self._model_name
   
@@ -72,7 +69,8 @@ class AttendeeBot(STTServiceProvider):
   
     def get_language(self): 
         return self._language
- 
+    
+    # Vulnerability # 01: Make this class as dependency, which will cause delay and performance issues in future
     async def join_meeting(self): 
         async with httpx.AsyncClient(timeout=10) as client:
             try:
