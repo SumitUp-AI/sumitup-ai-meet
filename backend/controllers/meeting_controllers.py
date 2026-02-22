@@ -34,15 +34,13 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Url invalid or Platform not supported")
     
-    # 1. Resolve Dependencies (Picking first available for now)
-    user = await User.find_one()
+    # Include tenant only, no user
     tenant = await Tenant.find_one()
-    
-    if not user or not tenant:
+    if not tenant:
         raise HTTPException(status_code=500, detail="User or Tenant configuration missing in DB")
 
     # 2. Create Participant Entry (The Host/Bot Requestor)
-    participant = Participants(user_id=user.id, role="host")
+    participant = Participants(tenant_id=tenant.id, role="host")
     await participant.save()
     
     # 3. Save Meeting to DB
@@ -50,8 +48,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         name=payload.name,
         meeting_link=meeting_url,
         platform=detected_platform,
-        created_by=user.id,
-        tenant_id=tenant.id,
+        created_by=tenant.id,
         participant_id=participant.id,
         started_at=datetime.now(timezone.utc),
         ended_at=None,
