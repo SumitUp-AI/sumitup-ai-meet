@@ -3,10 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
-from controllers.auth_controllers import router as auth_router
+from backend.controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
-from controllers.webhook_controller import router as transcription_webhook
+from controllers.webhooks.attendee_webhook import router as transcription_webhook
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
