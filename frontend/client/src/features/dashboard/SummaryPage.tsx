@@ -76,7 +76,8 @@ const SummaryPage: React.FC = () => {
         {/* Header with Back Button */}
         <div className="mb-6 flex items-center gap-4">
           <button
-            onClick={() => navigate("/")}
+          // Fixed navigation path
+            onClick={() => navigate("/dashboard")}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -107,7 +108,7 @@ const SummaryPage: React.FC = () => {
                 </div>
               )}
               <div className="mt-6 prose prose-sm max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                   {summary.summary}
                 </p>
               </div>

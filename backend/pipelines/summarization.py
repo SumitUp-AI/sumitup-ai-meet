@@ -61,6 +61,7 @@ Instructions:
 - Focus on the important points which are discussed only.
 - Facts should be grounded not assumed.
 - Add refined summary and update the schema information.
+- Include Organization and Time Specified for the meeting conducted
 
 Refined Summary""")
 
