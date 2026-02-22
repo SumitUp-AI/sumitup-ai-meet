@@ -6,7 +6,6 @@ from auth.auth import create_access_token, create_refresh_token, decode_refresh_
 from auth.dependencies import get_current_user
 from pydantic import BaseModel
 
-
 router = APIRouter(
     prefix="/api/v1",
     tags=["Authentication and Authorization"]
@@ -24,10 +23,8 @@ class LoginUser(BaseModel):
 
 @router.post("/signup")
 async def create_user_account(payload: CreateUserRequest):
-    # Check if user exists
     if await User.find_one(User.email == payload.email):
         raise HTTPException(status_code=400, detail="This User Already Exists!")
-    # Create a Tenant for User
     tenant_key = payload.email.split("@")[-1]
     tenant = await Tenant.find_one(Tenant.domain == tenant_key)
     if not tenant:
@@ -35,7 +32,6 @@ async def create_user_account(payload: CreateUserRequest):
             domain=tenant_key,
             settings=DEFAULT_SETTINGS.copy()
         )
-
         await tenant.insert()
 
     user = User(
@@ -55,7 +51,6 @@ async def login_user(payload: LoginUser, response: Response):
     user = await User.find_one(User.email == payload.email)
     if not user or not verify_user(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid Credentials or User not found")
-    
     
     token = create_access_token({
         "user_id": str(user.id),
@@ -82,8 +77,6 @@ async def login_user(payload: LoginUser, response: Response):
         "access_token": token,
         "token_type": "bearer"
     }
-    
-    
 
 @router.post("/refresh")
 async def refresh_access_token(request: Request, response: Response):
@@ -105,7 +98,6 @@ async def refresh_access_token(request: Request, response: Response):
         "access_token": new_access_token,
         "token_type": "bearer"
     }, status_code=200)
-
 
 @router.post("/logout")
 async def logout_user(request: Request, response: Response):
