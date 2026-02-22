@@ -50,6 +50,7 @@ class Tenant(Document):
 
 # Models for Action Items
 class ActionItems(Document):
+    tenant: "Link[Tenant]"
     meeting_id: "Link[Meeting]"
     title: str
     assignee: str
@@ -94,8 +95,7 @@ class MeetingState(str, Enum):
     
     
 class Meeting(Document):
-    created_by: "Link[User]"
-    tenant_id: "Link[Tenant]"
+    created_by: "Link[Tenant]"
     name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
@@ -114,7 +114,7 @@ class Meeting(Document):
 
 # Model for Participants
 class Participants(Document):
-    user_id: "Link[User]"
+    tenant_id: "Link[Tenant]"
     role: str
     
     class Settings:
@@ -135,7 +135,7 @@ class Transcripts(Document):
          
 # Model for Teams
 class Team(Document):
-    user_id: "Link[User]"
+    user_id: "Link[Tenant]"
     team_name: str
     organization: str
     role: str
