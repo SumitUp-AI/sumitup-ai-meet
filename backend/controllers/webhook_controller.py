@@ -70,8 +70,36 @@ async def get_transcription(request: Request, x_webhook_signature: str = Header(
             # Update State
             # Check for nested data structure (e.g. from state_change trigger)
             if "bot.state_change" in payload["trigger"] and "new_state" in payload["data"]:
-                meeting.state = payload["data"]["new_state"]
-                await meeting.save()
+                
+                # Check for timestamp to handle out-of-order delivery
+                event_created_at_str = payload["data"].get("created_at")
+                should_update = True
+                
+                if event_created_at_str:
+                    try:
+                         # normalize event_time to UTC
+                        event_time = datetime.fromisoformat(event_created_at_str.replace('Z', '+00:00'))
+                        
+                        if meeting.last_state_change_time:
+                            # Standardize timezone to UTC for comparison
+                            current_last_change = meeting.last_state_change_time
+                            if current_last_change.tzinfo is None:
+                                current_last_change = current_last_change.replace(tzinfo=timezone.utc)
+                            
+                            # If event is older than our last update, ignore it
+                            if event_time < current_last_change:
+                                print(f"Ignoring out-of-order event. Current: {current_last_change}, Received: {event_time}")
+                                should_update = False
+                            else:
+                                meeting.last_state_change_time = event_time
+                        else:
+                             meeting.last_state_change_time = event_time
+                    except ValueError:
+                        print("Error parsing created_at timestamp")
+                
+                if should_update:
+                    meeting.state = payload["data"]["new_state"]
+                    await meeting.save()
                 
             # Save Transcript
             elif "transcript.update" in payload["trigger"]:

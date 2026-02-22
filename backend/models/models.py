@@ -106,6 +106,7 @@ class Meeting(Document):
     state: Optional[MeetingState] = None
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
+    last_state_change_time: Optional[datetime] = None
     mermaid_syntax: Optional[str] = None
     
     class Settings:
