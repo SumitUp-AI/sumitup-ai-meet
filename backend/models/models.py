@@ -26,12 +26,12 @@ class User(Document):
 # Models for Tenant
 
 DEFAULT_SETTINGS = {
-   "max_meetings": 6,
+   "max_meetings": 15,
    "recording_enabled" : False,
    "realtime_transcription": False,
    "summarization_and_action_items": True,
-   "max_team_members": 2,
-   "dark_theme": False
+   "max_team_members": 3,
+   "billing_mode": True
 }
 
 
