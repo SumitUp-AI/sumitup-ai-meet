@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Loader } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { getAuthHeaders } from "../../utils/apiHeaders";
 
 interface Summary {
   summary: string;
@@ -11,9 +13,11 @@ interface Summary {
 const SummaryPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
+  const { user, token } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1"
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -23,17 +27,21 @@ const SummaryPage: React.FC = () => {
         return;
       }
 
+      if (!user || !token) {
+        setError("User not authenticated");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
         const response = await fetch(
-          `http://localhost:3000/api/v1/create_summary?meeting_id=${meetingId}`,
+          `${BASE_URL}/create_summary?meeting_id=${meetingId}`,
           {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(token, user.tenant_id),
           }
         );
 
@@ -44,7 +52,6 @@ const SummaryPage: React.FC = () => {
         const data = await response.json();
         setSummary({
           summary: data.summary,
-          // Optional: Add other fields if backend provides them later
         });
       } catch (err) {
         const errorMessage =
@@ -57,7 +64,7 @@ const SummaryPage: React.FC = () => {
     };
 
     fetchSummary();
-  }, [meetingId]);
+  }, [meetingId, user, token]);
 
   if (loading) {
     return (

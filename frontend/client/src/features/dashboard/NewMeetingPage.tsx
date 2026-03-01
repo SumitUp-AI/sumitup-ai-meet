@@ -10,15 +10,19 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMeeting } from "../../context/MeetingContext";
+import { useAuth } from "../../context/AuthContext";
+import { getAuthHeaders } from "../../utils/apiHeaders";
 
 const NewMeetingPage: React.FC = () => {
   const navigate = useNavigate();
   const { setCurrentMeeting } = useMeeting();
+  const { token, user } = useAuth();
   const [showGoogleMeetModal, setShowGoogleMeetModal] = useState(false);
   const [meetingLink, setMeetingLink] = useState("");
   const [meetingTitle, setMeetingTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1"
 
   const handleGoogleMeetConnect = () => {
     setShowGoogleMeetModal(true);
@@ -43,13 +47,16 @@ const NewMeetingPage: React.FC = () => {
     setError(null);
 
     try {
+      if (!token || !user) {
+        setError("Token or User must not be null!")
+        return
+      }
+        
       const response = await fetch(
-        "http://localhost:3000/api/v1/create_meeting",
+        `${BASE_URL}/create_meeting`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(token, user?.tenant_id),
           body: JSON.stringify({
             name: meetingTitle,
             meeting_url: meetingLink,
@@ -168,7 +175,7 @@ const NewMeetingPage: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">
-                        Connect Google Meet
+                        Connect Meeting PLatform
                       </h4>
                       <p className="text-sm text-gray-500">
                         Sync from your calendar events
@@ -202,7 +209,7 @@ const NewMeetingPage: React.FC = () => {
 
       {/* Google Meet Modal */}
       {showGoogleMeetModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -211,10 +218,10 @@ const NewMeetingPage: React.FC = () => {
                 </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Connect Google Meet
+                Enter Meeting Link to get started
               </h3>
               <p className="text-gray-600">
-                Enter your Google Meet link to import the recording
+                Enter your any meeting link (Zoom, Teams or Meet) to import the recording
               </p>
             </div>
 
