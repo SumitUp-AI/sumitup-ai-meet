@@ -11,6 +11,8 @@ interface User {
   name: string;
   email: string;
   tenant_id: string;
+  tenant_domain?: string;
+  tenant_settings?: Record<string, any>;
 }
 
 interface AuthContextType {
@@ -28,17 +30,21 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
   // Fetch user data from /me endpoint
   const fetchUser = async (authToken: string) => {
     try {
       const res = await fetch(`${BASE_URL}/me`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { 
+          Authorization: `Bearer ${authToken}`,
+          "X-Tenant-ID": user?.tenant_id || "",
+        },
       });
 
       if (!res.ok) {
@@ -113,6 +119,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const res = await fetch(`${BASE_URL}/refresh`, {
       method: "POST",
       credentials: "include",
+      headers: {
+        "X-Tenant-ID": user?.tenant_id || "",
+      },
     });
 
     if (!res.ok) throw new Error("Refresh failed");
@@ -120,7 +129,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const data = await res.json();
     setToken(data.access_token);
     return data.access_token;
-  }, []);
+  }, [user?.tenant_id]);
 
   // Logout method
   const logout = useCallback(async () => {

@@ -17,6 +17,7 @@ router = APIRouter(
 class CreateMeeting(BaseModel):
     name: str
     meeting_url: str
+    provider: str
 
 class LeaveMeetingPayload(BaseModel):
     meeting_id: str
@@ -34,10 +35,10 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Url invalid or Platform not supported")
     
-    # Include tenant only, no user
-    tenant = await Tenant.find_one()
+    # Get tenant from request state (set by middleware)
+    tenant = request.state.tenant
     if not tenant:
-        raise HTTPException(status_code=500, detail="User or Tenant configuration missing in DB")
+        raise HTTPException(status_code=500, detail="Tenant not found")
 
     # 2. Create Participant Entry (The Host/Bot Requestor)
     participant = Participants(tenant_id=tenant.id, role="host")
@@ -65,7 +66,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
             bot="SumitUp Bot",
             api_key=bot_api_key,
             meeting_url=meeting_url,
-            provider="assemblyai", # Defaulting provider
+            provider=payload.provider,
             meeting=meeting
         )
         
@@ -116,7 +117,9 @@ async def create_physical_meeting(request: Request):
 
 @router.get("/get_all_meetings")
 async def get_all_meetings_information(request: Request):
-    meetings = await Meeting.find_all().sort(-Meeting.started_at).to_list()
+    # Filter meetings by current tenant
+    tenant = request.state.tenant
+    meetings = await Meeting.find(Meeting.created_by == tenant.id).sort(-Meeting.started_at).to_list()
     
     if not meetings:
         return []
@@ -141,11 +144,16 @@ async def get_current_meeting_status(request: Request, meeting_id: str):
 
 
 @router.get("/transcript")
-async def get_transcript(meeting_id: str):
-    # 1. Fetch meeting to ensure it exists
+async def get_transcript(request: Request, meeting_id: str):
+    # 1. Fetch meeting to ensure it exists and belongs to the tenant
+    tenant = request.state.tenant
     meeting = await Meeting.get(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    # Ensure meeting belongs to the current tenant
+    if str(meeting.created_by.id) != str(tenant.id):
+        raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
 
     # 2. Fetch all transcript segments sorted by timestamp
     transcripts = await Transcripts.find(Transcripts.meeting_id.id == meeting.id).sort(+Transcripts.timestamp_ms).to_list()

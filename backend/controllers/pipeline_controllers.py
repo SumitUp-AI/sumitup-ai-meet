@@ -25,11 +25,15 @@ router = APIRouter(
     tags=["Summarization and Action Items API"]
 )
 
-async def get_meeting_and_combined_transcript(meeting_id: str) -> Tuple[Meeting, str]:
-   
+async def get_meeting_and_combined_transcript(meeting_id: str, request: Request) -> Tuple[Meeting, str]:
+    tenant = request.state.tenant
     meeting: Optional[Meeting] = await Meeting.get(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    # Ensure meeting belongs to the current tenant
+    if str(meeting.created_by.id) != str(tenant.id):
+        raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
     
     transcripts: List[Transcripts] = await Transcripts.find(
         Transcripts.meeting_id.id == meeting.id
@@ -44,8 +48,9 @@ async def get_meeting_and_combined_transcript(meeting_id: str) -> Tuple[Meeting,
 @router.get("/create_summary", response_model=MeetingTranscriptOutput)
 @limiter.limit("6/minute")
 async def get_summary_from_raw_transcript(
+    request: Request,
     meeting_id: str,
-    deps: Tuple[Meeting, str] = Depends(get_meeting_and_combined_transcript)
+    deps: Tuple[Meeting, str] = Depends(lambda r=None, mid=None: get_meeting_and_combined_transcript(mid, r))
 ) -> JSONResponse:
     try:
         meeting, combined_text = deps
@@ -62,8 +67,9 @@ async def get_summary_from_raw_transcript(
 @router.post("/create_action_items")
 @limiter.limit("6/minute")
 async def get_action_items(
+    request: Request,
     meeting_id: str,
-    deps: Tuple[Meeting, str] = Depends(get_meeting_and_combined_transcript)
+    deps: Tuple[Meeting, str] = Depends(lambda r=None, mid=None: get_meeting_and_combined_transcript(mid, r))
 ) -> JSONResponse:
     """
     Generate action items from meeting transcripts.

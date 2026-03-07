@@ -1,19 +1,25 @@
 import { Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
-
-
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getAuthHeaders } from "../../utils/apiHeaders";
 
 const MeetingsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [meetings, setMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-
-
+  const { user, token } = useAuth();
+  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1"
   useEffect(() => {
-    fetch("http://localhost:3000/api/v1/get_all_meetings")
+    if (!user || !token) {
+      setLoading(false);
+      return;
+    }
+
+    fetch(`${BASE_URL}/get_all_meetings`, {
+      headers: getAuthHeaders(token, user.tenant_id),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch meetings");
         return res.json();
@@ -36,7 +42,7 @@ const MeetingsPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user, token]);
 
   const getStatusBadge = (status: string, color: string) => {
     const baseClasses =

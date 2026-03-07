@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
-from backend.controllers.auth_controllers import router as auth_router
+from middlewares.tenant_middleware import TenantMiddleware
+from controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
@@ -17,6 +18,9 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan, title="SumitUp AI Powered Meeting Assistant API Docs", description="RESTful APIs and Webhooks for Sumitup.ai Application")
+
+# Add TenantMiddleware to validate tenant for all requests
+app.add_middleware(TenantMiddleware)
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
