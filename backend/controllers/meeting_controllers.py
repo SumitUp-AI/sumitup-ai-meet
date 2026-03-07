@@ -17,6 +17,7 @@ router = APIRouter(
 class CreateMeeting(BaseModel):
     name: str
     meeting_url: str
+    provider: str
 
 class LeaveMeetingPayload(BaseModel):
     meeting_id: str
@@ -65,7 +66,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
             bot="SumitUp Bot",
             api_key=bot_api_key,
             meeting_url=meeting_url,
-            provider="assemblyai", # Defaulting provider
+            provider=payload.provider,
             meeting=meeting
         )
         

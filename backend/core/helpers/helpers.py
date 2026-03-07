@@ -33,45 +33,60 @@ class STTServiceProvider:
             self.provider = provider
             self._assemblyai_api_key = os.getenv("ASSEMBLYAI_API_KEY")
         
-        elif provider == "whisper":
+        elif provider == "openai":
             
-            if not os.getenv("WHISPER_PROVIDER_API_KEY"):
-                raise ValueError("API Key for Whisper is required, You can provide the API key for Whisper or any other Cloud GPU instance that uses Whisper")
+            if not os.getenv("OPENAI_PROVIDER_API_KEY"):
+                raise ValueError("API Key for OpenAI is required")
             
             self.provider = provider
-            self._openai_api_key = os.getenv("WHISPER_PROVIDER_API_KEY")
+            self._openai_api_key = os.getenv("OPENAI_PROVIDER_API_KEY")
         
         
 class AttendeeBot(STTServiceProvider):
-    _model_name: str
     _language: str
     _api_key: str
- 
-
- 
- 
-    def __init__(self, bot, api_key, meeting_url, provider, meeting=None):
+    
+    # Adding Multiple Settings for ASR Providers
+    def __init__(self, bot, api_key, meeting_url, provider, language, meeting=None):
         super().__init__(provider=provider)
         self._bot = bot
         self._api_key = api_key
-        self._model_name = "nova-2" # By Default
+        self._language = language           
         self._meeting_url = meeting_url
         self.meeting = meeting
+
+        self.openai_transcription_settings = {
+            "openai": {
+                "model": "gpt-4o-transcribe-diarize",
+                "language": self._language
+            }
+        }
+        self.deepgram_transcription_settings = {
+            "deepgram": {
+                "detect_language": True,
+                "language": self._language,
+                "model": "nova-2"
+            }
+        }
+        self.assemblyai_transcription_settings = {
+            "assembly_ai": {
+                    "language_detection": True,
+                    "language_detection_options": {
+                    "expected_languages": ["en", "ur"],
+                    "fallback_language": self._language
+                }
+            }
+        }
+
  
-    def set_model(self, model_name):
-        self._model_name = model_name
- 
-    def get_model(self):
-        return self._model_name
-  
-    def set_language(self, language):
-        self._language = language
-  
-    def get_language(self): 
-        return self._language
-    
-    # Vulnerability # 01: Make this class as dependency, which will cause delay and performance issues in future
-    async def join_meeting(self): 
+    async def join_meeting(self):
+        if self.provider == 'deepgram':
+            settings = self.deepgram_transcription_settings
+        elif self.provider == 'assemblyai':
+            settings = self.assemblyai_transcription_settings
+        else:
+            settings = self.openai_transcription_settings
+
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
@@ -83,14 +98,7 @@ class AttendeeBot(STTServiceProvider):
                     json={
                         "meeting_url": self._meeting_url,
                         "bot_name": self._bot,
-                        "transcription_settings": {
-                            "assembly_ai": {
-                                "language_detection": True,
-                                "language_detection_options": {
-                                    "expected_languages": ["en", "ur"]
-                                }
-                            }
-                        },
+                        "transcription_settings": settings,
                         "recording_settings":{
                             "format":"none"
                         }
