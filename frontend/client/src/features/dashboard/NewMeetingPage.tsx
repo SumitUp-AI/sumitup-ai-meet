@@ -60,7 +60,7 @@ const NewMeetingPage: React.FC = () => {
           body: JSON.stringify({
             name: meetingTitle,
             meeting_url: meetingLink,
-            provider: "deepgram" // defaulted to Deepgram, can change it to assemblyai or openai
+            provider: "assemblyai" // defaulted to AssemblyAI, can change it to deepgram or openai
           }),
         }
       );
