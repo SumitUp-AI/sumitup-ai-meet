@@ -29,9 +29,15 @@ async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)
         raise HTTPException(status_code=403, detail="Access denied for this tenant")
 
     
-    tenant = await Tenant.get(tenant_id)
-    if not tenant:
+    try:
+        tenant = await Tenant.get(tenant_id)
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=404, detail="Tenant not found")
+    
     request.state.tenant = tenant
 
     return user

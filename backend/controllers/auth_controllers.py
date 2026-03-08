@@ -77,8 +77,17 @@ async def login_user(payload: LoginUser, response: Response):
         raise HTTPException(status_code=401, detail="Invalid Credentials or User not found")
     
     # Validate that tenant exists and is active
-    tenant = await Tenant.find_one(Tenant.id == user.tenant_id.id)
-    if not tenant:
+    try:
+        tenant_id = user.tenant_id.id if user.tenant_id else None
+        if not tenant_id:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+        
+        tenant = await Tenant.get(tenant_id)
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
     token = create_access_token({
@@ -118,8 +127,17 @@ async def refresh_access_token(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
     
     # Validate that tenant exists
-    tenant = await Tenant.get(payload["tenant_id"])
-    if not tenant:
+    try:
+        tenant_id = payload.get("tenant_id")
+        if not tenant_id:
+            raise HTTPException(status_code=401, detail="Invalid token: tenant_id missing")
+        
+        tenant = await Tenant.get(tenant_id)
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
     # Create new access token
@@ -146,12 +164,26 @@ async def logout_user(request: Request, response: Response):
 
 @router.get("/me")
 async def me(user=Depends(get_current_user), request: Request = None):
-    tenant = request.state.tenant if request else await Tenant.get(user.tenant_id.id)
-    return JSONResponse({
-        "id": str(user.id),
-        "name": user.name,
-        "email": user.email,
-        "tenant_id": str(tenant.id),
-        "tenant_domain": tenant.domain,
-        "tenant_settings": tenant.settings
-    })
+    try:
+        if request and hasattr(request.state, 'tenant'):
+            tenant = request.state.tenant
+        else:
+            tenant_id = user.tenant_id.id if user.tenant_id else None
+            if not tenant_id:
+                raise HTTPException(status_code=404, detail="Tenant not found")
+            tenant = await Tenant.get(tenant_id)
+            if not tenant:
+                raise HTTPException(status_code=404, detail="Tenant not found")
+        
+        return JSONResponse({
+            "id": str(user.id),
+            "name": user.name,
+            "email": user.email,
+            "tenant_id": str(tenant.id),
+            "tenant_domain": tenant.domain,
+            "tenant_settings": tenant.settings
+        })
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error retrieving user information")

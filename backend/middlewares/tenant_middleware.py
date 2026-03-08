@@ -1,6 +1,8 @@
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from models.models import Tenant
+from bson import ObjectId
+from bson.errors import InvalidId
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -14,9 +16,18 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if not tenant_id:
             raise HTTPException(status_code=400, detail="Tenant ID is missing in the request headers. Please include X-Tenant-ID header.")
 
+        # Convert string tenant_id to ObjectId
+        try:
+            tenant_oid = ObjectId(tenant_id)
+        except (InvalidId, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format")
+
         # Fetch the tenant from the database
-        tenant = await Tenant.find_one(Tenant.id == tenant_id)
-        if not tenant:
+        try:
+            tenant = await Tenant.get(tenant_oid)
+            if not tenant:
+                raise HTTPException(status_code=404, detail="Tenant not found")
+        except Exception:
             raise HTTPException(status_code=404, detail="Tenant not found")
 
         # Attach the tenant to the request state

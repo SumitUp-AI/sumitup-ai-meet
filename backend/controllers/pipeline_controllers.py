@@ -32,11 +32,11 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
         raise HTTPException(status_code=404, detail="Meeting not found")
     
     # Ensure meeting belongs to the current tenant
-    if str(meeting.created_by.id) != str(tenant.id):
+    if meeting.created_by.id != tenant.id:
         raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
     
     transcripts: List[Transcripts] = await Transcripts.find(
-        Transcripts.meeting_id.id == meeting.id
+        Transcripts.meeting_id == meeting
     ).sort(+Transcripts.timestamp_ms).to_list()
     
     if not transcripts:
@@ -49,14 +49,13 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
 @limiter.limit("6/minute")
 async def get_summary_from_raw_transcript(
     request: Request,
-    meeting_id: str,
-    deps: Tuple[Meeting, str] = Depends(lambda r=None, mid=None: get_meeting_and_combined_transcript(mid, r))
+    meeting_id: str
 ) -> JSONResponse:
     try:
-        meeting, combined_text = deps
+        meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
         summary: str = summarize_meeting_transcripts(combined_text)
         return JSONResponse(content={
-            "meeting_id": meeting.id,
+            "meeting_id": str(meeting.id),
             "summary": summary
         })
     except HTTPException as he:
@@ -68,15 +67,16 @@ async def get_summary_from_raw_transcript(
 @limiter.limit("6/minute")
 async def get_action_items(
     request: Request,
-    meeting_id: str,
-    deps: Tuple[Meeting, str] = Depends(lambda r=None, mid=None: get_meeting_and_combined_transcript(mid, r))
+    meeting_id: str
 ) -> JSONResponse:
     """
     Generate action items from meeting transcripts.
     """
     try:
-        meeting, combined_text = deps
+        meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
         action_items = create_action_items_json(combined_text)
         return JSONResponse(content={"items": action_items["items"]})
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process action items: {str(e)}")
