@@ -3,7 +3,10 @@ import httpx
 import asyncio
 import os
 from datetime import datetime
-from models import models
+from dotenv import load_dotenv, find_dotenv
+from models.models import MeetingState
+
+load_dotenv(find_dotenv())
 
 class STTServiceProvider:
     #  We are supporting these inferences for the cloud providers and for the self hosted
@@ -19,27 +22,30 @@ class STTServiceProvider:
     
         if provider == "deepgram":
         
-            if not os.getenv("DEEPGRAM_API_KEY"):
-                raise ValueError("DEEPGRAM_API_KEY is required for Deepgram Service")
+            deepgram_key = os.getenv("DEEPGRAM_API_KEY")
+            if not deepgram_key:
+                raise ValueError("DEEPGRAM_API_KEY is required for Deepgram Service but not found in environment variables")
         
             self.provider = provider
-            self._deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
+            self._deepgram_api_key = deepgram_key
         
         elif provider == "assemblyai":
             
-            if not os.getenv("ASSEMBLYAI_API_KEY"):
-                raise ValueError("ASSEMBLYAI_API_KEY is required for Assembly.ai Service")
+            assemblyai_key = os.getenv("ASSEMBLYAI_API_KEY")
+            if not assemblyai_key:
+                raise ValueError("ASSEMBLYAI_API_KEY is required for Assembly.ai Service but not found in environment variables")
             
             self.provider = provider
-            self._assemblyai_api_key = os.getenv("ASSEMBLYAI_API_KEY")
+            self._assemblyai_api_key = assemblyai_key
         
         elif provider == "openai":
             
-            if not os.getenv("OPENAI_PROVIDER_API_KEY"):
-                raise ValueError("API Key for OpenAI is required")
+            openai_key = os.getenv("OPENAI_PROVIDER_API_KEY")
+            if not openai_key:
+                raise ValueError("API Key for OpenAI is required but not found in environment variables")
             
             self.provider = provider
-            self._openai_api_key = os.getenv("OPENAI_PROVIDER_API_KEY")
+            self._openai_api_key = openai_key
         
         
 class AttendeeBot(STTServiceProvider):
@@ -87,6 +93,10 @@ class AttendeeBot(STTServiceProvider):
         else:
             settings = self.openai_transcription_settings
 
+        # Validate that we have the necessary API key
+        if not self._api_key:
+            raise ValueError("ATTENDEE_API_KEY is missing. Please set ATTENDEE_API_KEY in environment variables")
+
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
@@ -114,7 +124,17 @@ class AttendeeBot(STTServiceProvider):
                     if "meeting_url" in data:
                         self.meeting.meeting_link = data["meeting_url"]
                     if "state" in data:
-                        self.meeting.state = data["state"]
+                        try:
+                            # Convert string state to MeetingState enum
+                            state_value = data["state"]
+                            # Try to match the state value to MeetingState enum
+                            self.meeting.state = MeetingState(state_value)
+                        except (ValueError, KeyError):
+                            # If conversion fails, try with lowercase
+                            try:
+                                self.meeting.state = MeetingState(state_value.lower())
+                            except (ValueError, AttributeError):
+                                print(f"Warning: Could not convert state '{state_value}' to MeetingState enum")
                     if "created_at" in data:
                         try:
                             # handling simple iso format
@@ -126,15 +146,23 @@ class AttendeeBot(STTServiceProvider):
                 return data
 
             except httpx.HTTPStatusError as e:
+                error_detail = e.response.text
+                if "credentials_not_found" in error_detail.lower():
+                    raise RuntimeError(
+                        f"Credentials not found on bot service. "
+                        f"Ensure {self.provider.upper()}_API_KEY is set on the bot service. "
+                        f"Error: {error_detail}"
+                    )
                 raise RuntimeError(
                     f"Join meeting failed "
-                    f"(status={e.response.status_code}): {e.response.text}"
+                    f"(status={e.response.status_code}): {error_detail}"
                 )
 
             except httpx.RequestError as e:
             # Network / DNS / connection issues
                 raise RuntimeError(
-                    f"Could not connect to Bot: {str(e)}"
+                    f"Could not connect to Bot at localhost:8000: {str(e)}. "
+                    f"Make sure the bot service is running."
                 )
  
     async def leave_meeting(self):

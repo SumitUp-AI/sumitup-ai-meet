@@ -41,7 +41,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         raise HTTPException(status_code=500, detail="Tenant not found")
 
     # 2. Create Participant Entry (The Host/Bot Requestor)
-    participant = Participants(tenant_id=tenant.id, role="host")
+    participant = Participants(tenant_id=tenant, role="host")
     await participant.save()
     
     # 3. Save Meeting to DB
@@ -49,8 +49,8 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         name=payload.name,
         meeting_link=meeting_url,
         platform=detected_platform,
-        created_by=tenant.id,
-        participant_id=participant.id,
+        created_by=tenant,
+        participant_id=participant,
         started_at=datetime.now(timezone.utc),
         ended_at=None,
     )
@@ -67,19 +67,21 @@ async def create_meeting(request: Request, payload: CreateMeeting):
             api_key=bot_api_key,
             meeting_url=meeting_url,
             provider=payload.provider,
-            meeting=meeting
+            meeting=meeting,
+            language="en"
         )
         
         result = await bot.join_meeting()
-        # The bot_id is automatically saved to 'meeting' object by join_meeting() logic
+        # Refresh meeting object from database to get updated state
+        updated_meeting = await Meeting.get(str(meeting.id))
         
         return JSONResponse(content={
             "message": "Bot Initiated", 
             "meeting_id": str(meeting.id), 
-            "bot_data": result
+            "bot_data": result,
+            "meeting_state": updated_meeting.state if updated_meeting else meeting.state
         })
     except Exception as e:
-
         meeting.state = MeetingState.fatal_error
         await meeting.save()
         raise HTTPException(status_code=500, detail=f"Bot failed to join: {str(e)}")
@@ -100,12 +102,17 @@ async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload)
         bot="SumitUp Bot", 
         api_key=bot_api_key, 
         meeting_url=meeting.meeting_link, 
-        provider="assemblyai", 
+        provider="deepgram", 
+        language="en",
         meeting=meeting
     )
 
     try:
         await bot.leave_meeting()
+        # Ensure meeting state is updated to ended
+        meeting.state = MeetingState.ended
+        meeting.ended_at = datetime.now(timezone.utc)
+        await meeting.save()
         return JSONResponse(content={"message": "Bot left the meeting"})
     except Exception as e:
          raise HTTPException(status_code=500, detail=f"Failed to leave: {str(e)}")
@@ -119,7 +126,7 @@ async def create_physical_meeting(request: Request):
 async def get_all_meetings_information(request: Request):
     # Filter meetings by current tenant
     tenant = request.state.tenant
-    meetings = await Meeting.find(Meeting.created_by == tenant.id).sort(-Meeting.started_at).to_list()
+    meetings = await Meeting.find(Meeting.created_by.id == tenant.id).sort(-Meeting.started_at).to_list()
     
     if not meetings:
         return []
@@ -152,11 +159,11 @@ async def get_transcript(request: Request, meeting_id: str):
         raise HTTPException(status_code=404, detail="Meeting not found")
     
     # Ensure meeting belongs to the current tenant
-    if str(meeting.created_by.id) != str(tenant.id):
+    if meeting.created_by.id != tenant.id:
         raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
 
     # 2. Fetch all transcript segments sorted by timestamp
-    transcripts = await Transcripts.find(Transcripts.meeting_id.id == meeting.id).sort(+Transcripts.timestamp_ms).to_list()
+    transcripts = await Transcripts.find(Transcripts.meeting_id == meeting).sort(+Transcripts.timestamp_ms).to_list()
 
     if not transcripts:
         return JSONResponse(content={"transcript": "No transcript available yet."})
