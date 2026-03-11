@@ -159,7 +159,7 @@ async def get_transcript(request: Request, meeting_id: str):
         raise HTTPException(status_code=404, detail="Meeting not found")
     
     # Ensure meeting belongs to the current tenant
-    if meeting.created_by.id != tenant.id:
+    if meeting.created_by.ref.id != tenant.id:
         raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
 
     # 2. Fetch all transcript segments sorted by timestamp

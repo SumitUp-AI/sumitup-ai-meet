@@ -5,6 +5,7 @@ from models.models import Meeting, Transcripts
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
+import traceback
 
 class TranscriptData(BaseModel):
     start_time: str
@@ -14,11 +15,6 @@ class TranscriptData(BaseModel):
     
 class MeetingTranscriptPayload(BaseModel):
     transcript: List[TranscriptData]
-
-class MeetingTranscriptOutput(BaseModel):
-    dated_at: Optional[str] = None
-    organization: Optional[str] = None
-    summary: str
 
 router = APIRouter(
     prefix="/api/v1",
@@ -30,9 +26,8 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
     meeting: Optional[Meeting] = await Meeting.get(meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
-    
-    # Ensure meeting belongs to the current tenant
-    if meeting.created_by.id != tenant.id:
+
+    if meeting.created_by.ref.id != tenant.id:
         raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
     
     transcripts: List[Transcripts] = await Transcripts.find(
@@ -45,7 +40,7 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
     combined_text: str = "\n".join([f"{t.speaker_name}: {t.transcript}" for t in transcripts])
     return meeting, combined_text
 
-@router.get("/create_summary", response_model=MeetingTranscriptOutput)
+@router.get("/create_summary")
 @limiter.limit("6/minute")
 async def get_summary_from_raw_transcript(
     request: Request,
@@ -56,6 +51,8 @@ async def get_summary_from_raw_transcript(
         summary: str = summarize_meeting_transcripts(combined_text)
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
+            "title": meeting.name,
+            "dated_at": meeting.created_at,
             "summary": summary
         })
     except HTTPException as he:
