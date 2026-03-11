@@ -7,7 +7,7 @@ import { getAuthHeaders } from "../../utils/apiHeaders";
 interface Summary {
   summary: string;
   dated_at?: string;
-  organization?: string;
+  title?: string;
 }
 
 const SummaryPage: React.FC = () => {
@@ -46,7 +46,7 @@ const SummaryPage: React.FC = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to generate summary");
+          throw new Error("Meeting Transcription Failed!");
         }
 
         const data = await response.json();
@@ -79,23 +79,24 @@ const SummaryPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full mx-auto">
         {/* Header with Back Button */}
         <div className="mb-6 flex items-center gap-4">
           <button
           // Fixed navigation path
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Dashboard</span>
+            <span className="font-medium text-blue-600">Back to Dashboard</span>
           </button>
         </div>
 
         {/* Summary Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex flex-col">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Meeting Summary
+            Overall Meeting Summary
           </h1>
 
           {error ? (
@@ -104,14 +105,14 @@ const SummaryPage: React.FC = () => {
             </div>
           ) : summary ? (
             <div className="mt-6 space-y-4">
-              {summary.dated_at && (
-                <div className="text-sm text-gray-500">
-                  <strong>Date:</strong> {summary.dated_at}
+              {summary.title && (
+                <div className="text-sm text-gray-800">
+                  <strong>Title :</strong> {summary.title}
                 </div>
               )}
-              {summary.organization && (
-                <div className="text-sm text-gray-500">
-                  <strong>Organization:</strong> {summary.organization}
+              {summary.dated_at && (
+                <div className="text-sm text-gray-800">
+                  <strong>Date:</strong> {summary.dated_at}
                 </div>
               )}
               <div className="mt-6 prose prose-sm max-w-none">
@@ -125,6 +126,19 @@ const SummaryPage: React.FC = () => {
               <p className="text-yellow-800">No summary available yet</p>
             </div>
           )}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-3">
+            Action Items (Todo Detected)
+          </h1>
+          {/* Action Items here */}
+          </div>
+          <div className="flex items-center justify-content-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-3">
+              Visualized Overview
+            </h1>
+            <canvas>
+              {/* Canvas Here for visualized summary */}
+            </canvas>
+          </div>
         </div>
       </div>
     </div>
