@@ -1,4 +1,4 @@
-import { Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
+import { Search, ChevronDown, Eye, RotateCcw, Clock, VideoIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -34,8 +34,7 @@ const MeetingsPage: React.FC = () => {
           duration: "N/A", // Backend doesn't return duration yet
           status: m.state,
           statusColor: m.state === "completed" ? "green" : "blue",
-          icon: "🎥",
-          iconBg: "bg-blue-100",
+          iconBg: "bg-cyan-200",
           iconColor: "text-blue-600",
         }));
         setMeetings(mappedMeetings);
@@ -65,14 +64,14 @@ const MeetingsPage: React.FC = () => {
   };
 
   const getActionButton = (status: string, id: string) => {
-    if (status === "Failed") {
+    if (status === "Failed" || status === "fatal_error" ) {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
           <RotateCcw className="w-4 h-4 mr-1" />
           Retry
         </button>
       );
-    } else if (status === "Processing" || status === "joining" || status === "joined_recording") {
+    } else if (status === "joining" || status === "joined_recording") {
       return (
         <button className="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors">
           <Clock className="w-4 h-4 mr-1" />
@@ -160,7 +159,7 @@ const MeetingsPage: React.FC = () => {
                   <div
                     className={`w-10 h-10 ${meeting.iconBg} rounded-lg flex items-center justify-center text-lg`}
                   >
-                    {meeting.icon}
+                    <VideoIcon stroke="none" fill="darkcyan" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">
@@ -206,7 +205,7 @@ const MeetingsPage: React.FC = () => {
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to{" "}
+                Showing {" "}
                 <span className="font-medium">{meetings.length}</span> of{" "}
                 <span className="font-medium">{meetings.length}</span> results
               </p>
