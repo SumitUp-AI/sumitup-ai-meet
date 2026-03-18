@@ -21,7 +21,7 @@ const HomePage = () => {
               <div className="sm:text-center lg:text-left">
                 {/* Badge */}
                 <div className="mb-6">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
                     🆕 New: Visual Process Mapping v2.0
                   </span>
                 </div>
@@ -29,7 +29,7 @@ const HomePage = () => {
                 {/* Main Heading */}
                 <h1 className="text-3xl tracking-tight font-bold text-gray-900 sm:text-5xl">
                   <span className="block xl:inline">Turn meetings into</span>{' '}
-                  <span className="block text-blue-600 xl:inline">
+                  <span className="block text-cyan-600 xl:inline">
                     memory, clarity, and action.
                   </span>
                 </h1>
@@ -44,7 +44,7 @@ const HomePage = () => {
                   <div className="rounded-md">
                     <Link
                       to="/signup"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-2 md:text-sm md:px-5 transition-colors"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 md:py-2 md:text-sm md:px-5 transition-colors"
                     >
                       Start now
                     </Link>

@@ -5,8 +5,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_classic.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
 
-from typing import List
-
 import os
 import time
 from dotenv import load_dotenv, find_dotenv
@@ -34,11 +32,12 @@ initial_template = """You are an expert meeting analyst. Summarize the following
 
 {text}
 
-Create a concise, detailed summary focusing on:
-- Key discussion points
-- Decisions made
-- Action items
-- Important insights
+Here are the instructions following:
+- Generate the overall summary of a meeting, what's discussed only in a professional manner.
+- Don't assume on your own
+- It should not be in markdown style only simple PlainText
+- Agenda of meeting
+- Overall Confidence Score after generation of summary.
 
 Summary:"""
 
@@ -59,9 +58,10 @@ New information from the meeting:
 Instructions:
 - Combine the existing summary with the new information
 - Create a concise yet comprehensive summary
-- Focus on key decisions, action items, and important discussion points
-- Maintain a professional, clear tone
-- Organize information logically
+- Focus on the important points which are discussed only.
+- Facts should be grounded not assumed.
+- Add refined summary and update the schema information.
+- Include Organization and Time Specified for the meeting conducted
 
 Refined Summary""")
 

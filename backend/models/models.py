@@ -24,17 +24,33 @@ class User(Document):
         name = "users"
         
 # Models for Tenant
+
+DEFAULT_SETTINGS = {
+   "max_meetings": 15,
+   "recording_enabled" : False,
+   "realtime_transcription": False,
+   "summarization_and_action_items": True,
+   "max_team_members": 3,
+   "billing_mode": True
+}
+
+
+class TenantType(str, Enum):
+    normal = "normal"
+    education = "education"
+    organization = "organization"
+
 class Tenant(Document):
-    user_id: "Link[User]"
-    tenant_type: str
-    domain: Optional[str] = None
-    settings: None
+    tenant_type: TenantType = TenantType.normal
+    domain: str
+    settings: dict = Field(default_factory=lambda: DEFAULT_SETTINGS)
     
     class Settings:
         name = "tenants"
 
 # Models for Action Items
 class ActionItems(Document):
+    tenant: "Link[Tenant]"
     meeting_id: "Link[Meeting]"
     title: str
     assignee: str
@@ -53,33 +69,52 @@ class MeetingPlatform(str, Enum):
 
 class MeetingLanguage(str, Enum):
     english = "English"
-    urdu = "Urdu"
-    hindi = "Hindi"
-    sinhalese = "Sinhalese"
     chinese = "Chinese"
     latin = "Latin"
     spanish = "Spanish"
     russian = "Russian"
     korean = "Korean"
+
+class MeetingState(str, Enum):
+    ready="ready"
+    joining="joining"
+    joined_not_recording="joined_not_recording"
+    joined_recording="joined_recording"
+    leaving="leaving"
+    post_processing="post_processing"
+    fatal_error="fatal_error"
+    waiting_room="waiting_room"
+    ended="ended"
+    data_deleted="data_deleted"
+    scheduled="scheduled"
+    staged="staged"
+    joined_recording_paused="joined_recording_paused"
+    joining_breakout_room="joining_breakout_room"
+    leaving_breakout_room="leaving_breakout_room"
+    joined_recording_permission_denied="joined_recording_permission_denied"
     
     
 class Meeting(Document):
-    created_by: "Link[User]"
-    tenant_id: "Link[Tenant]"
+    created_by: "Link[Tenant]"
+    name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
     participant_id: "Link[Participants]"
-    transcript_id: "Link[Transcripts]"
-    started_at: datetime
-    ended_at: datetime
-    mermaid_syntax: str
+    bot_id: Optional[str] = None
+    meeting_link: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    state: Optional[MeetingState] = None
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    last_state_change_time: Optional[datetime] = None
+    mermaid_syntax: Optional[str] = None
     
     class Settings:
         name = "meeting"
 
 # Model for Participants
 class Participants(Document):
-    user_id: "Link[User]"
+    tenant_id: "Link[Tenant]"
     role: str
     
     class Settings:
@@ -88,9 +123,11 @@ class Participants(Document):
 
 # Model for Transcripts
 class Transcripts(Document):
-     speaker_id: "Link[User]"
-     start: datetime
-     end: datetime
+     meeting_id: "Link[Meeting]"
+     speaker_id: str
+     speaker_name: str
+     duration_ms: int
+     timestamp_ms: int
      transcript: str
      
      class Settings:
@@ -98,7 +135,7 @@ class Transcripts(Document):
          
 # Model for Teams
 class Team(Document):
-    user_id: "Link[User]"
+    user_id: "Link[Tenant]"
     team_name: str
     organization: str
     role: str
@@ -113,16 +150,17 @@ class Mode(str, Enum):
     partial_self_hosted = "Partial_Self_Hosted"
 
 class MinimumHour(int, Enum):
-    cloud_version: 6
-    self_hosted: 0 # For Users, using in Self Hosted Version
-    pro_plan: 24
-    super_plan: 0 # For Users in Super Plan
+    cloud_version = 6
+    self_hosted = 0 # For Users, using in Self Hosted Version
+    pro_plan = 24
     
 class Billing(Document):
-    user_id: "Link[User]"
+    tenant_id: "Link[Tenant]"
     stripe_id: str
     payment_processed: bool
     plan_selected: str
     mode: Mode = Mode.cloud
     limited_hours: MinimumHour = MinimumHour.cloud_version
     
+    class Settings:
+        name = "Billing"
