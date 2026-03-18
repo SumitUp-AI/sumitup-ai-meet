@@ -29,12 +29,12 @@ const Dashboard: React.FC = () => {
       icon: <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />,
       label: "Total meetings processed",
       value: "42",
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      bgColor: "bg-cyan-100",
+      iconColor: "text-cyan-600",
     },
     {
       icon: <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />,
-      label: "Follow-up action items",
+      label: "Follow-up Automated",
       value: "8",
       bgColor: "bg-orange-100",
       iconColor: "text-orange-600",
@@ -50,8 +50,8 @@ const Dashboard: React.FC = () => {
       icon: <Clock className="w-5 h-5 sm:w-6 sm:h-6" />,
       label: "Time saved this week",
       value: "4.5 hrs",
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      bgColor: "bg-cyan-100",
+      iconColor: "text-cyan-600",
     },
   ];
 
@@ -69,12 +69,12 @@ const Dashboard: React.FC = () => {
     };
 
     const uiStatus = statusMap[meeting.state] || "Processing";
-    const statusColor = meeting.state === "completed" ? "green" : "blue";
+    const statusColor = meeting.state === "completed" ? "green" : "cyan";
 
     // Get random icon for variety (you can improve this logic)
     const icons = [
-      <Calendar className="w-6 h-6 text-blue-600" />,
-      <Users className="w-6 h-6 text-purple-600" />,
+      <Calendar className="w-6 h-6 text-cyan-800" />,
+      <Users className="w-6 h-6 text-cyan-900" />,
       <TrendingUp className="w-6 h-6 text-purple-600" />,
       <BarChart3 className="w-6 h-6 text-orange-600" />,
     ];
@@ -121,7 +121,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">
               Recent Meetings
             </h2>
-            <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+            <button className="text-cyan-600 text-sm font-medium hover:text-cyan-700">
               View all
             </button>
           </div>

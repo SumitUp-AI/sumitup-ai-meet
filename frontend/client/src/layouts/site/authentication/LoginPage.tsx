@@ -121,7 +121,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="name@company.com"
               />
             </div>
@@ -140,7 +140,7 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Enter your password"
               />
             </div>
@@ -152,7 +152,7 @@ const LoginPage = () => {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 disabled={isLoading}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-50"
+                className="h-4 w-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500 disabled:bg-gray-50"
               />
 
               <label
@@ -167,7 +167,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-800 hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Logging in..." : "Log in"}
               </button>
@@ -178,7 +178,7 @@ const LoginPage = () => {
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-cyan-600 hover:text-cyan-500"
                 >
                   Sign up for free
                 </Link>
@@ -227,7 +227,7 @@ const LoginPage = () => {
 
           {/* Bottom indicators */}
           <div className="absolute bottom-8 left-12 flex space-x-2">
-            <div className="w-6 h-1 bg-blue-600 rounded-full"></div>
+            <div className="w-6 h-1 bg-cyan-600 rounded-full"></div>
             <div className="w-6 h-1 bg-slate-600 rounded-full"></div>
             <div className="w-6 h-1 bg-slate-600 rounded-full"></div>
           </div>
