@@ -22,7 +22,7 @@ class ActionItems(BaseModel):
 def create_action_items_json(summary):
     """This function extracts action items from the summary and return action items"""
     parser = PydanticOutputParser(pydantic_object=ActionItems)
-    prompt_action_items = f"""You are an meeting analyst, Given the generated summary by a large language model, your work is to extract action items in JSON format as schema specified as under:
+    prompt_action_items = f"""You are an meeting analyst, Given the generated summary your work is to extract action items in JSON format as schema specified as under:
 
     Schema Instructions:
     {parser.get_format_instructions()}
