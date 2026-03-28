@@ -113,7 +113,7 @@ const SignupPage = () => {
                 onChange={(e) => setName(e.target.value)}
                 required
                 disabled={isLoading}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Enter your full name"
               />
             </div>
@@ -132,7 +132,7 @@ const SignupPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="name@company.com"
               />
             </div>
@@ -148,7 +148,7 @@ const SignupPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500"
                 placeholder="Min. 8 characters"
               />
             </div>
@@ -157,7 +157,7 @@ const SignupPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Creating account..." : "Create Account"}
               </button>
@@ -168,7 +168,7 @@ const SignupPage = () => {
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-cyan-600 hover:text-cyan-500"
                 >
                   Login here
                 </Link>
@@ -177,9 +177,9 @@ const SignupPage = () => {
 
             <div className="text-xs text-gray-500 text-center">
               By clicking "Create Account", you agree to our{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500">Terms of Service</a>
+              <a href="#" className="text-cyan-600 hover:text-cyan-500">Terms of Service</a>
               {' '}and{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500">Privacy Policy</a>.
+              <a href="#" className="text-cyan-600 hover:text-cyan-500">Privacy Policy</a>.
             </div>
           </form>
         </div>
@@ -216,8 +216,8 @@ const SignupPage = () => {
           {/* Features */}
           <div className="mt-8 space-y-3">
             <div className="flex items-center">
-              <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-5 h-5 bg-cyan-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-3 h-3 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -225,8 +225,8 @@ const SignupPage = () => {
             </div>
             
             <div className="flex items-center">
-              <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-5 h-5 bg-cyan-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-3 h-3 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -234,8 +234,8 @@ const SignupPage = () => {
             </div>
             
             <div className="flex items-center">
-              <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-5 h-5 bg-cyan-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-3 h-3 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>

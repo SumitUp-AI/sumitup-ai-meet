@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import SumitupBg from "../../../public/sumitup-typography.svg";
 import {
   BarChart3,
   Calendar,
@@ -73,10 +74,10 @@ export const DashboardSidebar: React.FC<{
         {/* Mobile header */}
         <div className="flex items-center justify-between p-4 lg:hidden border-b border-gray-200">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
+            <div className="w-30 flex items-center justify-center">
+              <img src={SumitupBg} />
             </div>
-            <span className="font-semibold text-lg">SumItUP</span>
+            
           </Link>
           <button
             onClick={onClose}
@@ -97,7 +98,7 @@ export const DashboardSidebar: React.FC<{
                 w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors
                 ${
                   isActive(item.path)
-                    ? "text-blue-600 bg-blue-50 border-r-2 border-blue-600"
+                    ? "text-cyan-600 bg-cyan-50 border-r-2 border-cyan-600"
                     : "text-gray-600 hover:bg-gray-50"
                 }
               `}

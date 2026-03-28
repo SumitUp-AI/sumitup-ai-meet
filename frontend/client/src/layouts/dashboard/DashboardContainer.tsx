@@ -1,14 +1,10 @@
 import React, { useState } from "react";
-import { DashboardSidebar } from "./DashboardSidebar";
+import { Menu, Settings } from "lucide-react";
 import { DashboardNavbar } from "./DashboardNavbar";
-
-export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+import SumitupBg from "../../../public/sumitup-typography.svg";
 
 export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-const [menuOpen, setMenuOpen] = useState(false); // ✅ starts fully open
+const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="flex h-screen bg-gray-50">
 
@@ -19,10 +15,9 @@ const [menuOpen, setMenuOpen] = useState(false); // ✅ starts fully open
         <div>
           {/* LOGO */}
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center">
+              <img src={SumitupBg} />
             </div>
-            {menuOpen && <span className="font-semibold text-lg">SumItUP</span>}
           </div>
 
           {/* HAMBURGER */}
@@ -68,3 +63,4 @@ const [menuOpen, setMenuOpen] = useState(false); // ✅ starts fully open
     </div>
   );
 };
+
