@@ -1,5 +1,7 @@
 import { User, Bell, Shield, Palette, Globe } from "lucide-react";
 import { useState } from "react";
+import zoomLogo from "../../../public/zoomus-ar21.svg";
+import teamsLogo from "../../../public/icons8-microsoft-teams-96.png";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -231,8 +233,8 @@ const SettingsPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Globe className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 p-2">
+                            <img src={zoomLogo} width={32} alt="Zoom" />
                         </div>
                         <div>
                           <h4 className="font-medium text-gray-900">Zoom</h4>
@@ -245,8 +247,8 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <Globe className="w-5 h-5 text-purple-600" />
+                        <div className="w-10 h-10 p-2 bg-cyan-50 rounded-lg border border-cyan-100">
+                            <img src={teamsLogo} width={32} alt="Microsoft Teams" />
                         </div>
                         <div>
                           <h4 className="font-medium text-gray-900">Microsoft Teams</h4>

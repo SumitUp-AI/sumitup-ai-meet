@@ -44,6 +44,9 @@ class Tenant(Document):
     tenant_type: TenantType = TenantType.normal
     domain: str
     settings: dict = Field(default_factory=lambda: DEFAULT_SETTINGS)
+    zoom_connected: bool = False
+    zoom_access_token: Optional[str] = None
+    zoom_refresh_token: Optional[str] = None
     
     class Settings:
         name = "tenants"

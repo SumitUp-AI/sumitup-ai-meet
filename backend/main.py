@@ -8,6 +8,7 @@ from controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
+from controllers.zoom_integation_controller import router as zoom_auth_router
 from contextlib import asynccontextmanager
 from database.connection import init_db
 
@@ -46,6 +47,7 @@ app.include_router(auth_router)
 app.include_router(pipeline_router)
 app.include_router(meeting_router)
 app.include_router(transcription_webhook)
+app.include_router(zoom_auth_router)
 
 @app.get("/")
 @limiter.limit("5/minute")
