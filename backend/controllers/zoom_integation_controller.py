@@ -29,7 +29,7 @@ async def zoom_authorize():
 async def zoom_callback(code: str, request: Request):
     tenant = request.state.tenant
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant Unauthorized, Access not allowed!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     
     encoded = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
 
@@ -61,7 +61,11 @@ async def zoom_callback(code: str, request: Request):
 @router.get("/status")
 async def zoom_status(request: Request):
     tenant = request.state.tenant
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found!")
+    
     return JSONResponse({"zoom_connected": tenant.zoom_connected})
+
 
 
 
