@@ -1,37 +1,56 @@
 import { User, Bell, Shield, Palette, Globe } from "lucide-react";
 import { useState } from "react";
+import { useZoomIntegration } from "../../hooks/useZoomIntegration";
 import zoomLogo from "../../../public/zoomus-ar21.svg";
 import teamsLogo from "../../../public/icons8-microsoft-teams-96.png";
 
 const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState("profile");
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
     summary: true,
-    actionItems: true
+    actionItems: true,
   });
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
-    { id: 'security', label: 'Security', icon: <Shield className="w-4 h-4" /> },
-    { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
-    { id: 'integrations', label: 'Integrations', icon: <Globe className="w-4 h-4" /> }
+    { id: "profile", label: "Profile", icon: <User className="w-4 h-4" /> },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: <Bell className="w-4 h-4" />,
+    },
+    { id: "security", label: "Security", icon: <Shield className="w-4 h-4" /> },
+    {
+      id: "appearance",
+      label: "Appearance",
+      icon: <Palette className="w-4 h-4" />,
+    },
+    {
+      id: "integrations",
+      label: "Integrations",
+      icon: <Globe className="w-4 h-4" />,
+    },
   ];
 
   const handleNotificationChange = (key: string) => {
-    setNotifications(prev => ({
+    setNotifications((prev) => ({
       ...prev,
-      [key]: !prev[key as keyof typeof prev]
+      [key]: !prev[key as keyof typeof prev],
     }));
   };
 
+  const { status, connect, saving } = useZoomIntegration();
+  console.log(status);
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-sm sm:text-base text-gray-500">Manage your account preferences and configurations</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          Settings
+        </h1>
+        <p className="text-sm sm:text-base text-gray-500">
+          Manage your account preferences and configurations
+        </p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -45,8 +64,8 @@ const SettingsPage: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {tab.icon}
@@ -58,13 +77,17 @@ const SettingsPage: React.FC = () => {
 
           {/* Content */}
           <div className="flex-1 p-6">
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Profile Information
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Full Name
+                      </label>
                       <input
                         type="text"
                         defaultValue="John Doe"
@@ -72,7 +95,9 @@ const SettingsPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                      </label>
                       <input
                         type="email"
                         defaultValue="john.doe@company.com"
@@ -80,7 +105,9 @@ const SettingsPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Job Title
+                      </label>
                       <input
                         type="text"
                         defaultValue="Product Manager"
@@ -88,7 +115,9 @@ const SettingsPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Department
+                      </label>
                       <input
                         type="text"
                         defaultValue="Product"
@@ -105,21 +134,27 @@ const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'notifications' && (
+            {activeTab === "notifications" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Notification Preferences
+                  </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                        <p className="text-sm text-gray-600">Receive notifications via email</p>
+                        <h4 className="font-medium text-gray-900">
+                          Email Notifications
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Receive notifications via email
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={notifications.email}
-                          onChange={() => handleNotificationChange('email')}
+                          onChange={() => handleNotificationChange("email")}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -127,14 +162,18 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Push Notifications</h4>
-                        <p className="text-sm text-gray-600">Receive push notifications in browser</p>
+                        <h4 className="font-medium text-gray-900">
+                          Push Notifications
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Receive push notifications in browser
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={notifications.push}
-                          onChange={() => handleNotificationChange('push')}
+                          onChange={() => handleNotificationChange("push")}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -142,14 +181,18 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Meeting Summaries</h4>
-                        <p className="text-sm text-gray-600">Get notified when meeting summaries are ready</p>
+                        <h4 className="font-medium text-gray-900">
+                          Meeting Summaries
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Get notified when meeting summaries are ready
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={notifications.summary}
-                          onChange={() => handleNotificationChange('summary')}
+                          onChange={() => handleNotificationChange("summary")}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -157,14 +200,20 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Action Item Reminders</h4>
-                        <p className="text-sm text-gray-600">Reminders for pending action items</p>
+                        <h4 className="font-medium text-gray-900">
+                          Action Item Reminders
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Reminders for pending action items
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={notifications.actionItems}
-                          onChange={() => handleNotificationChange('actionItems')}
+                          onChange={() =>
+                            handleNotificationChange("actionItems")
+                          }
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -175,21 +224,31 @@ const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Security Settings
+                  </h3>
                   <div className="space-y-4">
                     <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Change Password</h4>
-                      <p className="text-sm text-gray-600 mb-4">Update your password to keep your account secure</p>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Change Password
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Update your password to keep your account secure
+                      </p>
                       <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                         Change Password
                       </button>
                     </div>
                     <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Two-Factor Authentication</h4>
-                      <p className="text-sm text-gray-600 mb-4">Add an extra layer of security to your account</p>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Two-Factor Authentication
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Add an extra layer of security to your account
+                      </p>
                       <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         Enable 2FA
                       </button>
@@ -199,10 +258,12 @@ const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'appearance' && (
+            {activeTab === "appearance" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Appearance Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Appearance Settings
+                  </h3>
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Theme</h4>
@@ -226,32 +287,63 @@ const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'integrations' && (
+            {activeTab === "integrations" && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Connected Apps</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Connected Apps
+                  </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 p-2">
-                            <img src={zoomLogo} width={32} alt="Zoom" />
+                        <div className="p-2 bg-cyan-50 rounded-lg border border-cyan-100">
+                          <img src={zoomLogo} width={64} alt="Zoom" />
                         </div>
                         <div>
                           <h4 className="font-medium text-gray-900">Zoom</h4>
-                          <p className="text-sm text-gray-600">Connected</p>
+                          <p
+                            className={`text-sm font-medium flex items-center gap-1.5 ${status ? "text-green-600" : "text-gray-400"}`}
+                          >
+                            <span
+                              className={`inline-block w-2 h-2 rounded-full ${status ? "bg-green-500 animate-pulse" : "bg-gray-300"}`}
+                            />
+                            {saving
+                              ? "Connecting..."
+                              : status
+                                ? "Connected"
+                                : "Not Connected"}
+                          </p>
                         </div>
                       </div>
-                      <button className="px-3 py-1 text-sm text-red-600 border border-red-200 rounded hover:bg-red-50">
-                        Disconnect
-                      </button>
+                      {status ? (
+                        <button
+                          onClick={connect}
+                          className="px-3 py-1 text-sm text-red-600 border border-red-200 rounded hover:bg-red-50"
+                        >
+                          Disconnect
+                        </button>
+                      ) : (
+                        <button
+                          onClick={connect}
+                          className="px-3 py-1 text-sm text-cyan-600 border border-red-200 rounded hover:bg-red-50"
+                        >
+                          Connect to Zoom
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 p-2 bg-cyan-50 rounded-lg border border-cyan-100">
-                            <img src={teamsLogo} width={32} alt="Microsoft Teams" />
+                        <div className="p-2 bg-cyan-50 rounded-lg border border-cyan-100">
+                          <img
+                            src={teamsLogo}
+                            width={64}
+                            alt="Microsoft Teams"
+                          />
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">Microsoft Teams</h4>
+                          <h4 className="font-medium text-gray-900">
+                            Microsoft Teams
+                          </h4>
                           <p className="text-sm text-gray-600">Not connected</p>
                         </div>
                       </div>
