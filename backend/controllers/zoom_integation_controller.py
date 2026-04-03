@@ -1,6 +1,6 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
-from models.models import Tenant
+from pydantic import BaseModel
 import httpx
 import base64
 import os
@@ -17,20 +17,31 @@ ZOOM_CLIENT_ID = os.getenv("ZOOM_CLIENT_ID")
 ZOOM_CLIENT_SECRET = os.getenv("ZOOM_CLIENT_SECRET")
 ZOOM_REDIRECT_URI = os.getenv("ZOOM_REDIRECT_URI")
 
+class ZoomTokenPayload(BaseModel):
+    access_token: str
+    refresh_token: str
+
+@router.post("/save-token")
+async def save_zoom_token(request: Request, payload: ZoomTokenPayload):
+    tenant = request.state.tenant
+    tenant.zoom_connected = True
+    tenant.zoom_access_token = payload.access_token
+    tenant.zoom_refresh_token = payload.refresh_token
+    await tenant.save()
+    return JSONResponse({"message": "Zoom token saved"})
+
 @router.get('/authorize')
 async def zoom_authorize():
-    redirect_uri = f"""https://zoom.us//oauth/authorize?response_type=code
-    &client_id={ZOOM_CLIENT_ID}
-    &redirect_uri={ZOOM_REDIRECT_URI}"""
-
-    return RedirectResponse(redirect_uri)
+    url = (
+        f"https://zoom.us/oauth/authorize"
+        f"?response_type=code"
+        f"&client_id={ZOOM_CLIENT_ID}"
+        f"&redirect_uri={ZOOM_REDIRECT_URI}"
+    )
+    return RedirectResponse(url)
 
 @router.get('/callback')
-async def zoom_callback(code: str, request: Request):
-    tenant = request.state.tenant
-    if not tenant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
-    
+async def zoom_callback(code: str, request: Request):    
     encoded = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
 
     async with httpx.AsyncClient() as client:
@@ -51,12 +62,11 @@ async def zoom_callback(code: str, request: Request):
     if "access_token" not in data:
         raise HTTPException(status_code=400, detail=f"Zoom OAuth failed: {data}")
 
-    tenant.zoom_connected = True
-    tenant.zoom_access_token = data["access_token"]
-    tenant.zoom_refresh_token = data.get("refresh_token")
-    await tenant.save()
-    
-    return RedirectResponse("http://localhost:5173/dashboard?zoom=connected")
+    access_token = data["access_token"]
+    refresh_token = data.get("refresh_token", "")
+    return RedirectResponse(
+        f"http://localhost:5173/dashboard/settings?zoom=connected&access_token={access_token}&refresh_token={refresh_token}"
+    )
 
 @router.get("/status")
 async def zoom_status(request: Request):

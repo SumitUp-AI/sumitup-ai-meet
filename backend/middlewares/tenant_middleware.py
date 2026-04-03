@@ -7,7 +7,20 @@ from bson.errors import InvalidId
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip tenant validation for public endpoints (signup, login, refresh, logout, me)
-        if request.url.path in ["/api/v1/signup", "/api/v1/login", "/api/v1/refresh", "/api/v1/logout", "/api/v1/me", "/"]:
+        allowed_urls = [
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/",
+            "/api/v1/zoom/authorize",
+            "/api/v1/zoom/callback",
+            "/api/v1/signup",
+            "/api/v1/login",
+            "/api/v1/refresh",
+            "/api/v1/logout",
+            "/api/v1/me"
+        ]
+        if request.url.path.startswith("/api/v1/zoom/callback") or request.url.path in allowed_urls:
             response = await call_next(request)
             return response
         
