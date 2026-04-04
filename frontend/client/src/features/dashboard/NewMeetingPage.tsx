@@ -54,7 +54,7 @@ const NewMeetingPage: React.FC = () => {
         setError("Token or User must not be null!");
         return;
       }
-        
+        // Assigned to Murtaza
       const response = await fetch(
         `${BASE_URL}/create_meeting`,
         {

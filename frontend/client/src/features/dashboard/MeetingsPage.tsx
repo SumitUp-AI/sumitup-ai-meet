@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 
+// Assigned to Murtaza
 const MeetingsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [meetings, setMeetings] = useState<any[]>([]);
