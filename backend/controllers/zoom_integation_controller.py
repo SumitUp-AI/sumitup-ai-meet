@@ -68,6 +68,30 @@ async def zoom_callback(code: str, request: Request):
         f"http://localhost:5173/dashboard/settings?zoom=connected&access_token={access_token}&refresh_token={refresh_token}"
     )
 
+@router.delete("/disconnect")
+async def zoom_disconnect(request: Request):
+    tenant = request.state.tenant
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    # Revoke token from Zoom
+    if tenant.zoom_access_token:
+        encoded = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                "https://zoom.us/oauth/revoke",
+                params={"token": tenant.zoom_access_token},
+                headers={"Authorization": f"Basic {encoded}"}
+            )
+
+    # Clear from DB
+    tenant.zoom_connected = False
+    tenant.zoom_access_token = None
+    tenant.zoom_refresh_token = None
+    await tenant.save()
+
+    return JSONResponse({"message": "Zoom disconnected"})
+
 @router.get("/status")
 async def zoom_status(request: Request):
     tenant = request.state.tenant

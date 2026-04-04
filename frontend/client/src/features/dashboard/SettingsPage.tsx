@@ -40,7 +40,7 @@ const SettingsPage: React.FC = () => {
     }));
   };
 
-  const { status, connect, saving } = useZoomIntegration();
+  const { status, connect, saving, disconnect } = useZoomIntegration();
   console.log(status);
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -296,7 +296,7 @@ const SettingsPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-cyan-50 rounded-lg border border-cyan-100">
+                        <div className="flex items-center p-2 w-20 h-20 bg-cyan-50 rounded-lg border border-cyan-100">
                           <img src={zoomLogo} width={64} alt="Zoom" />
                         </div>
                         <div>
@@ -317,7 +317,7 @@ const SettingsPage: React.FC = () => {
                       </div>
                       {status ? (
                         <button
-                          onClick={connect}
+                          onClick={disconnect}
                           className="px-3 py-1 text-sm text-red-600 border border-red-200 rounded hover:bg-red-50"
                         >
                           Disconnect
@@ -333,7 +333,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-cyan-50 rounded-lg border border-cyan-100">
+                        <div className="p-2 w-20 h-20 bg-cyan-50 rounded-lg border border-cyan-100">
                           <img
                             src={teamsLogo}
                             width={64}

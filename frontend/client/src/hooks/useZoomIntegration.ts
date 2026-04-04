@@ -58,18 +58,18 @@ export const useZoomIntegration = () => {
   );
 
   // ─── Disconnect ──────────────────────────────────────────────
-  // const disconnect = useCallback(async () => {
-  //     if (!token || !user) return
-  //     try {
-  //         await fetch(`${BASE_URL}/zoom/disconnect`, {
-  //             method: "DELETE",
-  //             headers: getAuthHeaders(token, user?.tenant_id)
-  //         })
-  //         setStatus(false)
-  //     } catch (err) {
-  //         console.error("Failed to disconnect Zoom", err)
-  //     }
-  // }, [token, user])
+  const disconnect = useCallback(async () => {
+      if (!token || !user) return
+      try {
+          await fetch(`${BASE_URL}/zoom/disconnect`, {
+              method: "DELETE",
+              headers: getAuthHeaders(token, user?.tenant_id)
+          })
+          setStatus(false)
+      } catch (err) {
+          console.error("Failed to disconnect Zoom", err)
+      }
+  }, [token, user])
 
   // ─── Handle OAuth callback redirect ─────────────────────────
   useEffect(() => {
@@ -91,5 +91,5 @@ export const useZoomIntegration = () => {
     fetchStatus();
   }, [fetchStatus]);
 
-  return { status, loading, saving, connect, fetchStatus };
+  return { status, loading, saving, disconnect, connect, fetchStatus };
 };
