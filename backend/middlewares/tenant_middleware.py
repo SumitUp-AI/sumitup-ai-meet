@@ -18,7 +18,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/login",
             "/api/v1/refresh",
             "/api/v1/logout",
-            "/api/v1/me"
+            "/api/v1/me",
+            "/api/v1/webhook"
         ]
         if request.url.path.startswith("/api/v1/zoom/callback") or request.url.path in allowed_urls:
             response = await call_next(request)
