@@ -12,11 +12,18 @@ const MeetingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1"
+  
   useEffect(() => {
+    console.log("Effect triggered — tenant_id:", user?.tenant_id)
+    console.log("Token:", token)
+
     if (!user || !token) {
       setLoading(false);
       return;
     }
+
+    setLoading(true)
+    setMeetings([])
 
     fetch(`${BASE_URL}/get_all_meetings`, {
       headers: getAuthHeaders(token, user.tenant_id),
@@ -42,7 +49,7 @@ const MeetingsPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [user, token]);
+  }, [user?.tenant_id, token]);
 
   const getStatusBadge = (status: string, color: string) => {
     const baseClasses =

@@ -37,37 +37,39 @@ CLOUD_DOMAINS = ['outlook.com', 'gmail.com', 'hotmail.com']
 
 @router.post("/signup")
 async def create_user_account(payload: CreateUserRequest):
-    # Check if user already exists (by email)
     if await User.find_one(User.email == payload.email):
         raise HTTPException(status_code=400, detail="This User Already Exists!")
     
     tenant_domain = payload.email.split("@")[-1]
-    tenant = await Tenant.find_one(Tenant.domain == tenant_domain)
-    
-    # Create tenant if it doesn't exist - allow multiple users per tenant
-    if not tenant:
-        if tenant_domain not in CLOUD_DOMAINS:
+    is_cloud = tenant_domain in CLOUD_DOMAINS
+
+    if is_cloud:
+        # Personal email — always create a new tenant per user
+        tenant = Tenant(
+            domain=payload.email,  # use full email as domain, not just gmail.com
+            settings=DEFAULT_SETTINGS.copy()
+        )
+        await tenant.insert()
+    else:
+        # Corporate email — share tenant per domain
+        tenant = await Tenant.find_one(Tenant.domain == tenant_domain)
+        if not tenant:
             tenant = Tenant(
                 domain=tenant_domain,
                 settings=ORGANIZATION_SETTINGS.copy()
             )
-        else:
-            tenant = Tenant(
-                domain=tenant_domain,
-                settings=DEFAULT_SETTINGS.copy()
-            )            
-        await tenant.insert()
-    
+            await tenant.insert()
+
     user = User(
         name=payload.name,
         email=payload.email,
         hashed_password=hash_password(payload.password),
         tenant_id=tenant
     )
-
     await user.insert()
 
     return JSONResponse({"message": "User created successfully! Login to continue"}, status_code=201)
+
 
 @router.post("/login")
 async def login_user(payload: LoginUser, response: Response):
