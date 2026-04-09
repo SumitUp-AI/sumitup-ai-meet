@@ -13,7 +13,7 @@ load_dotenv(find_dotenv())
 
 
 router = APIRouter(
-    prefix="",
+    prefix="/api/v1",
     tags=["Attendee Webhooks for Transcription and Meeting State"]
 )
 
@@ -50,7 +50,7 @@ async def get_transcription(request: Request, x_webhook_signature: str = Header(
 
     # This code should not be included in Production, It is for testing purpose
     if WEBHOOK_SECRET is None:
-        raise HTTPException(status_code=400, detail="Error Webhook Secret Not Found! Kindly update your environment variables")
+        raise HTTPException(status_code=404, detail="Error Webhook Secret Not Found! Kindly update your environment variables")
 
     # Verify Signature Integrity
     if not verify_signature(body_bytes, WEBHOOK_SECRET, x_webhook_signature):
@@ -117,12 +117,12 @@ async def get_transcription(request: Request, x_webhook_signature: str = Header(
                 await new_transcript.save()
 
             else:
-                raise HTTPException(status_code=200, detail="Trigger not found")
+                raise HTTPException(status_code=404, detail="Trigger not found")
                 
         else:
-            raise HTTPException(status_code=200, detail="Meeting not found for bot_id")
+            raise HTTPException(status_code=404, detail="Meeting not found for bot_id")
 
     else:
-        raise HTTPException(status_code=200, detail="Invalid bot_id")
+        raise HTTPException(status_code=500, detail="Invalid bot_id")
 
     return JSONResponse(content={"message": "Transcription Received and Verified"}, status_code=200)
