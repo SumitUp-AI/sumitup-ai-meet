@@ -102,7 +102,7 @@ class Meeting(Document):
     name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
-    participant_id: "Link[Participants]"
+    participant_id: Optional["Link[Participants]"] = None
     bot_id: Optional[str] = None
     meeting_link: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
