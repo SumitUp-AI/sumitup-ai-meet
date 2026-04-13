@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Loader } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
+import AOS from "aos";
 
 interface Summary {
   summary: string;
@@ -11,6 +12,10 @@ interface Summary {
 }
 
 const SummaryPage: React.FC = () => {
+  useEffect(() => {
+    AOS.refresh()
+  }, [])
+
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -95,7 +100,7 @@ const SummaryPage: React.FC = () => {
         {/* Summary Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 data-aos="fade-up" className="text-3xl font-bold text-gray-900 mb-2">
             Overall Meeting Summary
           </h1>
 
@@ -115,7 +120,7 @@ const SummaryPage: React.FC = () => {
                   <strong>Date:</strong> {summary.dated_at}
                 </div>
               )}
-              <div className="mt-6 prose prose-sm max-w-none">
+              <div data-aos="fade-up" className="mt-6 prose prose-sm max-w-none">
                 <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                   {summary.summary}
                 </p>
@@ -126,12 +131,12 @@ const SummaryPage: React.FC = () => {
               <p className="text-yellow-800">No summary available yet</p>
             </div>
           )}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-3">
+          <h1 data-aos="fade-up" className="text-3xl font-bold text-gray-900 mb-2 mt-3">
             Action Items (Todo Detected)
           </h1>
           {/* Action Items here */}
           </div>
-          <div className="flex items-center justify-content-center">
+          <div data-aos="fade-up" className="flex items-center justify-content-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2 mt-3">
               Visualized Overview
             </h1>

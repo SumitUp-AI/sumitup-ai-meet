@@ -1,10 +1,15 @@
 import { User, Bell, Shield, Palette, Globe } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AOS from "aos";
 import { useZoomIntegration } from "../../hooks/useZoomIntegration";
 import zoomLogo from "../../../public/zoomus-ar21.svg";
 import teamsLogo from "../../../public/icons8-microsoft-teams-96.png";
 
 const SettingsPage: React.FC = () => {
+  useEffect(() => {
+    AOS.refresh()
+  }, [])
+
   const [activeTab, setActiveTab] = useState("profile");
   const [notifications, setNotifications] = useState({
     email: true,
@@ -64,7 +69,7 @@ const SettingsPage: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     activeTab === tab.id
-                      ? "bg-blue-50 text-blue-600"
+                      ? "bg-cyan-50 text-cyan-600"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -78,7 +83,7 @@ const SettingsPage: React.FC = () => {
           {/* Content */}
           <div className="flex-1 p-6">
             {activeTab === "profile" && (
-              <div className="space-y-6">
+              <div data-aos="fade-up" className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Profile Information
@@ -91,7 +96,7 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="text"
                         defaultValue="John Doe"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>
                     <div>
@@ -101,7 +106,7 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="email"
                         defaultValue="john.doe@company.com"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>
                     <div>
@@ -111,7 +116,7 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="text"
                         defaultValue="Product Manager"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>
                     <div>
@@ -121,13 +126,13 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="text"
                         defaultValue="Product"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <button className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
                     Save Changes
                   </button>
                 </div>
@@ -140,10 +145,10 @@ const SettingsPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Notification Preferences
                   </h3>
-                  <div className="space-y-4">
+                  <div data-aos="fade-up" className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">
+                        <h4 data-aos="fade-up" className="font-medium text-gray-900">
                           Email Notifications
                         </h4>
                         <p className="text-sm text-gray-600">
@@ -157,7 +162,7 @@ const SettingsPage: React.FC = () => {
                           onChange={() => handleNotificationChange("email")}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
                       </label>
                     </div>
                     <div className="flex items-center justify-between">
@@ -176,7 +181,7 @@ const SettingsPage: React.FC = () => {
                           onChange={() => handleNotificationChange("push")}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
                       </label>
                     </div>
                     <div className="flex items-center justify-between">
@@ -195,7 +200,7 @@ const SettingsPage: React.FC = () => {
                           onChange={() => handleNotificationChange("summary")}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
                       </label>
                     </div>
                     <div className="flex items-center justify-between">
@@ -216,7 +221,7 @@ const SettingsPage: React.FC = () => {
                           }
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
                       </label>
                     </div>
                   </div>
@@ -225,7 +230,7 @@ const SettingsPage: React.FC = () => {
             )}
 
             {activeTab === "security" && (
-              <div className="space-y-6">
+              <div data-aos="fade-up" className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Security Settings
@@ -249,7 +254,7 @@ const SettingsPage: React.FC = () => {
                       <p className="text-sm text-gray-600 mb-4">
                         Add an extra layer of security to your account
                       </p>
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      <button className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
                         Enable 2FA
                       </button>
                     </div>
@@ -259,7 +264,7 @@ const SettingsPage: React.FC = () => {
             )}
 
             {activeTab === "appearance" && (
-              <div className="space-y-6">
+              <div data-aos="fade-up" className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Appearance Settings
@@ -268,15 +273,15 @@ const SettingsPage: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Theme</h4>
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
+                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-cyan-500">
                           <div className="w-full h-16 bg-white border rounded mb-2"></div>
                           <p className="text-sm text-center">Light</p>
                         </div>
-                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
+                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-cyan-500">
                           <div className="w-full h-16 bg-gray-800 border rounded mb-2"></div>
                           <p className="text-sm text-center">Dark</p>
                         </div>
-                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
+                        <div className="p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-cyan-500">
                           <div className="w-full h-16 from-white to-gray-800 border rounded mb-2"></div>
                           <p className="text-sm text-center">Auto</p>
                         </div>
@@ -288,7 +293,7 @@ const SettingsPage: React.FC = () => {
             )}
 
             {activeTab === "integrations" && (
-              <div className="space-y-6">
+              <div data-aos="fade-up" className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Connected Apps
@@ -347,7 +352,7 @@ const SettingsPage: React.FC = () => {
                           <p className="text-sm text-gray-600">Not connected</p>
                         </div>
                       </div>
-                      <button className="px-3 py-1 text-sm text-blue-600 border border-blue-200 rounded hover:bg-blue-50">
+                      <button className="px-3 py-1 text-sm text-cyan-600 border border-cyan-200 rounded hover:bg-cyan-50">
                         Connect
                       </button>
                     </div>

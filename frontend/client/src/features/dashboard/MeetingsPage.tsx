@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
+import AOS from "aos";
 
 // Assigned to Murtaza
 const MeetingsPage: React.FC = () => {
+
+  useEffect(()=> { AOS.refresh() }, [])
   const [searchQuery, setSearchQuery] = useState("");
   const [meetings, setMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +116,7 @@ const MeetingsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
+        <div data-aos="fade-up" className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Meetings</h1>
           <p className="text-gray-500 mt-1 text-sm">
             Access your past recordings, transcripts, and AI-generated insights.
@@ -121,7 +124,7 @@ const MeetingsPage: React.FC = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+        <div data-aos="fade-up" className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -145,7 +148,7 @@ const MeetingsPage: React.FC = () => {
         </div>
 
         {/* Meetings Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div data-aos="fade-up" className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wider">

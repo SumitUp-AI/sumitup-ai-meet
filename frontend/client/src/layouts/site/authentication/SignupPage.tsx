@@ -1,8 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
+import AOS from "aos";
 
 const SignupPage = () => {
+  useEffect(() => {
+    AOS.refresh()
+  }, [])
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +55,7 @@ const SignupPage = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
-          <div>
+          <div data-aos="fade-up">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Get started with SumItUp
             </h2>
@@ -63,7 +68,7 @@ const SignupPage = () => {
           </div>
 
           {/* Social Sign Up Buttons */}
-          <div className="space-y-3">
+          <div data-aos="fade-up" className="space-y-3">
             <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <img 
                 src="https://developers.google.com/identity/images/g-logo.png" 
@@ -85,7 +90,7 @@ const SignupPage = () => {
           </div>
 
           {/* Divider */}
-          <div className="relative">
+          <div data-aos="fade-up" className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
             </div>
@@ -95,7 +100,7 @@ const SignupPage = () => {
           </div>
 
           {/* Email Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form data-aos="fade-up" className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {error}
