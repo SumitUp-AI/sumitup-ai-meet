@@ -59,6 +59,7 @@ Instructions:
 - Combine the existing summary with the new information
 - Create a concise yet comprehensive summary
 - Focus on the important points which are discussed only.
+- Do not include any special character including "**" also, focus on text only
 - Facts should be grounded not assumed.
 - Add refined summary and update the schema information.
 - Include Organization and Time Specified for the meeting conducted

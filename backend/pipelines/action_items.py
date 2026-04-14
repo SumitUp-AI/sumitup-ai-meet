@@ -9,10 +9,10 @@ load_dotenv(find_dotenv())
 groq_apikey = os.getenv("GROQ_API_KEY")
 
 class ActionItemObject(BaseModel):
-    action: str
+    title: str
     assignee: Optional[str] = None
     deadline: Optional[str] = None
-    feedback: Optional[str] = None
+    description: Optional[str] = None
     confidence: float
     
 class ActionItems(BaseModel):
