@@ -4,7 +4,7 @@ anyio==4.11.0
 argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 async-timeout==4.0.3
-beanie==2.0.1
+beanie==2.0.0
 boolean.py==5.0
 CacheControl==0.14.4
 certifi==2025.10.5
@@ -36,7 +36,7 @@ langchain-core==1.2.25
 langchain-groq==1.1.1
 langchain-text-splitters==1.1.0
 langsmith==0.7.24
-lazy-model==0.4.0
+lazy-model==0.3.0
 license-expression==30.4.4
 limits==5.6.0
 markdown-it-py==4.0.0
