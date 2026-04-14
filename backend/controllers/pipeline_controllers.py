@@ -31,10 +31,11 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
         raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
     
     transcripts: List[Transcripts] = await Transcripts.find(
-        Transcripts.meeting_id == meeting
+        Transcripts.meeting_id.id == meeting.id
     ).sort(+Transcripts.timestamp_ms).to_list()
     
     if not transcripts:
+        print("error here")
         raise HTTPException(status_code=400, detail="No transcripts found for this meeting")
     
     combined_text: str = "\n".join([f"{t.speaker_name}: {t.transcript}" for t in transcripts])
@@ -52,12 +53,12 @@ async def get_summary_from_raw_transcript(
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
             "title": meeting.name,
-            "dated_at": meeting.created_at,
             "summary": summary
         })
     except HTTPException as he:
         raise he
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f"Server failed to process summary: {str(e)}")
 
 @router.post("/create_action_items")

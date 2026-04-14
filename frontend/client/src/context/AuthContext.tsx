@@ -43,7 +43,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const res = await fetch(`${BASE_URL}/me`, {
         headers: { 
           Authorization: `Bearer ${authToken}`,
-          "X-Tenant-ID": user?.tenant_id || "",
         },
       });
 
@@ -119,9 +118,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const res = await fetch(`${BASE_URL}/refresh`, {
       method: "POST",
       credentials: "include",
-      headers: {
-        "X-Tenant-ID": user?.tenant_id || "",
-      },
     });
 
     if (!res.ok) throw new Error("Refresh failed");
@@ -129,7 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const data = await res.json();
     setToken(data.access_token);
     return data.access_token;
-  }, [user?.tenant_id]);
+  }, []);
 
   // Logout method
   const logout = useCallback(async () => {

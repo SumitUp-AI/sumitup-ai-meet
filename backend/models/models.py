@@ -44,6 +44,9 @@ class Tenant(Document):
     tenant_type: TenantType = TenantType.normal
     domain: str
     settings: dict = Field(default_factory=lambda: DEFAULT_SETTINGS)
+    zoom_connected: bool = False
+    zoom_access_token: Optional[str] = None
+    zoom_refresh_token: Optional[str] = None
     
     class Settings:
         name = "tenants"
@@ -51,7 +54,7 @@ class Tenant(Document):
 # Models for Action Items
 class ActionItems(Document):
     tenant: "Link[Tenant]"
-    meeting_id: "Link[Meeting]"
+    meeting: "Link[Meeting]"
     title: str
     assignee: str
     description: str
@@ -99,7 +102,6 @@ class Meeting(Document):
     name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
-    participant_id: "Link[Participants]"
     bot_id: Optional[str] = None
     meeting_link: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -107,14 +109,14 @@ class Meeting(Document):
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
     last_state_change_time: Optional[datetime] = None
-    mermaid_syntax: Optional[str] = None
     
     class Settings:
         name = "meeting"
 
 # Model for Participants
 class Participants(Document):
-    tenant_id: "Link[Tenant]"
+    tenant: "Link[Tenant]"
+    meeting: "Link[Meeting]"
     role: str
     
     class Settings:

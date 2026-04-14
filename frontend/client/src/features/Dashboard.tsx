@@ -2,7 +2,6 @@ import { useLoaderData, useNavigate } from "react-router-dom";
 import { MeetingCard } from "../components/MeetingCard";
 import { StatCard } from "../components/StatCard";
 import { formatDate } from "../utils/dateFormatter";
-
 import {
   BarChart3,
   TrendingUp,
@@ -11,6 +10,8 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
+import AOS from "aos";
+import { useEffect } from "react";
 
 interface Meeting {
   name: string;
@@ -20,6 +21,11 @@ interface Meeting {
 }
 
 const Dashboard: React.FC = () => {
+  
+  useEffect(() => {
+    AOS.refresh()
+  }, [])
+
   // Load meetings data from API using React Router loader
   const meetingsData = useLoaderData() as Meeting[] | null;
   const navigate = useNavigate();
@@ -102,15 +108,15 @@ const Dashboard: React.FC = () => {
     <>
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 data-aos="fade-up" className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Your meetings, finally understood
           </h1>
-          <p className="text-sm sm:text-base text-gray-500">
+          <p data-aos="fade-up" className="text-sm sm:text-base text-gray-500">
             Here's what happened while you were busy building
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div data-aos="fade-up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {stats.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}
@@ -118,7 +124,7 @@ const Dashboard: React.FC = () => {
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            <h2 data-aos="fade-up" className="text-lg sm:text-xl font-bold text-gray-900">
               Recent Meetings
             </h2>
             <button className="text-cyan-600 text-sm font-medium hover:text-cyan-700">
@@ -126,7 +132,7 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div data-aos="fade-up" className="space-y-3">
             <div className="hidden lg:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-4 pb-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
               <div className="w-10"></div>
               <div>Title & Date</div>

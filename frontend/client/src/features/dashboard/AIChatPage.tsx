@@ -75,8 +75,8 @@ const AIChatPage: React.FC = () => {
         {/* Chat Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+              <Bot className="w-5 h-5 text-cyan-600" />
             </div>
             <div>
               <h3 className="font-medium text-gray-900">
@@ -99,7 +99,7 @@ const AIChatPage: React.FC = () => {
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    msg.type === "user" ? "bg-blue-600" : "bg-gray-100"
+                    msg.type === "user" ? "bg-cyan-600" : "bg-gray-100"
                   }`}
                 >
                   {msg.type === "user" ? (
@@ -111,14 +111,14 @@ const AIChatPage: React.FC = () => {
                 <div
                   className={`rounded-lg p-3 ${
                     msg.type === "user"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-cyan-600 text-white"
                       : "bg-gray-100 text-gray-900"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-line">{msg.content}</p>
                   <p
                     className={`text-xs mt-1 ${
-                      msg.type === "user" ? "text-blue-100" : "text-gray-500"
+                      msg.type === "user" ? "text-cyan-100" : "text-gray-500"
                     }`}
                   >
                     {msg.timestamp}
@@ -137,12 +137,12 @@ const AIChatPage: React.FC = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask me anything about your meetings..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
             />
             <button
               type="submit"
               disabled={!message.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
