@@ -35,7 +35,6 @@ async def get_meeting_and_combined_transcript(meeting_id: str, request: Request)
     ).sort(+Transcripts.timestamp_ms).to_list()
     
     if not transcripts:
-        print("error here")
         raise HTTPException(status_code=400, detail="No transcripts found for this meeting")
     
     combined_text: str = "\n".join([f"{t.speaker_name}: {t.transcript}" for t in transcripts])
@@ -50,10 +49,11 @@ async def get_summary_from_raw_transcript(
     try:
         meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
         summary: str = summarize_meeting_transcripts(combined_text)
+        final_summary = summary.replace("**","")
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
             "title": meeting.name,
-            "summary": summary
+            "summary": final_summary
         })
     except HTTPException as he:
         raise he
