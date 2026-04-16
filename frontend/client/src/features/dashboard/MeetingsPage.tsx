@@ -69,6 +69,8 @@ const MeetingsPage: React.FC = () => {
         return <span className={`${base} bg-cyan-100 text-cyan-500`}>Joining</span>;
       case "joined_recording":
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
+      case "post_processing":
+        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing..</span>;
       default:
         // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
