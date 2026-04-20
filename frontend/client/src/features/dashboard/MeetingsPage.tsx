@@ -1,9 +1,12 @@
-import { Search, ChevronDown, Eye, CircleX, Clock, VideoIcon, Loader } from "lucide-react";
+import { Search, ChevronDown, Eye, CircleX, Clock, VideoIcon, Loader} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
+import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
+import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
+import ZoomIcon from "../../../public/zoom.avif";
 import AOS from "aos";
 
 // Assigned to Murtaza
@@ -38,6 +41,7 @@ const MeetingsPage: React.FC = () => {
           id: m.id,
           title: m.name,
           team: "General",
+          platform: m.platform,
           date: formatDate(m.started_at),
           duration: getMeetingDuration(m.started_at, m.ended_at),
           status: m.state,
@@ -65,6 +69,8 @@ const MeetingsPage: React.FC = () => {
         return <span className={`${base} bg-cyan-100 text-cyan-500`}>Joining</span>;
       case "joined_recording":
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
+      case "post_processing":
+        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing..</span>;
       default:
         // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
@@ -103,6 +109,33 @@ const MeetingsPage: React.FC = () => {
       );
     }
   };
+
+  const showMeetingPlatform = (str: string) => {
+    switch (str) {
+      case "GMEET":
+        return (
+          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+              <img src={GoogleMeetIcon} width={32} alt="GMEET" />
+          </div>
+        )
+      case "MSTEAMS":
+        return (
+          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+              <img src={MicrosoftTeamsIcon} width={32} alt="MSTEAMS" />
+          </div>
+        )
+      case "ZOOM":
+        return (
+          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+              <img src={ZoomIcon} width={32} alt="ZOOM" />
+          </div>
+        )
+      default:
+        return (
+          <></>
+        )
+    }
+  }
 
   if (loading) return (
     <div className="p-6 flex items-center justify-center gap-2">
@@ -155,6 +188,7 @@ const MeetingsPage: React.FC = () => {
                 <th className="px-6 py-3 text-left">Meeting Title</th>
                 <th className="px-6 py-3 text-left">Date</th>
                 <th className="px-6 py-3 text-left">Duration</th>
+                <th className="px-6 py-3 text-left">Platform</th>
                 <th className="px-6 py-3 text-left">Status</th>
                 <th className="px-6 py-3 text-left">Action</th>
               </tr>
@@ -186,6 +220,7 @@ const MeetingsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-600">{meeting.date}</td>
                       <td className="px-6 py-4 text-gray-600">{meeting.duration}</td>
+                      <td className="px-6 py-4 text-gray-600">{showMeetingPlatform(meeting.platform)}</td>
                       <td className="px-6 py-4">{getStatusBadge(meeting.status)}</td>
                       <td className="px-6 py-4">{getActionButton(meeting.status, meeting.id)}</td>
                     </tr>
