@@ -4,17 +4,16 @@ import hashlib
 import base64
 import json
 from dotenv import load_dotenv, find_dotenv
-from models.models import Meeting, Transcripts, MeetingState
+from models.models import Meeting, Transcripts
 from datetime import datetime, timezone
-
 from fastapi.responses import JSONResponse
-from fastapi import HTTPException, APIRouter, Request, Header
-load_dotenv(find_dotenv())
+from fastapi import APIRouter, Request, Header
 
+load_dotenv(find_dotenv())
 
 router = APIRouter(
     prefix="/api/v1",
-    tags=["Attendee Webhooks for Transcription and Meeting State"]
+    tags=["Attendee Webhooks"]
 )
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
@@ -23,106 +22,107 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
 def verify_signature(payload_bytes: bytes, secret: str, received_signature: str) -> bool:
     try:
         secret_decoded = base64.b64decode(secret)
-        # Canonicalize the JSON to match the sender's hashing format
         payload_json = json.loads(payload_bytes)
-        canonical_json = json.dumps(payload_json, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-        
+        canonical_json = json.dumps(
+            payload_json,
+            sort_keys=True,
+            ensure_ascii=False,
+            separators=(",", ":")
+        )
         signature = hmac.new(
             secret_decoded,
-            canonical_json.encode("utf-8"), 
+            canonical_json.encode("utf-8"),
             hashlib.sha256
         ).digest()
-        
-        expected_signature = base64.b64encode(signature).decode("utf-8")
-        return hmac.compare_digest(expected_signature, received_signature)
+        expected = base64.b64encode(signature).decode("utf-8")
+        return hmac.compare_digest(expected, received_signature)
     except Exception:
         return False
 
 
+async def handle_state_change(meeting: Meeting, data: dict):
+    event_created_at_str = data.get("created_at")
+    should_update = True
+
+    if event_created_at_str:
+        try:
+            event_time = datetime.fromisoformat(
+                event_created_at_str.replace('Z', '+00:00')
+            )
+            if meeting.last_state_change_time:
+                current = meeting.last_state_change_time
+                if current.tzinfo is None:
+                    current = current.replace(tzinfo=timezone.utc)
+                if event_time < current:
+                    print(f"Out-of-order event ignored: {event_time}")
+                    should_update = False
+                else:
+                    meeting.last_state_change_time = event_time
+            else:
+                meeting.last_state_change_time = event_time
+        except ValueError:
+            print("Error parsing created_at timestamp")
+
+    if should_update:
+        meeting.state = data["new_state"]
+        await meeting.save()
+        print(f"Meeting {meeting.id} state → {data['new_state']}")
+
+
+async def handle_transcript(meeting: Meeting, data: dict):
+    transcript = Transcripts(
+        meeting_id=meeting.id,
+        speaker_id=data["speaker_uuid"],
+        speaker_name=data["speaker_name"],
+        duration_ms=data["duration_ms"],
+        timestamp_ms=data["timestamp_ms"],
+        transcript=data["transcription"]["transcript"]
+    )
+    await transcript.save()
+
+
 @router.post("/webhook")
-async def get_transcription(request: Request, x_webhook_signature: str = Header(None)):
-    # Get raw body for signature verification
+async def receive_webhook(
+    request: Request,
+    x_webhook_signature: str = Header(None)
+):
     body_bytes = await request.body()
 
-    # Verify Header Presence
+    # Signature checks — return 200 always so Attendee doesn't retry
     if not x_webhook_signature:
-        raise HTTPException(status_code=400, detail="Missing signature header")
+        print("Webhook received without signature header")
+        return JSONResponse({"message": "OK"}, status_code=200)
 
-    # This code should not be included in Production, It is for testing purpose
-    if WEBHOOK_SECRET is None:
-        raise HTTPException(status_code=404, detail="Error Webhook Secret Not Found! Kindly update your environment variables")
+    if not WEBHOOK_SECRET:
+        print("WEBHOOK_SECRET not configured")
+        return JSONResponse({"message": "OK"}, status_code=200)
 
-    # Verify Signature Integrity
     if not verify_signature(body_bytes, WEBHOOK_SECRET, x_webhook_signature):
-        raise HTTPException(status_code=400, detail="Invalid signature")
+        print("Invalid webhook signature")
+        return JSONResponse({"message": "OK"}, status_code=200)
 
-    # 3. Process validated data
     payload = json.loads(body_bytes)
-    print(f"Verified Webhook Received: {payload}")
-    
-    # Process Database Update
     bot_id = payload.get("bot_id")
-    
-    if bot_id:
-        meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
+    trigger = payload.get("trigger", "")
+    data = payload.get("data", {})
 
-        if meeting:
-            # Update State
-            # Check for nested data structure (e.g. from state_change trigger)
-            if "bot.state_change" in payload["trigger"] and "new_state" in payload["data"]:
-                
-                # Check for timestamp to handle out-of-order delivery
-                event_created_at_str = payload["data"].get("created_at")
-                should_update = True
-                
-                if event_created_at_str:
-                    try:
-                         # normalize event_time to UTC
-                        event_time = datetime.fromisoformat(event_created_at_str.replace('Z', '+00:00'))
-                        
-                        if meeting.last_state_change_time:
-                            # Standardize timezone to UTC for comparison
-                            current_last_change = meeting.last_state_change_time
-                            if current_last_change.tzinfo is None:
-                                current_last_change = current_last_change.replace(tzinfo=timezone.utc)
-                            
-                            # If event is older than our last update, ignore it
-                            if event_time < current_last_change:
-                                print(f"Ignoring out-of-order event. Current: {current_last_change}, Received: {event_time}")
-                                should_update = False
-                            else:
-                                meeting.last_state_change_time = event_time
-                        else:
-                             meeting.last_state_change_time = event_time
-                    except ValueError:
-                        print("Error parsing created_at timestamp")
-                
-                if should_update:
-                    meeting.state = payload["data"]["new_state"]
-                    await meeting.save()
-                
-            # Save Transcript
-            elif "transcript.update" in payload["trigger"]:
-                # This assumes payload["transcript"] is the text content
-                # If it's a structure with speaker/time, parse accordingly.
-                # For now, implementing basic storage as requested.
-                new_transcript = Transcripts(
-                    meeting_id=meeting.id,
-                    speaker_id=payload["data"]["speaker_uuid"],
-                    speaker_name=payload["data"]["speaker_name"],
-                    duration_ms=payload["data"]["duration_ms"],
-                    timestamp_ms=payload["data"]["timestamp_ms"],
-                    transcript=payload["data"]["transcription"]["transcript"]
-                )
-                await new_transcript.save()
+    if not bot_id:
+        print(f"Webhook with no bot_id — trigger: {trigger}")
+        return JSONResponse({"message": "OK"}, status_code=200)
 
-            else:
-                raise HTTPException(status_code=404, detail="Trigger not found")
-                
-        else:
-            raise HTTPException(status_code=404, detail="Meeting not found for bot_id")
+    meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
+
+    if not meeting:
+        print(f"No meeting found for bot_id: {bot_id}")
+        return JSONResponse({"message": "OK"}, status_code=200)
+
+    if "bot.state_change" in trigger and "new_state" in data:
+        await handle_state_change(meeting, data)
+
+    elif "transcript.update" in trigger:
+        await handle_transcript(meeting, data)
 
     else:
-        raise HTTPException(status_code=500, detail="Invalid bot_id")
+        print(f"Unhandled trigger: {trigger}")
 
-    return JSONResponse(content={"message": "Transcription Received and Verified"}, status_code=200)
+    return JSONResponse({"message": "OK"}, status_code=200)
