@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Request
+from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
 from models.models import User, Tenant, DEFAULT_SETTINGS
 from auth.security import hash_password, verify_user
@@ -37,6 +37,7 @@ CLOUD_DOMAINS = ['outlook.com', 'gmail.com', 'hotmail.com']
 
 @router.post("/signup")
 async def create_user_account(payload: CreateUserRequest):
+    
     if await User.find_one(User.email == payload.email):
         raise HTTPException(status_code=400, detail="This User Already Exists!")
     
