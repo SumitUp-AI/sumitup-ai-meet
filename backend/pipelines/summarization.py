@@ -4,6 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
+import asyncio
 
 import os
 import time
@@ -22,7 +23,8 @@ llm = ChatGroq(
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
-    chunk_overlap=100
+    chunk_overlap=100,
+    separators=["\n", ".", ","]
 )
 
 
@@ -67,7 +69,7 @@ Instructions:
 Refined Summary""")
 
 
-def summarize_meeting_transcripts(transcript: str):
+async def summarize_meeting_transcripts(transcript: str):
     """This Method breaks the transcripts into chunks and summarizes them using LLM provided through Groq API Inference
        and then combines the summary and then again summarizes the collected summary using refine method.
        
@@ -84,8 +86,8 @@ def summarize_meeting_transcripts(transcript: str):
         verbose=False # Set to True if you want to see logs what's going on
     )
     
-    result = refine_chain.invoke({"input_documents": docs})
+    result = await refine_chain.ainvoke({"input_documents": docs})
     final_summary = result["output_text"]
     
-    time.sleep(0.6) # Used for Rate Limiting
+    await asyncio.sleep(0.6) # Used for Rate Limiting
     return final_summary
