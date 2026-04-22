@@ -28,20 +28,32 @@ const SignupPage = () => {
     setError("");
     setIsLoading(true);
 
+    // 1. Basic empty field check
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError("Please provide name, email, and password");
       setIsLoading(false);
       return;
     }
 
+    // 2. Length check (Enforcing at least 8 characters)
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError("Password must be at least 8 characters long");
+      setIsLoading(false);
+      return;
+    }
+
+    // 3. Strong Password Check (At least one special character)
+    // This regex looks for at least one character that is NOT a letter or a number
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharRegex.test(password)) {
+      setError("Password must contain at least one special character (e.g., @, #, $, %)");
       setIsLoading(false);
       return;
     }
 
     try {
       await signup(name, email, password);
+      // Logic for successful signup
       navigate("/login", { replace: true });
     } catch (err: any) {
       setError(err.message || "Signup failed. Please try again.");
