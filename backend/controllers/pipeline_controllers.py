@@ -48,7 +48,7 @@ async def get_summary_from_raw_transcript(
 ) -> JSONResponse:
     try:
         meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
-        summary: str = summarize_meeting_transcripts(combined_text)
+        summary: str = await summarize_meeting_transcripts(combined_text)
         final_summary = summary.replace("**","")
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
