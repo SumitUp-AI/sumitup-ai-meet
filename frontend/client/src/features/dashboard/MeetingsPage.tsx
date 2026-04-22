@@ -6,7 +6,7 @@ import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
 import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
 import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
-import ZoomIcon from "../../../public/zoom.avif";
+import ZoomIcon from "../../../public/zoom.png";
 import AOS from "aos";
 
 // Assigned to Murtaza
@@ -62,7 +62,7 @@ const MeetingsPage: React.FC = () => {
     // TODO (Murtaza): Add all state cases here
     switch (status) {
       case "ended":
-        return <span className={`${base} bg-green-100 text-green-800`}>Completed</span>;
+        return <span className={`${base} bg-teal-100 text-teal-800`}>Ready</span>;
       case "fatal_error":
         return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
       case "joining":
@@ -70,7 +70,7 @@ const MeetingsPage: React.FC = () => {
       case "joined_recording":
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
       case "post_processing":
-        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing..</span>;
+        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
       default:
         // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
@@ -85,23 +85,31 @@ const MeetingsPage: React.FC = () => {
   const getActionButton = (status: string, id: string) => {
     if (status === "fatal_error") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
+        <button disabled className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
           <CircleX className="w-4 h-4" />
           Failed
         </button>
       );
-    } else if (status === "joining" || status === "joined_recording") {
+    } else if (status === "joining") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 transition-colors">
+        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
           <Clock className="w-4 h-4" />
-          Live
+          Joining
+        </button>
+      );
+    } 
+    else if (status === "joined_recording") {
+      return (
+        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <VideoIcon className="w-4 h-4" />
+          Recording
         </button>
       );
     } else {
       return (
         <button
           onClick={() => traverseToSummary(id)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-pointer transition-colors"
         >
           <Eye className="w-4 h-4" />
           View Summary
@@ -110,8 +118,8 @@ const MeetingsPage: React.FC = () => {
     }
   };
 
-  const showMeetingPlatform = (str: string) => {
-    switch (str) {
+  const showMeetingPlatform = (platform: string) => {
+    switch (platform) {
       case "GMEET":
         return (
           <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
