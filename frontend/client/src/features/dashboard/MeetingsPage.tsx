@@ -6,7 +6,7 @@ import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
 import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
 import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
-import ZoomIcon from "../../../public/zoom.png";
+import ZoomIcon from "../../../public/zoom.avif";
 import AOS from "aos";
 
 // Assigned to Murtaza
@@ -71,6 +71,8 @@ const MeetingsPage: React.FC = () => {
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
       case "post_processing":
         return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
+      case "waiting_room":
+        return <span className={`${base} bg-cyan-100 text-cyan-700`}>In Waiting Room</span>;
       default:
         // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
@@ -98,11 +100,18 @@ const MeetingsPage: React.FC = () => {
         </button>
       );
     } 
-    else if (status === "joined_recording") {
+    else if (status === "joined_recording" || status === "waiting_room") {
       return (
         <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
           <VideoIcon className="w-4 h-4" />
           Recording
+        </button>
+      );
+    } else if (status === "post_processing") {
+      return (
+        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <Loader className="w-4 h-4 animate-spin" />
+          Processing
         </button>
       );
     } else {
@@ -112,7 +121,7 @@ const MeetingsPage: React.FC = () => {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-pointer transition-colors"
         >
           <Eye className="w-4 h-4" />
-          View Summary
+          View
         </button>
       );
     }
@@ -122,21 +131,33 @@ const MeetingsPage: React.FC = () => {
     switch (platform) {
       case "GMEET":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
-              <img src={GoogleMeetIcon} width={32} alt="GMEET" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+                <img src={GoogleMeetIcon} width={32} alt="GMEET" />
+            </div>
+            <span className="text-green-900">Meet</span>
           </div>
+          
         )
       case "MSTEAMS":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
               <img src={MicrosoftTeamsIcon} width={32} alt="MSTEAMS" />
+            </div>
+            <span className="text-purple-900">Teams</span>
           </div>
+          
         )
       case "ZOOM":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
               <img src={ZoomIcon} width={32} alt="ZOOM" />
+            </div>
+            <span className="text-blue-900">Zoom</span>
           </div>
+          
         )
       default:
         return (
