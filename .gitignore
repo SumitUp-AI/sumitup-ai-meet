@@ -1,3 +1,8 @@
+"RAG chatbot/meeting_dataset/MeetingBank.json"
+"RAG chatbot/chroma_db/"
+**/MeetingBank.json
+**/chroma_db/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
