@@ -187,10 +187,10 @@ const Dashboard: React.FC = () => {
     <div data-aos="fade-up" className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Your meetings, finally understood
+          Your meeting workspace
         </h1>
         <p className="text-sm sm:text-base text-gray-500">
-          Here's what happened while you were busy building
+          Here's what happened while were you busy in your meetings
         </p>
       </div>
 
