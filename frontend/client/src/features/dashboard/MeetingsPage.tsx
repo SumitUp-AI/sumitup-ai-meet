@@ -18,7 +18,7 @@ const MeetingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user, token } = useAuth();
-  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   useEffect(() => {
     if (!user || !token) {

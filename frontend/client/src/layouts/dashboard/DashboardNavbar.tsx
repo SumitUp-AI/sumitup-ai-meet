@@ -5,10 +5,10 @@ import {
   LogOut,
   CircleUser,
   BotIcon,
-  Send,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import Sumitupbg from "../../../public/sumitup-typography.svg";
 
 export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,
@@ -27,7 +27,10 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
           </button>
         )}
 
-        <div className="hidden md:flex flex-1 max-w-xl">
+        <div className="hidden md:flex flex-1 gap-1 max-w-xl">
+          <div className="sm:hidden lg:flex items-center justify-center w-30">
+            <img src={Sumitupbg} />
+          </div>
           <div className="relative w-full">
             <BotIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-700" />
             <input
