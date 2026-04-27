@@ -1,4 +1,4 @@
-import { Search, ChevronDown, Eye, CircleX, Clock, VideoIcon, Loader} from "lucide-react";
+import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -52,14 +52,9 @@ const MeetingsPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [user?.tenant_id, token]);
 
-  // TODO (Murtaza): Map each meeting state to the correct badge style.
-  // States from backend: "joining", "joined_recording", "post_processing",
-  // "ended", "fatal_error", "leaving", "waiting_room", "scheduled"
-  // Use the getStatusBadge function below and add cases for each state.
-  // Example: "ended" → green badge, "fatal_error" → red badge, "joining" → cyan badge
+  
   const getStatusBadge = (status: string) => {
     const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    // TODO (Murtaza): Add all state cases here
     switch (status) {
       case "ended":
         return <span className={`${base} bg-teal-100 text-teal-800`}>Ready</span>;
@@ -73,8 +68,9 @@ const MeetingsPage: React.FC = () => {
         return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
       case "waiting_room":
         return <span className={`${base} bg-cyan-100 text-cyan-700`}>In Waiting Room</span>;
+      case "scheduled":
+        return <span className={`${base} bg-blue-100 text-blue-700`}>Scheduled</span>;
       default:
-        // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
     }
   };
@@ -83,7 +79,6 @@ const MeetingsPage: React.FC = () => {
     navigate(`/dashboard/summary/${id}`);
   };
 
-  // Murtaza's work here
   const getActionButton = (status: string, id: string) => {
     if (status === "fatal_error") {
       return (
@@ -94,25 +89,32 @@ const MeetingsPage: React.FC = () => {
       );
     } else if (status === "joining") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
-          <Clock className="w-4 h-4" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
+          <Ellipsis className="w-4 h-4" />
           Joining
-        </button>
+        </div>
       );
     } 
     else if (status === "joined_recording" || status === "waiting_room") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
           <VideoIcon className="w-4 h-4" />
           Recording
-        </button>
+        </div>
       );
     } else if (status === "post_processing") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
           <Loader className="w-4 h-4 animate-spin" />
           Processing
-        </button>
+        </div>
+      );
+    } else if (status === "scheduled") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <Clock className="w-4 h-4" />
+          Scheduled
+        </div>
       );
     } else {
       return (
@@ -120,8 +122,8 @@ const MeetingsPage: React.FC = () => {
           onClick={() => traverseToSummary(id)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-pointer transition-colors"
         >
-          <Eye className="w-4 h-4" />
-          View
+          <Sparkle className="w-4 h-4" />
+          Recap
         </button>
       );
     }

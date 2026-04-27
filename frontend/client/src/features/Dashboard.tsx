@@ -9,10 +9,11 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Eye,
   CircleX,
   Loader,
   VideoIcon,
+  Sparkle,
+  Ellipsis,
 } from "lucide-react";
 import AOS from "aos";
 
@@ -31,6 +32,10 @@ const Dashboard: React.FC = () => {
   const BASE_URL =
     import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1";
 
+  const traverseToSummary = (id: string) => {
+    navigate(`/dashboard/summary/${id}`);
+  };
+
   useEffect(() => {
     if (!user || !token) {
       setIsLoading(false);
@@ -42,7 +47,7 @@ const Dashboard: React.FC = () => {
     setError(null);
 
     fetch(`${BASE_URL}/get_all_meetings`, {
-      headers: getAuthHeaders(token, user.tenant_id), // no optional chaining, same as MeetingsPage
+      headers: getAuthHeaders(token, user.tenant_id),
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch meetings`);
@@ -50,12 +55,12 @@ const Dashboard: React.FC = () => {
       })
       .then((data) => {
         const mapped = (data || [])
-          // ✅ Sort by raw started_at BEFORE mapping — same as MeetingsPage
+        
           .sort(
             (a: any, b: any) =>
               new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
           )
-          .slice(0, 4) // Only 4 most recent for the dashboard
+          .slice(0, 4) 
           .map((m: any) => ({
             id: m.id,
             title: m.name,
@@ -72,7 +77,7 @@ const Dashboard: React.FC = () => {
       })
       .finally(() => setIsLoading(false));
 
-  }, [user?.tenant_id, token]); // same dependency array as MeetingsPage
+  }, [user?.tenant_id, token]); 
 
   const stats = [
     {
@@ -106,17 +111,22 @@ const Dashboard: React.FC = () => {
   ];
 
   const getStatusBadge = (status: string) => {
-    const base =
-      "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium";
+    const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
     switch (status) {
       case "ended":
-        return <span className={`${base} bg-green-100 text-green-800`}>Completed</span>;
+        return <span className={`${base} bg-teal-100 text-teal-800`}>Ready</span>;
       case "fatal_error":
         return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
       case "joining":
         return <span className={`${base} bg-cyan-100 text-cyan-500`}>Joining</span>;
       case "joined_recording":
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
+      case "post_processing":
+        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
+      case "waiting_room":
+        return <span className={`${base} bg-cyan-100 text-cyan-700`}>In Waiting Room</span>;
+      case "scheduled":
+        return <span className={`${base} bg-blue-100 text-blue-700`}>Scheduled</span>;
       default:
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
     }
@@ -125,30 +135,53 @@ const Dashboard: React.FC = () => {
   const getActionButton = (status: string, id: string) => {
     if (status === "fatal_error") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
+        <button disabled className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
           <CircleX className="w-4 h-4" />
           Failed
         </button>
       );
-    } else if (status === "joining" || status === "joined_recording") {
+    } else if (status === "joining") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 transition-colors">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
+          <Ellipsis className="w-4 h-4" />
+          Joining
+        </div>
+      );
+    } 
+    else if (status === "joined_recording" || status === "waiting_room") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <VideoIcon className="w-4 h-4" />
+          Recording
+        </div>
+      );
+    } else if (status === "post_processing") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <Loader className="w-4 h-4 animate-spin" />
+          Processing
+        </div>
+      );
+    } else if (status === "scheduled") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
           <Clock className="w-4 h-4" />
-          Live
-        </button>
+          Scheduled
+        </div>
       );
     } else {
       return (
         <button
-          onClick={() => navigate(`/dashboard/summary/${id}`)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+          onClick={() => traverseToSummary(id)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-pointer transition-colors"
         >
-          <Eye className="w-4 h-4" />
-          <span className="hidden sm:inline">View Summary</span>
+          <Sparkle className="w-4 h-4" />
+          Recap
         </button>
       );
     }
   };
+
 
   return (
     <div data-aos="fade-up" className="p-4 sm:p-6 lg:p-8">
