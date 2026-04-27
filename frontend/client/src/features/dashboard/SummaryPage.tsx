@@ -33,7 +33,7 @@ const SummaryPage: React.FC = () => {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   useEffect(() => {
     const fetchSummary = async () => {

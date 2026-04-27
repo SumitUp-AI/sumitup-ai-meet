@@ -1,4 +1,4 @@
-import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle} from "lucide-react";
+import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -170,7 +170,7 @@ const MeetingsPage: React.FC = () => {
 
   if (loading) return (
     <div className="p-6 flex items-center justify-center gap-2">
-      <Loader className="w-8 h-8 animate-spin text-cyan-700" />
+      <LoaderCircle className="w-8 h-8 animate-spin text-cyan-700" />
       <span className="text-cyan-600">Loading Meetings</span>
     </div>
   );
