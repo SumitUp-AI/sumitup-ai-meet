@@ -1,9 +1,11 @@
 import os
 import csv
+import pickle
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_chroma import Chroma
+from langchain_community.retrievers import BM25Retriever
 
 def ingest_dataset(input_file: str, persist_directory: str = "./chroma_db"):
     """
@@ -76,6 +78,21 @@ def ingest_dataset(input_file: str, persist_directory: str = "./chroma_db"):
         persist_directory=persist_directory,
         collection_metadata={"hnsw:space": "cosine"}
     )
+    
+    # Retrieve all documents from ChromaDB to build a complete BM25 index
+    print("Retrieving all documents from ChromaDB to build complete BM25 index...")
+    all_data = vectorstore.get()
+    all_texts = all_data['documents']
+    all_metadatas = all_data['metadatas']
+    
+    print(f"Building BM25 index from {len(all_texts)} total documents...")
+    all_docs = [Document(page_content=text, metadata=meta or {}) for text, meta in zip(all_texts, all_metadatas)]
+    bm25_retriever = BM25Retriever.from_documents(all_docs)
+    
+    bm25_path = os.path.join(persist_directory, "bm25_retriever.pkl")
+    print(f"Saving complete BM25 index to '{bm25_path}'...")
+    with open(bm25_path, "wb") as f:
+        pickle.dump(bm25_retriever, f)
     
     print(f"Data ingestion complete! Vector store saved at '{persist_directory}'")
     return vectorstore
