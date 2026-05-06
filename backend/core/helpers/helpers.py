@@ -69,9 +69,9 @@ class AttendeeBot(STTServiceProvider):
         }
         self.deepgram_transcription_settings = {
             "deepgram": {
-                "detect_language": True,
+                # Setting Base Language English only and using nova-2-meeting
                 "language": self._language,
-                "model": "nova-2"
+                "model": "nova-2-meeting"
             }
         }
         self.assemblyai_transcription_settings = {
