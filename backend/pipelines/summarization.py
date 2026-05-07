@@ -36,10 +36,8 @@ initial_template = """You are an expert meeting analyst. Summarize the following
 
 Here are the instructions following:
 - Generate the overall summary of a meeting, what's discussed only in a professional manner.
-- Don't assume on your own
-- It should not be in markdown style only simple PlainText
-- Agenda of meeting
-- Overall Confidence Score after generation of summary.
+- Capture every information necessary required to do.
+
 
 Summary:"""
 
@@ -58,14 +56,10 @@ New information from the meeting:
 {text}
 
 Instructions:
-- Combine the existing summary with the new information
-- Create a concise yet comprehensive summary
-- Focus on the important points which are discussed only.
-- Do not include any special character including "**" also, focus on text only
-- Facts should be grounded not assumed.
-- Add refined summary and update the schema information.
-- Include Organization and Time Specified for the meeting conducted
-
+- Add this new information to the current one.
+- Preserve the information and don't change the whole context of meeting information.
+- Final summary should reflect whole meeting, which the agenda, what was discussed and followup.
+- Don't need to mention date, time and action items here.
 Refined Summary""")
 
 

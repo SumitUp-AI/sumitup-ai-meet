@@ -53,6 +53,7 @@ async def get_summary_from_raw_transcript(
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
             "title": meeting.name,
+            "platform": meeting.platform,
             "summary": final_summary
         })
     except HTTPException as he:
@@ -61,7 +62,7 @@ async def get_summary_from_raw_transcript(
         print(e)
         raise HTTPException(status_code=500, detail=f"Server failed to process summary: {str(e)}")
 
-@router.post("/create_action_items")
+@router.get("/create_action_items")
 @limiter.limit("6/minute")
 async def get_action_items(
     request: Request,

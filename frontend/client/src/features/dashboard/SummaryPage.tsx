@@ -46,7 +46,6 @@ interface Summary {
   host?: string;
   key_topics?: string[];
   decisions?: Decision[];
-  action_items?: ActionItem[];
   open_questions?: OpenQuestion[];
   started_at?: string;
 }
@@ -93,6 +92,8 @@ const SummaryPage: React.FC = () => {
   const { user, token } = useAuth();
 
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [items, setItems] = useState<Array<ActionItem>>([]);
+  const [transcripts, setTranscripts] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -125,8 +126,62 @@ const SummaryPage: React.FC = () => {
     }
   };
 
+  const fetchTranscript = async () => {
+    if (!meetingId || !user || !token) {
+      setError(!meetingId ? "Meeting ID not provided" : "User not authenticated")
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${BASE_URL}/view-transcripts?meeting_id=${meetingId}`, {
+        headers: getAuthHeaders(token, user?.tenant_id)
+      })
+      if (!res.ok) throw new Error("Failed to Get Transcripts")
+      const data = await res.json();
+      console.log(data);
+      setTranscripts(data.transcript);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Transcript not Found or Error")
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const fetchActionItems = async () => {
+    if (!meetingId || !user || !token) {
+      setError(!meetingId ? "Meeting ID not provided" : "User not authenticated")
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${BASE_URL}/create_action_items?meeting_id=${meetingId}`, {
+        headers: getAuthHeaders(token, user?.tenant_id)
+      })
+      if (!res.ok) throw new Error("Failed to Get Action Items")
+      console.log(res);
+      const data = await res.json();
+      console.log(data);
+      setItems(data.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action Items not Found for this meeting")
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
     fetchSummary();
+  }, [meetingId, user, token]);
+
+  useEffect(() => {
+    fetchTranscript();
+  }, [meetingId, user, token]);
+
+  useEffect(() => {
+    fetchActionItems();
   }, [meetingId, user, token]);
 
   const handleCopy = () => {
@@ -168,7 +223,7 @@ const SummaryPage: React.FC = () => {
     {
       key: "actionItems",
       label: "Action Items",
-      count: summary?.action_items?.length,
+      count: items?.length,
     },
     { key: "aiChat", label: "✦ AI Chat" },
   ] as const;
@@ -452,10 +507,10 @@ const SummaryPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-6">
               <AlertCircle className="w-5 h-5 text-cyan-500" />
               <h2 className="text-lg font-bold text-gray-900">Action Items</h2>
-              {summary?.action_items && summary.action_items.length > 0 && (
+              {items && items.length > 0 && (
                 <span className="ml-auto text-sm text-gray-400">
-                  {summary.action_items.length} item
-                  {summary.action_items.length > 1 ? "s" : ""}
+                  {items.length} item
+                  {items.length > 1 ? "s" : ""}
                 </span>
               )}
             </div>
@@ -466,9 +521,9 @@ const SummaryPage: React.FC = () => {
                   <Skeleton key={i} h="4rem" />
                 ))}
               </div>
-            ) : summary?.action_items && summary.action_items.length > 0 ? (
+            ) : items && items.length > 0 ? (
               <div className="space-y-3">
-                {summary.action_items.map((item, i) => (
+                {items.map((item, i) => (
                   <div
                     key={i}
                     className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:border-cyan-200 hover:bg-cyan-50 transition"
@@ -520,7 +575,9 @@ const SummaryPage: React.FC = () => {
         {activeTab === "transcript" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Transcript</h2>
-            <EmptyState label="Transcript view coming soon." />
+            <div className="flex items-center justify-center py-8 px-5 rounded-xl bg-gray-50 leading-whitespace">
+              <p className="text-sm text-gray-700">{transcripts}</p>
+            </div>
           </div>
         )}
 
