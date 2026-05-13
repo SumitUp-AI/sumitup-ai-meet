@@ -1,7 +1,7 @@
 # Database Connection
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-from models.models import User, Tenant, ActionItems, Meeting, Participants, Transcripts, Team, Billing
+from models.models import User, Tenant, ActionItems, Meeting, Participants, Transcripts, Team, Billing, TeamInvitation, MeetingParticipant
 import asyncio
 import os
 from dotenv import load_dotenv, find_dotenv
@@ -15,5 +15,5 @@ client = AsyncIOMotorClient(MONGO_URI)
 db = client[DB_NAME]
 
 async def init_db():
-    await init_beanie(db, document_models=[User, Tenant, ActionItems, Meeting, Participants, Transcripts, Team, Billing])
+    await init_beanie(db, document_models=[User, Tenant, ActionItems, Meeting, Participants, Transcripts, Team, Billing, TeamInvitation, MeetingParticipant])
     

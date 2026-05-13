@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from beanie import Document, Link
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 import secrets
 
@@ -177,21 +177,20 @@ class TeamInvitation(Document):
     
     # Timestamps
     sent_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    expires_at: datetime              # Auto-set to 7 days from sent_at
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7))
     responded_at: Optional[datetime] = None  # When user responded
     
     def __init__(self, **data):
         """Initialize invitation with auto-expiration"""
         super().__init__(**data)
-        # Set expiration to 7 days from now if not provided
-        if not hasattr(self, 'expires_at') or self.expires_at is None:
-            from datetime import timedelta
-            self.expires_at = self.sent_at + timedelta(days=7)
     
     @property
     def is_expired(self) -> bool:
         """Check if invitation has expired"""
-        return datetime.now(timezone.utc) > self.expires_at
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires
     
     @property
     def is_pending(self) -> bool:
