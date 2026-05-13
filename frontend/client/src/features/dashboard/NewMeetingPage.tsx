@@ -1,13 +1,47 @@
-import { Upload, Folder, Video, Sparkles, Shield, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import {
+  Upload,
+  Folder,
+  Video,
+  Shield,
+  ChevronRight,
+  Loader,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMeeting } from "../../context/MeetingContext";
+import { useAuth } from "../../context/AuthContext";
+import { getAuthHeaders } from "../../utils/apiHeaders";
+import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
+import MSTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
+import ZoomMeetIcon from "../../../public/zoomus-ar21.svg";
+import InviteTeamModal from "../../components/InviteTeamModal";
+import AOS from "aos";
 
 const NewMeetingPage: React.FC = () => {
-  const [showGoogleMeetModal, setShowGoogleMeetModal] = useState(false);
-  const [meetingLink, setMeetingLink] = useState('');
 
-  const handleGoogleMeetConnect = () => {
-    setShowGoogleMeetModal(true);
-  };
+  useEffect(() => {
+    AOS.refresh()
+  }, [])
+
+  const navigate = useNavigate();
+  const { setCurrentMeeting } = useMeeting();
+  const { token, user } = useAuth();
+  
+  // Modal States
+  const [showMeetModal, setShowMeetModal] = useState(false);
+  const [showZoomModal, setShowZoomModal] = useState(false);
+  // After a meeting is created, show the invite modal
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
+  const [createdMeetingName, setCreatedMeetingName] = useState<string>("");
+  
+  // Form States
+  const [meetingLink, setMeetingLink] = useState("");
+  const [meetingTitle, setMeetingTitle] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   const handleModalClose = () => {
     setShowGoogleMeetModal(false);
@@ -20,6 +54,17 @@ const NewMeetingPage: React.FC = () => {
       // Handle the meeting link submission
       console.log('Meeting link:', meetingLink);
       handleModalClose();
+
+      // Show the invite modal so the host can immediately invite team members
+      setCreatedMeetingId(meetingId);
+      setCreatedMeetingName(meetingTitle);
+      setShowInviteModal(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+      console.error("Error creating meeting:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -110,10 +155,22 @@ const NewMeetingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Google Meet Modal */}
-      {showGoogleMeetModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+      {/* Invite Team Modal — shown after a meeting is successfully created */}
+      {showInviteModal && createdMeetingId && (
+        <InviteTeamModal
+          meetingId={createdMeetingId}
+          meetingName={createdMeetingName}
+          onClose={() => {
+            setShowInviteModal(false);
+            navigate("/dashboard/meetings");
+          }}
+        />
+      )}
+
+      {/* Meeting link modal (Google Meet / Teams / Zoom) */}
+      {(showMeetModal || showZoomModal) && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-gray-100">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <div className="w-6 h-6 bg-green-600 rounded-sm flex items-center justify-center">

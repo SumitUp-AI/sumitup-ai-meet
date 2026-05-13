@@ -1,89 +1,116 @@
 import { Plus, Search, ChevronDown, Eye, RotateCcw, Clock } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useMeetingStatus } from "../../hooks/useMeetingStatus";
+import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
+import { getAuthHeaders } from "../../utils/apiHeaders";
+import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
+import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
+import ZoomIcon from "../../../public/zoom.avif";
+import AOS from "aos";
 
+// Assigned to Murtaza
 const MeetingsPage: React.FC = () => {
+
+  useEffect(()=> { AOS.refresh() }, [])
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
+  
+  // Use polling hook for real-time status updates
+  const { 
+    meetings: rawMeetings, 
+    loading, 
+    error,
+    refreshMeetings,
+    setOnStatusChange 
+  } = useMeetingStatus({
+    pollingInterval: 3000, // Poll every 3 seconds
+    enabled: !!user // Only poll when user is authenticated
+  });
 
-  const handleNewMeeting = () => {
-    navigate('/dashboard/new-meeting');
-  };
+  // Fetch shared meetings (accepted invitations from other hosts)
+  const [sharedMeetings, setSharedMeetings] = useState<any[]>([]);
+  const { token } = useAuth();
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
-  // Dummy meeting data
+  useEffect(() => {
+    if (!token || !user) return;
+    fetch(`${BASE_URL}/get_shared_meetings`, {
+      headers: getAuthHeaders(token, user.tenant_id),
+    })
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setSharedMeetings(Array.isArray(data) ? data : []))
+      .catch(() => setSharedMeetings([]));
+  }, [token, user]);
+
+  // Transform meetings data for display (with safety check)
+  const ownedMeetings = (rawMeetings || []).map((m: any) => ({
+    id: m.id,
+    title: m.name,
+    team: "General",
+    platform: m.platform,
+    date: formatDate(m.started_at),
+    duration: getMeetingDuration(m.started_at, m.ended_at),
+    status: m.state,
+    isOwner: true,
+  }));
+
+  const invitedMeetings = sharedMeetings.map((m: any) => ({
+    id: m.id,
+    title: m.name,
+    team: "Shared",
+    platform: m.platform,
+    date: formatDate(m.started_at),
+    duration: getMeetingDuration(m.started_at, m.ended_at),
+    status: m.state,
+    isOwner: false,
+  }));
+
+  // Merge, deduplicate by id, owned meetings first
+  const seenIds = new Set(ownedMeetings.map((m) => m.id));
   const meetings = [
-    {
-      id: 1,
-      title: 'Q3 Roadmap Sync',
-      team: 'Product Team',
-      date: 'Oct 24, 2:00 PM',
-      duration: '45m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '🚀',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600'
-    },
-    {
-      id: 2,
-      title: 'Weekly Design Sync',
-      team: 'Design Team',
-      date: 'Oct 24, 10:00 AM',
-      duration: '32m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '✏️',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600'
-    },
-    {
-      id: 3,
-      title: 'Client Intro: Acme Corp',
-      team: 'Sales',
-      date: 'Oct 23, 4:00 PM',
-      duration: '1h 10m',
-      status: 'Processing',
-      statusColor: 'blue',
-      icon: '💎',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600'
-    },
-    {
-      id: 4,
-      title: 'Product Marketing Sync',
-      team: 'Marketing',
-      date: 'Oct 22, 11:30 AM',
-      duration: '50m',
-      status: 'Processed',
-      statusColor: 'green',
-      icon: '🧡',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600'
-    },
-    {
-      id: 5,
-      title: 'Engineering Standup',
-      team: 'Engineering',
-      date: 'Oct 22, 9:00 AM',
-      duration: '15m',
-      status: 'Failed',
-      statusColor: 'red',
-      icon: '🔴',
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600'
-    }
+    ...ownedMeetings,
+    ...invitedMeetings.filter((m) => !seenIds.has(m.id)),
   ];
 
-  const getStatusBadge = (status: string, color: string) => {
-    const baseClasses = "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium";
-    
-    switch (color) {
-      case 'green':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'blue':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'red':
-        return `${baseClasses} bg-red-100 text-red-800`;
+  // Optional: Handle status change notifications
+  useEffect(() => {
+    setOnStatusChange((changedMeetings) => {
+      // Safety check for changedMeetings
+      if (!changedMeetings || !Array.isArray(changedMeetings)) {
+        return;
+      }
+      
+      // You can add toast notifications here
+      changedMeetings.forEach(meeting => {
+        console.log(`Meeting "${meeting.name}" status updated to: ${meeting.state}`);
+        // Example: show toast notification
+        // toast.info(`Meeting "${meeting.name}" is now ${meeting.state}`);
+      });
+    });
+  }, [setOnStatusChange]);
+
+  
+  const getStatusBadge = (status: string) => {
+    const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-300";
+    switch (status) {
+      case "ended":
+        return <span className={`${base} bg-teal-100 text-teal-800 animate-pulse`}>Ready</span>;
+      case "fatal_error":
+        return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
+      case "joining":
+        return <span className={`${base} bg-cyan-100 text-cyan-500 animate-pulse`}>Joining</span>;
+      case "joined_recording":
+        return <span className={`${base} bg-cyan-100 text-cyan-800 animate-pulse`}>Recording</span>;
+      case "post_processing":
+        return <span className={`${base} bg-gray-100 text-gray-800 animate-pulse`}>Processing</span>;
+      case "waiting_room":
+        return <span className={`${base} bg-cyan-100 text-cyan-700 animate-pulse`}>In Waiting Room</span>;
+      case "scheduled":
+        return <span className={`${base} bg-blue-100 text-blue-700`}>Scheduled</span>;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
@@ -146,12 +173,16 @@ const MeetingsPage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
-            {/* Filter Buttons */}
-            <div className="flex gap-3">
-              <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                Date Range
-                <ChevronDown className="w-4 h-4 ml-2" />
+            <div className="flex gap-2">
+              <button 
+                onClick={refreshMeetings}
+                className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Loader className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors">
+                Date Range <ChevronDown className="w-4 h-4" />
               </button>
               <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                 Status
@@ -159,58 +190,61 @@ const MeetingsPage: React.FC = () => {
               </button>
             </div>
           </div>
+          {error && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Meetings Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 uppercase tracking-wider">
-            <div className="col-span-4">Meeting Title</div>
-            <div className="col-span-2">Date</div>
-            <div className="col-span-2">Duration</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-2">Action</div>
-          </div>
-
-          {/* Table Body */}
-          <div className="divide-y divide-gray-200">
-            {meetings.map((meeting) => (
-              <div key={meeting.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                {/* Meeting Title */}
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 ${meeting.iconBg} rounded-lg flex items-center justify-center text-lg`}>
-                    {meeting.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{meeting.title}</h3>
-                    <p className="text-sm text-gray-500">{meeting.team}</p>
-                  </div>
-                </div>
-
-                {/* Date */}
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-900">{meeting.date}</span>
-                </div>
-
-                {/* Duration */}
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-900">{meeting.duration}</span>
-                </div>
-
-                {/* Status */}
-                <div className="col-span-2 flex items-center">
-                  <span className={getStatusBadge(meeting.status, meeting.statusColor)}>
-                    {meeting.status === 'Processed' && '●'} {meeting.status}
-                  </span>
-                </div>
-
-                {/* Action */}
-                <div className="col-span-2 flex items-center">
-                  {getActionButton(meeting.status)}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div data-aos="fade-up" className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left">Meeting Title</th>
+                <th className="px-6 py-3 text-left">Date</th>
+                <th className="px-6 py-3 text-left">Duration</th>
+                <th className="px-6 py-3 text-left">Platform</th>
+                <th className="px-6 py-3 text-left">Status</th>
+                <th className="px-6 py-3 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {meetings.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
+                    No meetings found
+                  </td>
+                </tr>
+              ) : (
+                meetings
+                  .filter((m) =>
+                    m.title?.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((meeting) => (
+                    <tr key={meeting.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center shrink-0">
+                            <VideoIcon className="w-4 h-4" stroke="none" fill="darkcyan" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{meeting.title || "Untitled"}</p>
+                            <p className="text-xs text-gray-400">{meeting.team}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">{meeting.date}</td>
+                      <td className="px-6 py-4 text-gray-600">{meeting.duration}</td>
+                      <td className="px-6 py-4 text-gray-600">{showMeetingPlatform(meeting.platform)}</td>
+                      <td className="px-6 py-4">{getStatusBadge(meeting.status)}</td>
+                      <td className="px-6 py-4">{getActionButton(meeting.status, meeting.id)}</td>
+                    </tr>
+                  ))
+              )}
+            </tbody>
+          </table>
 
           {/* Pagination */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
