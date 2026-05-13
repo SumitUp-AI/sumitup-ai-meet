@@ -1,6 +1,7 @@
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from models.models import Tenant
+from models.models import Tenant, User
+from auth.auth import decode_access_token
 from bson import ObjectId
 from bson.errors import InvalidId
 
@@ -16,6 +17,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/redoc",
             "/openapi.json",
             "/",
+            "/favicon.ico",          # Browser icon requests — no tenant needed
             "/api/v1/zoom/authorize",
             "/api/v1/zoom/callback",
             "/api/v1/signup",
@@ -24,6 +26,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/logout",
             "/api/v1/me",
             "/api/v1/webhook",
+            "/api/v1/team/respond",
         ]
 
         # Normalize incoming path by stripping trailing slash
@@ -31,7 +34,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Skip tenant validation for allowed URLs
         if (normalized_path in allowed_urls or 
-            normalized_path.startswith("/api/v1/zoom/callback")):
+            normalized_path.startswith("/api/v1/zoom/callback") or
+            normalized_path.startswith("/api/v1/team/invitation/")):
             response = await call_next(request)
             return response
 
@@ -70,6 +74,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Attach tenant to request state
         request.state.tenant = tenant
+
+        # Extract user_id from Bearer token if present
+        request.state.user_id = None
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[len("Bearer "):]
+            payload = decode_access_token(token)
+            if payload:
+                request.state.user_id = payload.get("user_id")
 
         # Proceed with request
         response = await call_next(request)
