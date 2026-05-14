@@ -7,7 +7,8 @@ from dotenv import load_dotenv, find_dotenv
 from models.models import Meeting, Transcripts
 from datetime import datetime, timezone
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Request, Header
+from fastapi import APIRouter, Request, Header, BackgroundTasks
+from pipelines.rag_ingestion import ingest_meeting_transcripts
 
 load_dotenv(find_dotenv())
 
@@ -40,7 +41,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return False
 
 
-async def handle_state_change(meeting: Meeting, data: dict):
+async def handle_state_change(meeting: Meeting, data: dict, background_tasks: BackgroundTasks):
     event_created_at_str = data.get("created_at")
     should_update = True
 
@@ -67,6 +68,10 @@ async def handle_state_change(meeting: Meeting, data: dict):
         meeting.state = data["new_state"]
         await meeting.save()
         print(f"Meeting {meeting.id} state → {data['new_state']}")
+        
+        # Trigger RAG ingestion if meeting ended
+        if data["new_state"] == "ended":
+            background_tasks.add_task(ingest_meeting_transcripts, str(meeting.id))
 
 
 async def handle_transcript(meeting: Meeting, data: dict):
@@ -84,6 +89,7 @@ async def handle_transcript(meeting: Meeting, data: dict):
 @router.post("/webhook")
 async def receive_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_webhook_signature: str = Header(None)
 ):
     body_bytes = await request.body()
@@ -117,7 +123,7 @@ async def receive_webhook(
         return JSONResponse({"message": "OK"}, status_code=200)
 
     if "bot.state_change" in trigger and "new_state" in data:
-        await handle_state_change(meeting, data)
+        await handle_state_change(meeting, data, background_tasks)
 
     elif "transcript.update" in trigger:
         await handle_transcript(meeting, data)

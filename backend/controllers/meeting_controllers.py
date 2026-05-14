@@ -108,6 +108,7 @@ async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload)
         meeting.state = MeetingState.ended
         meeting.ended_at = datetime.now(timezone.utc)
         await meeting.save()
+        
         return JSONResponse(content={"message": "Bot left the meeting"})
     except Exception as e:
          raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to leave: {str(e)}")

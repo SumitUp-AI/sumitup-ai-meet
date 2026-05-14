@@ -23,7 +23,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/refresh",
             "/api/v1/logout",
             "/api/v1/me",
-            "/api/v1/webhook",
+            "/api/v1/webhook"
         ]
 
         # Normalize incoming path by stripping trailing slash
