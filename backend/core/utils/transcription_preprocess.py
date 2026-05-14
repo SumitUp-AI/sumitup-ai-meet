@@ -1,10 +1,13 @@
 import re
 import spacy
 import torch
+import os
 from rapidfuzz import fuzz
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-model_path = "./gec-t5-v1_1-small"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(current_dir, "model_for_grammar_correction")
+
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
@@ -53,7 +56,6 @@ class TranscriptionPreProcessing:
                 max_length=512,
                 num_beams=4,
                 early_stopping=True,
-                temperature=0.1
             )
         
         result = tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -66,7 +68,7 @@ class TranscriptionPreProcessing:
     def process_transcript_list(self, transcript_list):
         results = []
         for transcript in transcript_list:
-            cleaned = self.text_cleaning_handler(transcript)
+            cleaned = self.text_cleaning_handler(transcript.transcript)
             corrected = self.grammar_correction_handler(cleaned)
             results.append(corrected)
         return results
