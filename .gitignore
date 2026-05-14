@@ -213,4 +213,4 @@ __marimo__/
 .vscode/
 
 # Model Path:
-backend/core/utils/gec-t5-v1_1-small
+backend/core/utils/model_for_grammar_correction
