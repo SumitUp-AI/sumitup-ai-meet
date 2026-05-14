@@ -4,11 +4,11 @@ import hashlib
 import base64
 import json
 from dotenv import load_dotenv, find_dotenv
-from models.models import Meeting, Transcripts
+from models.models import Meeting, Transcripts, MeetingState
 from datetime import datetime, timezone
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Request, Header
-
+from fastapi import APIRouter, BackgroundTasks, Request, Header
+from core.utils.meeting_postprocessing import MeetingPostProcessing
 load_dotenv(find_dotenv())
 
 router = APIRouter(
@@ -18,6 +18,7 @@ router = APIRouter(
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
 
+processor = MeetingPostProcessing()
 
 def verify_signature(payload_bytes: bytes, secret: str, received_signature: str) -> bool:
     try:
@@ -40,7 +41,7 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return False
 
 
-async def handle_state_change(meeting: Meeting, data: dict):
+async def handle_state_change(meeting: Meeting, data: dict, background_task: BackgroundTasks):
     event_created_at_str = data.get("created_at")
     should_update = True
 
@@ -64,30 +65,38 @@ async def handle_state_change(meeting: Meeting, data: dict):
             print("Error parsing created_at timestamp")
 
     if should_update:
-        meeting.state = data["new_state"]
+        new_state = data["new_state"]
+        meeting.state = new_state
         await meeting.save()
         print(f"Meeting {meeting.id} state → {data['new_state']}")
+
+        if new_state == MeetingState.ended:
+            background_task.add_task(
+                processor.execute_complete_pipeline,
+                meeting_id=str(meeting.id),
+            )
 
 
 async def handle_transcript(meeting: Meeting, data: dict):
     transcript = Transcripts(
-        meeting_id=meeting.id,
+        meeting_id=meeting,
         speaker_id=data["speaker_uuid"],
         speaker_name=data["speaker_name"],
         duration_ms=data["duration_ms"],
         timestamp_ms=data["timestamp_ms"],
         transcript=data["transcription"]["transcript"]
     )
-    await transcript.save()
+    await transcript.insert()
+
 
 
 @router.post("/webhook")
 async def receive_webhook(
     request: Request,
-    x_webhook_signature: str = Header(None)
+    background_task: BackgroundTasks,
+    x_webhook_signature: str = Header(None),
 ):
     body_bytes = await request.body()
-
     # Signature checks — return 200 always so Attendee doesn't retry
     if not x_webhook_signature:
         print("Webhook received without signature header")
@@ -117,7 +126,7 @@ async def receive_webhook(
         return JSONResponse({"message": "OK"}, status_code=200)
 
     if "bot.state_change" in trigger and "new_state" in data:
-        await handle_state_change(meeting, data)
+        await handle_state_change(meeting, data, background_task)
 
     elif "transcript.update" in trigger:
         await handle_transcript(meeting, data)

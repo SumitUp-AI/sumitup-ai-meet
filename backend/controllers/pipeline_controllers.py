@@ -1,66 +1,91 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from beanie import PydanticObjectId
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from pipelines import create_action_items_json, summarize_meeting_transcripts
-from models.models import Meeting, Transcripts
+from core.utils.meeting_postprocessing import MeetingPostProcessing
+from models.models import Meeting, MeetingSummaryStatus, ActionItems, Transcripts
 from middlewares.limiter import limiter
 from pydantic import BaseModel
-from typing import List, Optional, Tuple
+from typing import List
 import traceback
+import logging
 
-class TranscriptData(BaseModel):
+logger = logging.getLogger(__name__)
+
+class TranscriptData(BaseModel):       
     start_time: str
     end_time: str
     speaker: str
     text: str
-    
-class MeetingTranscriptPayload(BaseModel):
+
+class MeetingTranscriptPayload(BaseModel): 
     transcript: List[TranscriptData]
 
 router = APIRouter(
     prefix="/api/v1",
     tags=["Summarization and Action Items API"]
 )
+processor = MeetingPostProcessing()
 
-async def get_meeting_and_combined_transcript(meeting_id: str, request: Request) -> Tuple[Meeting, str]:
-    tenant = request.state.tenant
-    meeting: Optional[Meeting] = await Meeting.get(meeting_id)
-    if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found")
-
-    if meeting.created_by.ref.id != tenant.id:
-        raise HTTPException(status_code=403, detail="Access denied: This meeting does not belong to your tenant")
-    
-    transcripts: List[Transcripts] = await Transcripts.find(
-        Transcripts.meeting_id.id == meeting.id
-    ).sort(+Transcripts.timestamp_ms).to_list()
-    
-    if not transcripts:
-        raise HTTPException(status_code=400, detail="No transcripts found for this meeting")
-    
-    combined_text: str = "\n".join([f"{t.speaker_name}: {t.transcript}" for t in transcripts])
-    return meeting, combined_text
-
-@router.get("/create_summary")
-@limiter.limit("6/minute")
-async def get_summary_from_raw_transcript(
+@router.get("/get_meeting_processing_update")
+@limiter.limit("20/minute")           
+async def get_meeting_processing_update(
     request: Request,
     meeting_id: str
 ) -> JSONResponse:
+    # This endpoint is now purely for checking status
+    meeting = await Meeting.get(PydanticObjectId(meeting_id))
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    return JSONResponse(content={
+        "meeting_id": meeting_id,
+        "status": meeting.summary_status,
+        "has_summary": meeting.summary is not None,
+        "error": meeting.summary_error or None
+    })
+
+@router.get("/create_summary")
+@limiter.limit("6/minute")
+async def get_summary(
+    request: Request,
+    meeting_id: str,
+    background_tasks: BackgroundTasks
+) -> JSONResponse:
     try:
-        meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
-        summary: str = await summarize_meeting_transcripts(combined_text)
-        final_summary = summary.replace("**","")
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))  
+        if not meeting:
+            raise HTTPException(status_code=404, detail="Meeting not found!")
+
+        # Trigger logic: If pending, start the pipeline
+        if meeting.summary_status == MeetingSummaryStatus.PENDING:
+            meeting.summary_status = MeetingSummaryStatus.PROCESSING
+            await meeting.save()
+            background_tasks.add_task(
+                processor.execute_complete_pipeline,
+                meeting_id=meeting_id
+            )
+            return JSONResponse(
+                status_code=202,
+                content={"status": "processing", "message": "Pipeline started"}
+            )
+
+        # Handle existing states
+        if meeting.summary_status == MeetingSummaryStatus.PROCESSING:
+            return JSONResponse(status_code=202, content={"status": "processing"})
+
+        if meeting.summary_status == MeetingSummaryStatus.FAILED:
+            return JSONResponse(content={"status": "failed", "error": meeting.summary_error})
+        
+        # If READY, return the data
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
-            "title": meeting.name,
-            "platform": meeting.platform,
-            "summary": final_summary
+            "summary": meeting.summary,
+            "summary_status": meeting.summary_status
         })
-    except HTTPException as he:
-        raise he
+
     except Exception as e:
-        print(e)
-        raise HTTPException(status_code=500, detail=f"Server failed to process summary: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/create_action_items")
 @limiter.limit("6/minute")
@@ -68,14 +93,72 @@ async def get_action_items(
     request: Request,
     meeting_id: str
 ) -> JSONResponse:
-    """
-    Generate action items from meeting transcripts.
-    """
     try:
-        meeting, combined_text = await get_meeting_and_combined_transcript(meeting_id, request)
-        action_items = create_action_items_json(combined_text)
-        return JSONResponse(content={"items": action_items["items"]})
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))
+        if not meeting:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Meeting not found"
+            )
+
+        items = await ActionItems.find(
+            ActionItems.meeting.id == meeting.id
+        ).to_list()
+
+        if not items:
+            return JSONResponse(content={"items": []})
+
+        serialized = [
+            {
+                "id": str(item.id),
+                "title": item.title,
+                "assignee": item.assignee,
+                "description": item.description,
+                "deadline": str(item.deadline) if item.deadline else None,
+                "confidence": item.confidence / 100  # stored as int, return as float
+            }
+            for item in items
+        ]
+
+        return JSONResponse(content={"items": serialized})
+
     except HTTPException as he:
         raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process action items: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get action items: {str(e)}"
+        )
+
+@router.get("/view-transcripts")
+@limiter.limit("6/minute")
+async def view_transcripts(
+    request: Request,
+    meeting_id: str
+) -> JSONResponse:
+    try:
+        
+
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))
+        if not meeting:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Meeting not found"
+            )
+
+        transcripts = await Transcripts.find(
+            Transcripts.meeting_id.id == meeting.id
+        ).sort(+Transcripts.timestamp_ms).to_list()
+
+        combined = "\n".join([
+            f"{t.speaker_name}: {t.transcript}"
+            for t in transcripts
+        ])
+
+        return JSONResponse(content={"transcript": combined})
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
