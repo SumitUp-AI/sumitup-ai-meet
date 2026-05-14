@@ -29,7 +29,6 @@ ORGANIZATION_SETTINGS = {
    "recording_enabled" : False,
    "realtime_transcription": True,
    "summarization_and_action_items": True,
-   "max_team_members": 10,
    "billing_mode": True
 }
 
