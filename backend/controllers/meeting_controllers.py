@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from core.helpers.helpers import AttendeeBot
-from core.utils.process_meeting import ProcessMeeting
+from core.utils.meeting_postprocessing import MeetingPostProcessing
 from models.models import MeetingPlatform, Meeting, Participants, MeetingState, Transcripts
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -23,8 +23,8 @@ class LeaveMeetingPayload(BaseModel):
 @router.post("/create_meeting")
 async def create_meeting(request: Request, payload: CreateMeeting):
     meeting_url = payload.meeting_url
-    meeting_processor = ProcessMeeting(meeting_url=meeting_url)
-    detected_platform = meeting_processor.detect_meeting_platform()
+    meeting_processor = MeetingPostProcessing()
+    detected_platform = meeting_processor.detect_meeting_platform(payload.meeting_url)
 
     try: 
         detected_platform = MeetingPlatform(detected_platform)
@@ -118,7 +118,7 @@ async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload)
 async def get_all_meetings_information(request: Request):
     # Filter meetings by current tenant
     tenant = request.state.tenant
-    meetings = await Meeting.find(Meeting.created_by.id == tenant.id).sort(-Meeting.started_at).to_list()
+    meetings = await Meeting.find(Meeting.created_by.id == tenant.id).sort(-Meeting.created_at).to_list()
     
     if not meetings:
         return []
@@ -128,8 +128,8 @@ async def get_all_meetings_information(request: Request):
         "name": m.name,
         "platform": m.platform,
         "meeting_link": m.meeting_link,
-        "started_at": m.started_at.isoformat() if m.started_at else None,
-        "ended_at": m.ended_at.isoformat() if m.ended_at else None,
+        "started_at": m.created_at.isoformat() if m.created_at else None,
+        "ended_at": m.last_state_change_time.isoformat() if m.last_state_change_time else None,
         "state": m.state,
     } for m in meetings]
     
