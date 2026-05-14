@@ -149,7 +149,7 @@ async def get_transcript(request: Request, meeting_id: str):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: This meeting does not belong to your tenant")
 
     # 2. Fetch all transcript segments sorted by timestamp
-    transcripts = await Transcripts.find(Transcripts.meeting_id == meeting).sort(+Transcripts.timestamp_ms).to_list()
+    transcripts = await Transcripts.find(Transcripts.meeting_id.id == meeting.id).sort(+Transcripts.timestamp_ms).to_list()
 
     if not transcripts:
         return JSONResponse(content={"transcript": "No transcript available yet."})
@@ -183,7 +183,6 @@ async def get_transcript(request: Request, meeting_id: str):
     full_text = "\n\n".join(formatted_transcript)
 
     return JSONResponse(content={
-        "meeting_id": meeting_id,
         "transcript": full_text
     })
 

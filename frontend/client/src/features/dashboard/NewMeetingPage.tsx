@@ -36,7 +36,7 @@ const NewMeetingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   const handleModalClose = () => {
     setShowMeetModal(false);
@@ -61,7 +61,7 @@ const NewMeetingPage: React.FC = () => {
         setError("Token or User must not be null!");
         return;
       }
-        // Assigned to Murtaza
+
       const response = await fetch(
         `${BASE_URL}/create_meeting`,
         {

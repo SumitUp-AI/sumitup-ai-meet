@@ -1,4 +1,4 @@
-import { Search, ChevronDown, Eye, CircleX, Clock, VideoIcon, Loader} from "lucide-react";
+import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -18,7 +18,7 @@ const MeetingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user, token } = useAuth();
-  const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   useEffect(() => {
     if (!user || !token) {
@@ -52,17 +52,12 @@ const MeetingsPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [user?.tenant_id, token]);
 
-  // TODO (Murtaza): Map each meeting state to the correct badge style.
-  // States from backend: "joining", "joined_recording", "post_processing",
-  // "ended", "fatal_error", "leaving", "waiting_room", "scheduled"
-  // Use the getStatusBadge function below and add cases for each state.
-  // Example: "ended" → green badge, "fatal_error" → red badge, "joining" → cyan badge
+  
   const getStatusBadge = (status: string) => {
     const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    // TODO (Murtaza): Add all state cases here
     switch (status) {
       case "ended":
-        return <span className={`${base} bg-green-100 text-green-800`}>Completed</span>;
+        return <span className={`${base} bg-teal-100 text-teal-800`}>Ready</span>;
       case "fatal_error":
         return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
       case "joining":
@@ -70,9 +65,12 @@ const MeetingsPage: React.FC = () => {
       case "joined_recording":
         return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
       case "post_processing":
-        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing..</span>;
+        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
+      case "waiting_room":
+        return <span className={`${base} bg-cyan-100 text-cyan-700`}>In Waiting Room</span>;
+      case "scheduled":
+        return <span className={`${base} bg-blue-100 text-blue-700`}>Scheduled</span>;
       default:
-        // TODO (Murtaza): Handle remaining states — post_processing, leaving, waiting_room, scheduled
         return <span className={`${base} bg-gray-100 text-gray-700`}>{status}</span>;
     }
   };
@@ -81,54 +79,87 @@ const MeetingsPage: React.FC = () => {
     navigate(`/dashboard/summary/${id}`);
   };
 
-  // Murtaza's work here
   const getActionButton = (status: string, id: string) => {
     if (status === "fatal_error") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
+        <button disabled className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-600 transition-colors">
           <CircleX className="w-4 h-4" />
           Failed
         </button>
       );
-    } else if (status === "joining" || status === "joined_recording") {
+    } else if (status === "joining") {
       return (
-        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 transition-colors">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
+          <Ellipsis className="w-4 h-4" />
+          Joining
+        </div>
+      );
+    } 
+    else if (status === "joined_recording" || status === "waiting_room") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <VideoIcon className="w-4 h-4" />
+          Recording
+        </div>
+      );
+    } else if (status === "post_processing") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
+          <Loader className="w-4 h-4 animate-spin" />
+          Processing
+        </div>
+      );
+    } else if (status === "scheduled") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-teal-600 hover:text-teal-800 cursor-wait transition-colors">
           <Clock className="w-4 h-4" />
-          Live
-        </button>
+          Scheduled
+        </div>
       );
     } else {
       return (
         <button
           onClick={() => traverseToSummary(id)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-pointer transition-colors"
         >
-          <Eye className="w-4 h-4" />
-          View Summary
+          <Sparkle className="w-4 h-4" />
+          Recap
         </button>
       );
     }
   };
 
-  const showMeetingPlatform = (str: string) => {
-    switch (str) {
+  const showMeetingPlatform = (platform: string) => {
+    switch (platform) {
       case "GMEET":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
-              <img src={GoogleMeetIcon} width={32} alt="GMEET" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+                <img src={GoogleMeetIcon} width={32} alt="GMEET" />
+            </div>
+            <span className="text-green-900">Meet</span>
           </div>
+          
         )
       case "MSTEAMS":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
               <img src={MicrosoftTeamsIcon} width={32} alt="MSTEAMS" />
+            </div>
+            <span className="text-purple-900">Teams</span>
           </div>
+          
         )
       case "ZOOM":
         return (
-          <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center p-2 w-10 h-10 bg-cyan-50 rounded-lg border border-cyan-100">
               <img src={ZoomIcon} width={32} alt="ZOOM" />
+            </div>
+            <span className="text-blue-900">Zoom</span>
           </div>
+          
         )
       default:
         return (
@@ -139,7 +170,7 @@ const MeetingsPage: React.FC = () => {
 
   if (loading) return (
     <div className="p-6 flex items-center justify-center gap-2">
-      <Loader className="w-8 h-8 animate-spin text-cyan-700" />
+      <LoaderCircle className="w-8 h-8 animate-spin text-cyan-700" />
       <span className="text-cyan-600">Loading Meetings</span>
     </div>
   );

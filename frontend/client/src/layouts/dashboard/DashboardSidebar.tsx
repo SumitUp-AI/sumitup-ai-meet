@@ -89,6 +89,7 @@ export const DashboardSidebar: React.FC<{
 
         {/* Navigation */}
         <div className="flex-1 py-6">
+          
           {navItems.map((item, index) => (
             <Link
               key={index}

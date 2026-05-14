@@ -211,3 +211,6 @@ __marimo__/
 
 # VS Code
 .vscode/
+
+# Model Path:
+backend/core/utils/gec-t5-v1_1-small

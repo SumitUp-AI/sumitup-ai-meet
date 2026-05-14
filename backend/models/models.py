@@ -55,11 +55,11 @@ class Tenant(Document):
 class ActionItems(Document):
     tenant: "Link[Tenant]"
     meeting: "Link[Meeting]"
-    title: str
-    assignee: str
-    description: str
+    title: str = None
+    assignee: str = None
+    description: str = None
     deadline: datetime
-    
+    confidence: int = None
     class Settings:
         name = "action_items"
         
@@ -96,7 +96,12 @@ class MeetingState(str, Enum):
     leaving_breakout_room="leaving_breakout_room"
     joined_recording_permission_denied="joined_recording_permission_denied"
     
-    
+class MeetingSummaryStatus(str, Enum):
+    PENDING = "pending"
+    READY = "ready"
+    PROCESSING = "processing"
+    FAILED = "failed"
+
 class Meeting(Document):
     created_by: "Link[Tenant]"
     name: Optional[str] = None
@@ -109,7 +114,12 @@ class Meeting(Document):
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
     last_state_change_time: Optional[datetime] = None
-    
+    summary: Optional[str] = None
+    summary_status: MeetingSummaryStatus = MeetingSummaryStatus.PENDING
+    summary_error: Optional[str] = None
+    action_items_generated: bool = False
+    participants_count: int = 0
+
     class Settings:
         name = "meeting"
 
