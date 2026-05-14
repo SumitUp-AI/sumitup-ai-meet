@@ -30,7 +30,6 @@ DEFAULT_SETTINGS = {
    "recording_enabled" : False,
    "realtime_transcription": False,
    "summarization_and_action_items": True,
-   "max_team_members": 3,
    "billing_mode": True
 }
 
@@ -51,18 +50,6 @@ class Tenant(Document):
     class Settings:
         name = "tenants"
 
-# Models for Action Items
-class ActionItems(Document):
-    tenant: "Link[Tenant]"
-    meeting: "Link[Meeting]"
-    title: str = None
-    assignee: str = None
-    description: str = None
-    deadline: datetime
-    confidence: int = None
-    class Settings:
-        name = "action_items"
-        
 # Models for Meeting with Enums
 class MeetingPlatform(str, Enum):
     zoom = "ZOOM"
@@ -111,18 +98,26 @@ class Meeting(Document):
     meeting_link: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     state: Optional[MeetingState] = None
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
     last_state_change_time: Optional[datetime] = None
     summary: Optional[str] = None
     summary_status: MeetingSummaryStatus = MeetingSummaryStatus.PENDING
     summary_error: Optional[str] = None
-    action_items_generated: bool = False
-    participants_count: int = 0
-
+    
     class Settings:
         name = "meeting"
 
+# Models for Action Items
+class ActionItems(Document):
+    meeting: "Link[Meeting]"
+    title: str = None
+    assignee: str = None
+    description: str = None
+    deadline: datetime
+    confidence: int = None
+
+    class Settings:
+        name = "action_items"
+        
 # Model for Participants
 class Participants(Document):
     tenant: "Link[Tenant]"
