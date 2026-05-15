@@ -18,9 +18,9 @@ def download_spacy_model():
         print("spaCy installed and model downloaded")
 
 def download_grammar_model():
-    print("Downloading grammar correction model (77MB)...")
+    print("Downloading grammar correction model")
     
-    model_path = ".core/utils/gec-t5-v1_1-small"
+    model_path = ".core/utils/model_for_grammar_correction"
     
     if os.path.exists(model_path):
         print(f"Grammar model already exists at {model_path}")
@@ -70,7 +70,9 @@ def test_models():
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
         import torch
         
-        model_path = "./gec-t5-v1_1-small"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, "model_for_grammar_correction")
+
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
         
