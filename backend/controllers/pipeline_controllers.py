@@ -80,6 +80,9 @@ async def get_summary(
         return JSONResponse(content={
             "meeting_id": str(meeting.id),
             "summary": meeting.summary,
+            "title": meeting.name,
+            "platform": meeting.platform,
+            "started_at": str(meeting.created_at),
             "summary_status": meeting.summary_status
         })
 
