@@ -29,6 +29,7 @@ def create_action_items_json(summary):
 
     Core Instructions:
     - Only add doable points discussed in meetings, if there are no action items simply return no action item of it.
+    - Assignee, Deadline and Description should be according to schema, if not given simply mark it as None
     - Deadline should be in timezone format otherwise None
     - Include feedback also, add confidence scoring 0.5 above for grounded action items and below 0.5 for non-relevant.
     

@@ -114,7 +114,7 @@ map_template = """Summarize this portion of a meeting transcript:
 
 {text}
 
-Be concise. Capture key points only.
+Be concise. Only Summarize what the information is provided.
 
 Partial Summary:"""
 
@@ -133,6 +133,7 @@ Instructions:
 - Remove repetition
 - Preserve all unique information
 - Reflect whole meeting agenda
+- Summarize what is actually discussed
 
 Final Summary:"""
 
