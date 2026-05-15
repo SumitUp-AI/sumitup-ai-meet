@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import Sumitupbg from "../../../public/sumitup-typography.svg";
+import Sumitupbg from "../../assets/sumitup-typography.svg";
 
 export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import SumitupBg from "../../../public/sumitup-typography.svg";
+import SumitupBg from "../../assets/sumitup-typography.svg";
 import {
   BarChart3,
   Calendar,

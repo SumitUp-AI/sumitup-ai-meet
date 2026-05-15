@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
-import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
-import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
-import ZoomIcon from "../../../public/zoom.avif";
+import GoogleMeetIcon from "../../assets/google-meet-svgrepo-com.svg";
+import MicrosoftTeamsIcon from "../../assets/icons8-microsoft-teams-96.png";
+import ZoomIcon from "../../assets/zoom.avif";
 import AOS from "aos";
 
 // Assigned to Murtaza
@@ -40,7 +40,7 @@ const MeetingsPage: React.FC = () => {
         const mappedMeetings = data.map((m: any) => ({
           id: m.id,
           title: m.name,
-          team: "General",
+          team: "General Meeting",
           platform: m.platform,
           date: formatDate(m.started_at),
           duration: getMeetingDuration(m.started_at, m.ended_at),
@@ -241,7 +241,7 @@ const MeetingsPage: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <VideoIcon className="w-4 h-4" stroke="none" fill="darkcyan" />
+                            <VideoIcon className="w-6 h-6" stroke="none" fill="#1e7291"/>
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">{meeting.title || "Untitled"}</p>

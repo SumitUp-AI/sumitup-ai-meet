@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import SumitupBg from '../../../public/sumitup-typography.svg';
+import SumitupBg from '../../assets/sumitup-typography.svg';
 import { useAuth } from '../../context/AuthContext';
 const SiteNavbar = () => {
 

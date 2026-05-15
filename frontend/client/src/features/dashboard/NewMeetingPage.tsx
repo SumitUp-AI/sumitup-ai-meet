@@ -11,9 +11,9 @@ import { useNavigate } from "react-router-dom";
 import { useMeeting } from "../../context/MeetingContext";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
-import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
-import MSTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
-import ZoomMeetIcon from "../../../public/zoomus-ar21.svg";
+import GoogleMeetIcon from "../../assets/google-meet-svgrepo-com.svg";
+import MSTeamsIcon from "../../assets/icons8-microsoft-teams-96.png";
+import ZoomMeetIcon from "../../assets/zoomus-ar21.svg";
 import AOS from "aos";
 
 const NewMeetingPage: React.FC = () => {

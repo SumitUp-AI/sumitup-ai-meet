@@ -2,8 +2,8 @@ import { User, Bell, Shield, Palette, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import AOS from "aos";
 import { useZoomIntegration } from "../../hooks/useZoomIntegration";
-import zoomLogo from "../../../public/zoomus-ar21.svg";
-import teamsLogo from "../../../public/icons8-microsoft-teams-96.png";
+import zoomLogo from "../../assets/zoomus-ar21.svg";
+import teamsLogo from "../../assets/icons8-microsoft-teams-96.png";
 
 const SettingsPage: React.FC = () => {
   useEffect(() => {
