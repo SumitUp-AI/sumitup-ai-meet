@@ -14,13 +14,6 @@ load_dotenv(find_dotenv())
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-llm = ChatGroq(
-    api_key=GROQ_API_KEY,
-    model="llama-3.1-8b-instant",
-    temperature=0.0,
-    max_retries=2
-)
-
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=100,
@@ -69,6 +62,13 @@ async def summarize_meeting_transcripts(transcript: str):
        
        transcript: str -  The raw transcript to be passed here
        """
+    llm = ChatGroq(
+        api_key=GROQ_API_KEY,
+        model="llama-3.1-8b-instant",
+        temperature=0.0,
+        max_retries=2
+    )
+    
     chunks = text_splitter.split_text(transcript)
     docs = [Document(page_content=chunk) for chunk in chunks]
     refine_chain = load_summarize_chain(

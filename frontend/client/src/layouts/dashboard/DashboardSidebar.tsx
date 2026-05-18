@@ -9,6 +9,7 @@ import {
   Settings,
   X,
   Plus,
+  Users
 } from "lucide-react";
 
 interface NavItem {
@@ -33,6 +34,11 @@ export const DashboardSidebar: React.FC<{
       icon: <Calendar className="w-5 h-5" />,
       label: "Meetings",
       path: "/dashboard/meetings",
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      label: "Participants",
+      path: "/dashboard/participants",
     },
     {
       icon: <Plus className="w-5 h-5" />,
