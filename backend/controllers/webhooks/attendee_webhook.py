@@ -7,7 +7,8 @@ from dotenv import load_dotenv, find_dotenv
 from models.models import Meeting, Transcripts, MeetingState
 from datetime import datetime, timezone
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, BackgroundTasks, Request, Header
+from fastapi import APIRouter, BackgroundTasks, Request, Header, BackgroundTasks
+from pipelines.rag_ingestion import ingest_meeting_transcripts
 from core.utils.meeting_postprocessing import MeetingPostProcessing
 load_dotenv(find_dotenv())
 
@@ -71,6 +72,12 @@ async def handle_state_change(meeting: Meeting, data: dict, background_task: Bac
         print(f"Meeting {meeting.id} state → {data['new_state']}")
 
         if new_state == MeetingState.ended:
+
+            background_task.add_task(
+                ingest_meeting_transcripts,
+                meeting_id=meeting.id
+            )
+            
             background_task.add_task(
                 processor.execute_complete_pipeline,
                 meeting_id=str(meeting.id),
@@ -94,6 +101,7 @@ async def handle_transcript(meeting: Meeting, data: dict):
 async def receive_webhook(
     request: Request,
     background_task: BackgroundTasks,
+    background_tasks: BackgroundTasks,
     x_webhook_signature: str = Header(None),
 ):
     body_bytes = await request.body()
@@ -126,7 +134,7 @@ async def receive_webhook(
         return JSONResponse({"message": "OK"}, status_code=200)
 
     if "bot.state_change" in trigger and "new_state" in data:
-        await handle_state_change(meeting, data, background_task)
+        await handle_state_change(meeting, data, background_task, background_tasks)
 
     elif "transcript.update" in trigger:
         await handle_transcript(meeting, data)
