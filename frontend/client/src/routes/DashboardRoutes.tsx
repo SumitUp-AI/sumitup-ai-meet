@@ -3,6 +3,7 @@ import AIChatPage from "../features/dashboard/AIChatPage";
 import InsightsPage from "../features/dashboard/InsightsPage";
 import MeetingsPage from "../features/dashboard/MeetingsPage";
 import NewMeetingPage from "../features/dashboard/NewMeetingPage";
+import ParticipantsPage from "../features/dashboard/ParticipantsPage";
 import SettingsPage from "../features/dashboard/SettingsPage";
 import SummaryPage from "../features/dashboard/SummaryPage";
 import Dashboard from "../features/Dashboard";
@@ -19,10 +20,12 @@ export function DashboardWrapper() {
           <Route path="insights" element={<InsightsPage />} />
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="new-meetings" element={<NewMeetingPage />} />
+          <Route path="participants" element={<ParticipantsPage />} />
           <Route path="summary/:meetingId" element={<SummaryPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
+
     </>
   );
 }
