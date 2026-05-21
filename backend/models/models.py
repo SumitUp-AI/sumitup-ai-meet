@@ -144,7 +144,16 @@ class Transcripts(Document):
      
      class Settings:
          name = "transcripts"
-         
+
+class Embedding(Document):
+    meeting_id: "Link[Meeting]"
+    chunk: str
+    vector_embedding: list[float]
+
+    class Settings:
+        name = "embedding"  
+
+
 # Model for Teams
 class Team(Document):
     user_id: "Link[Tenant]"
