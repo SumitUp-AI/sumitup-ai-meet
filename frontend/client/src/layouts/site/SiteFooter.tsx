@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Twitter, Github, Linkedin } from "lucide-react";
-import SumitupBg from '../../../public/sumitup-typography.svg';
+import SumitupBg from '../../assets/sumitup-typography.svg';
 
 const SiteFooter = () => {
   return (
