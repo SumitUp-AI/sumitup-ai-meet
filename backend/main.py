@@ -12,11 +12,13 @@ from controllers.zoom_integation_controller import router as zoom_auth_router
 from controllers.rag_controllers import router as chatbot_router
 from contextlib import asynccontextmanager
 from database.connection import init_db
+from database.create_vector_index import create_vector_index_and_search_index
 
 # Connect to DB and disconnect when server shutdown from Connection pool
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    create_vector_index_and_search_index()
     yield
 
 app = FastAPI(lifespan=lifespan, title="SumitUp AI Powered Meeting Assistant API Docs", description="RESTful APIs and Webhooks for Sumitup.ai Application")

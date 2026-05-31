@@ -1,6 +1,4 @@
-import os
-from dotenv import load_dotenv, find_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from config.settings import settings
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -10,11 +8,13 @@ from langchain_mongodb import MongoDBAtlasVectorSearch
 from langchain_mongodb.retrievers.hybrid_search import MongoDBAtlasHybridSearchRetriever
 from pymongo import MongoClient
 
-load_dotenv(find_dotenv())
-api_key = os.getenv("GOOGLE_API_KEY")
-groq_api_key = os.getenv("GROQ_API_KEY")
-cohere_api_key = os.getenv("COHERE_API_KEY")
-mongodb_uri = os.getenv("MONGO_URI")
+client = MongoClient(settings.mongodb_atlas_uri)
+db = client[settings.db_name]
+collection = db["embedding"]
+
+groq_api_key = settings.groq_api_key
+cohere_api_key = settings.cohere_api_key
+mongodb_uri = settings.mongo_uri
 
 def format_chat_history(chat_history: list) -> str:
     """Formats the rolling chat history list and the summary into a text string for the prompt."""
@@ -75,11 +75,7 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     """
     Retrieves chunks from MongoDB Atlas Hybrid Search for a given query and maintains contextual chat history.
     """
-    primary_llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", google_api_key=api_key, temperature=0.0, thinking_level="minimal")
-    fallback_1 = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", google_api_key=api_key, temperature=0.0, thinking_budget="0")
-    fallback_2 = ChatGoogleGenerativeAI(model="gemini-3.0-flash", google_api_key=api_key, temperature=0.0, thinking_level="minimal")
-    fallback_3 = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0.0, thinking_budget="0")
-    llm = primary_llm.with_fallbacks([fallback_1, fallback_2, fallback_3])
+    llm_smart = ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=groq_api_key, temperature=0.0, max_retries=2)
 
     expansion_prompt = ChatPromptTemplate.from_messages([
         ("system", "Given the following chat history and a follow up user question, formulate 3 distinct variations of the user's question to maximize search retrieval over a vector database.\n"
@@ -105,9 +101,6 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     elif len(queries) < 3:
         queries += [query] * (3 - len(queries))
         
-    client = MongoClient(mongodb_uri)
-    db_name = os.getenv("DB_NAME", "test")
-    collection = client[db_name]["embedding"]
     
     vector_store = MongoDBAtlasVectorSearch(
        collection=collection,
@@ -144,8 +137,6 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
                 all_docs.append(doc)
                 doc_ids.add(doc.page_content)
 
-    client.close()
-
     if not all_docs:
         return "I could not find any relevant information in the meeting transcript to answer your query.", queries
 
@@ -156,11 +147,11 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     context_text = "\n\n".join([doc.page_content for doc in reranked_docs])
     
     qa_prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful AI assistant. Use the following retrieved context to answer the user's question explicitly and accurately. If the context does not contain the information needed to answer the question, state that you do not know based on the provided documents.\n\nContext:\n{context}"),
+        ("system", "You are a helpful AI assistant. Use the following retrieved context to answer the user's question explicitly and accurately. If the context does not contain the information needed to answer the question, state that you do not know based on the provided information or context.\n\nContext:\n{context}"),
         ("user", "{query}")
     ])
 
-    rag_chain = qa_prompt | llm
+    rag_chain = qa_prompt | llm_smart
     response = await rag_chain.ainvoke({"context": context_text, "query": combined_queries})
     
     final_answer = response.content

@@ -1,17 +1,11 @@
-import os
 from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from models.models import Meeting, Transcripts, Embedding
 from typing import List
 from pipelines.embedding_model import embeddings
-from langchain_mongodb.index import create_fulltext_search_index
-from langchain_mongodb import MongoDBAtlasVectorSearch
-from pymongo import MongoClient
-from dotenv import load_dotenv, find_dotenv
+from config.settings import settings
 
-load_dotenv(find_dotenv())
-
-mongodb_uri = os.getenv("MONGO_URI")
+mongodb_uri = settings.mongo_uri
 
 async def ingest_meeting_transcripts(meeting_id: str):
     """
@@ -74,28 +68,6 @@ async def ingest_meeting_transcripts(meeting_id: str):
     
     if embedding_docs:
         await Embedding.insert_many(embedding_docs)
-
-    # Create search indexes using LangChain MongoDB helpers
-    client = MongoClient(mongodb_uri)
-    db_name = os.getenv("DB_NAME", "test")
-    collection = client[db_name]["embedding"]
-    
-    vector_store = MongoDBAtlasVectorSearch(
-       collection=collection,
-       embedding=embeddings,
-       index_name="vector_index",
-       text_key="chunk",
-       embedding_key="vector_embedding",
-       relevance_score_fn="cosine"
-    )
-    vector_store.create_vector_search_index(dimensions=384)
-
-    create_fulltext_search_index(
-       collection=collection,
-       field="chunk",
-       index_name="search_index"
-    )
-    client.close()
-        
+     
     print(f"Data ingestion complete for meeting {meeting_id}!")
     return True

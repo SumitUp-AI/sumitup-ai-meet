@@ -48,7 +48,7 @@ llm_fast = ChatGroq(
 # Smarter model for final synthesis (optional — uses less tokens)
 llm_smart = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="llama3-70b-8192",
+    model="llama-3.3-70b-versatile",
     temperature=0.0,
     max_retries=2
 )

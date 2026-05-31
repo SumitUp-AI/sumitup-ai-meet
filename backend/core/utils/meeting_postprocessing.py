@@ -3,6 +3,7 @@ from .transcription_preprocess import TranscriptionPreProcessing
 from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus
 from pipelines.summarization import summarize_meeting_transcript
 from pipelines.action_items import create_action_items_json
+from pipelines.rag_ingestion import ingest_meeting_transcripts
 from beanie import PydanticObjectId
 import re
 import logging
@@ -114,6 +115,11 @@ class MeetingPostProcessing(TranscriptionPreProcessing):
             return {"status": "failed", "error": "Cleaning/Transcripts failed"}
 
         # 2. Summarization
+
+        ingested = ingest_meeting_transcripts(meeting_id)
+        if not ingested:
+            return {"status": "failed", "error": "RAG Ingestion Failed"}
+        
         mid, summary = await self.create_summarization_from_transcription(meeting_id, cleaned_results)
         if not summary:
             return {"status": "failed", "error": "Summarization failed"}

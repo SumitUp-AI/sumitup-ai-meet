@@ -1,11 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request, Depends, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional, Any
-from pipelines.rag_ingestion import ingest_meeting_transcripts
 from pipelines.rag_retrieval import retrieve_answer, update_summary
-from models.models import Meeting
-import asyncio
+from middlewares.limiter import limiter
 
 router = APIRouter(
     prefix="/api/v1",
@@ -16,11 +13,11 @@ class ChatPayload(BaseModel):
     query: str
 
 @router.post("/chat")
+@limiter.limit("6/minute")
 async def chat_with_meeting(request: Request, payload: ChatPayload):
     """
     Chat with the global meeting transcripts using RAG.
     """
-    tenant = request.state.tenant
     global chat_history
     if 'chat_history' not in globals():
         chat_history = []
@@ -64,6 +61,7 @@ async def chat_with_meeting(request: Request, payload: ChatPayload):
             "answer": answer
         })
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve answer: {str(e)}")
+        print(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve answer: {str(e)}")
