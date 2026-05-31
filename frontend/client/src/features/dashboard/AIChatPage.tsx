@@ -1,61 +1,152 @@
 import { Send, Bot, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getAuthHeaders } from "../../utils/apiHeaders";
+
+interface ChatMessage {
+  id: number;
+  type: "user" | "bot";
+  content: string;
+  timestamp: string;
+  isLoading?: boolean;
+}
 
 const AIChatPage: React.FC = () => {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([
+  const { user, token } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
-      type: "bot" as const,
+      type: "bot",
       content:
         "Hello! I'm your AI assistant. I can help you analyze your meetings, extract insights, and answer questions about your meeting data. How can I help you today?",
-      timestamp: "10:30 AM",
-    },
-    {
-      id: 2,
-      type: "user" as const,
-      content:
-        "Can you summarize the key decisions from yesterday's product meeting?",
-      timestamp: "10:32 AM",
-    },
-    {
-      id: 3,
-      type: "bot" as const,
-      content:
-        "Based on yesterday's Q3 Product Roadmap meeting, here are the key decisions:\n\n1. **Feature Prioritization**: Decided to prioritize the mobile app redesign over the web dashboard updates\n2. **Timeline**: Set Q4 2024 as the target for the new user onboarding flow\n3. **Resources**: Allocated 2 additional developers to the core platform team\n4. **Budget**: Approved $50K additional budget for user research\n\nWould you like me to dive deeper into any of these decisions?",
-      timestamp: "10:32 AM",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     },
   ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sessionId] = useState(() => crypto.randomUUID?.() || Date.now().toString());
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        type: "user" as const,
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  
+
+  const sendMessageToAPI = async (userMessage: string) => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    
+    try {
+      
+      if (!user || !token) {
+        setIsLoading(false);
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: "POST",
+        headers: getAuthHeaders(token, user?.tenant_id),
+        body: JSON.stringify({
+          query: userMessage,
+          session_id: sessionId, // Optional: for tracking conversation
         }),
-      };
-      setMessages([...messages, newMessage]);
-      setMessage("");
+      });
 
-      // Simulate AI response
-      setTimeout(() => {
-        const aiResponse = {
-          id: messages.length + 2,
-          type: "bot" as const,
-          content:
-            "I understand your question. Let me analyze your meeting data and provide you with relevant insights...",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-      }, 1000);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to get response");
+      }
+
+      const data = await response.json();
+      return data.answer;
+    } catch (error) {
+      console.error("API Error:", error);
+      throw error;
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!message.trim() || isLoading) return;
+
+    const userMessage = message.trim();
+    setMessage("");
+
+    // Add user message to chat
+    const userChatMessage: ChatMessage = {
+      id: messages.length + 1,
+      type: "user",
+      content: userMessage,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    setMessages((prev) => [...prev, userChatMessage]);
+
+    // Add loading message
+    const loadingMessageId = messages.length + 2;
+    const loadingMessage: ChatMessage = {
+      id: loadingMessageId,
+      type: "bot",
+      content: "Thinking...",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      // Call API
+      const aiResponse = await sendMessageToAPI(userMessage);
+
+      // Replace loading message with actual response
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === loadingMessageId
+            ? {
+                ...msg,
+                content: aiResponse,
+                isLoading: false,
+              }
+            : msg
+        )
+      );
+    } catch (error) {
+      // Replace loading message with error message
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === loadingMessageId
+            ? {
+                ...msg,
+                content: "Sorry, I encountered an error. Please try again.",
+                isLoading: false,
+              }
+            : msg
+        )
+      );
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
     }
   };
 
@@ -71,7 +162,7 @@ const AIChatPage: React.FC = () => {
       </div>
 
       {/* Chat Container */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 flex flex-col">
+      <div className="flex-1 bg-white rounded-xl border border-gray-200 flex flex-col min-h-0">
         {/* Chat Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -113,9 +204,17 @@ const AIChatPage: React.FC = () => {
                     msg.type === "user"
                       ? "bg-cyan-600 text-white"
                       : "bg-gray-100 text-gray-900"
-                  }`}
+                  } ${msg.isLoading ? "opacity-70" : ""}`}
                 >
-                  <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                  {msg.isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                  )}
                   <p
                     className={`text-xs mt-1 ${
                       msg.type === "user" ? "text-cyan-100" : "text-gray-500"
@@ -127,6 +226,7 @@ const AIChatPage: React.FC = () => {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
@@ -136,12 +236,14 @@ const AIChatPage: React.FC = () => {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
               placeholder="Ask me anything about your meetings..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+              disabled={isLoading}
             />
             <button
               type="submit"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isLoading}
               className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-4 h-4" />

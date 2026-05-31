@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
+import { formatDate } from "../../utils/dateFormatter";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -550,7 +551,7 @@ const SummaryPage: React.FC = () => {
                           </span>
                         )}
                         {item.deadline && (
-                          <span className="text-xs text-gray-400">Due: {item.deadline}</span>
+                          <span className="text-xs text-gray-400">Due: {formatDate(item.deadline)}</span>
                         )}
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           item.confidence >= 0.7 ? "bg-green-100 text-green-700"

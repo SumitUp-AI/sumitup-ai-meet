@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,6 +6,6 @@
 }
 
 body {
-    font-family: "Instrument Sans", sans-serif;
+    font-family: "Rethink Sans", sans-serif;
     box-sizing: border-box;
 }
