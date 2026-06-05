@@ -521,7 +521,7 @@ const SummaryPage: React.FC = () => {
         {activeTab === "actionItems" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-6">
-              <AlertCircle className="w-5 h-5 text-cyan-500" />
+              <AlertCircle color="darkcyan" className="w-5 h-5 text-cyan-500" />
               <h2 className="text-lg font-bold text-gray-900">Action Items</h2>
               {items.length > 0 && (
                 <span className="ml-auto text-sm text-gray-400">
@@ -538,7 +538,7 @@ const SummaryPage: React.FC = () => {
               <div className="space-y-3">
                 {items.map((item, i) => (
                   <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:border-cyan-200 hover:bg-cyan-50 transition">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 shrink-0 mt-0.5" />
+                    <div className="w-6 h-6 rounded-full bg-cyan-700 shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-800">{item.title}</p>
                       {item.description && (
