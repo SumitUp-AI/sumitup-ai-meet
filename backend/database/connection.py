@@ -9,7 +9,7 @@ MONGO_URI = settings.mongo_uri
 DB_NAME = settings.db_name
 MONGODB_ATLAS_URI = settings.mongodb_atlas_uri
 
-client = AsyncIOMotorClient(MONGODB_ATLAS_URI if MONGODB_ATLAS_URI else MONGO_URI)
+client = AsyncIOMotorClient(MONGODB_ATLAS_URI if MONGODB_ATLAS_URI else MONGO_URI, tz_aware=True)
 db = client[DB_NAME]
 
 async def init_db():
