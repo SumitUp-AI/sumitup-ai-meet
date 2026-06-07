@@ -2,6 +2,7 @@
 "RAG chatbot/chroma_db/"
 **/MeetingBank.json
 **/chroma_db/
+backend/.core/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

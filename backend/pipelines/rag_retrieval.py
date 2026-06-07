@@ -145,7 +145,9 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     reranked_docs = reranker.compress_documents(documents=all_docs, query=combined_queries)
     
     context_text = "\n\n".join([doc.page_content for doc in reranked_docs])
-    
+    print("########################################################")
+    print(reranked_docs[0])
+    print("########################################################")
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", "You are a helpful AI assistant. Use the following retrieved context to answer the user's question explicitly and accurately. If the context does not contain the information needed to answer the question, state that you do not know based on the provided information or context.\n\nContext:\n{context}"),
         ("user", "{query}")

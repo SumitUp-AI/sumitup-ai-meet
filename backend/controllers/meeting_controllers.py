@@ -130,7 +130,7 @@ async def get_all_meetings_information(request: Request):
         "platform": m.platform,
         "meeting_link": m.meeting_link,
         "started_at": m.created_at.isoformat() if m.created_at else None,
-        "ended_at": m.last_state_change_time.isoformat() if m.last_state_change_time else None,
+        "ended_at": m.ended_at.isoformat() if m.ended_at else None,
         "state": m.state,
     } for m in meetings]
     

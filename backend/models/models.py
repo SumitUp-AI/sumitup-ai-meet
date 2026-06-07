@@ -99,6 +99,7 @@ class Meeting(Document):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     state: Optional[MeetingState] = None
     last_state_change_time: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
     summary: Optional[str] = None
     summary_status: MeetingSummaryStatus = MeetingSummaryStatus.PENDING
     summary_error: Optional[str] = None

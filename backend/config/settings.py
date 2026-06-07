@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # STT Config
     deepgram_api_key: str
-    assembly_api_key: str
+    assembly_api_key: str | None = None
     
     # Zoom OAuth Config
     zoom_client_id: str

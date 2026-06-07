@@ -67,9 +67,10 @@ async def handle_state_change(meeting: Meeting, data: dict, background_task: Bac
         meeting.state = new_state
         await meeting.save()
         print(f"Meeting {meeting.id} state → {data['new_state']}")
-
+        
         if new_state == MeetingState.ended:
-
+            meeting.ended_at = event_time
+            await meeting.save()
             background_task.add_task(
                 processor.execute_complete_pipeline,
                 meeting_id=str(meeting.id),
