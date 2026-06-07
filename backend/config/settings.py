@@ -19,9 +19,10 @@ class Settings(BaseSettings):
     webhook_secret: str
     attendee_api_key: str
 
-    # Deepgram Config
+    # STT Config
     deepgram_api_key: str
-
+    assembly_api_key: str
+    
     # Zoom OAuth Config
     zoom_client_id: str
     zoom_client_secret: str
