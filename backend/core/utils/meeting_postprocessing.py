@@ -114,9 +114,7 @@ class MeetingPostProcessing(TranscriptionPreProcessing):
         if not cleaned_results:
             return {"status": "failed", "error": "Cleaning/Transcripts failed"}
 
-        # 2. Summarization
-
-        ingested = ingest_meeting_transcripts(meeting_id)
+        ingested = await ingest_meeting_transcripts(meeting_id)
         if not ingested:
             return {"status": "failed", "error": "RAG Ingestion Failed"}
         
