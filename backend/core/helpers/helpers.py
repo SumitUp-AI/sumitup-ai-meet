@@ -97,10 +97,13 @@ class AttendeeBot(STTServiceProvider):
         if not self._api_key:
             raise ValueError("ATTENDEE_API_KEY is missing. Please set ATTENDEE_API_KEY in environment variables")
 
+        # Get Attendee service URL from environment
+        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
+        
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
-                    "http://localhost:8000/api/v1/bots",
+                    f"{attendee_url}/api/v1/bots",
                     headers={
                         "Authorization": f"Token {self._api_key}",
                         "Content-Type": "application/json",
@@ -171,10 +174,11 @@ class AttendeeBot(STTServiceProvider):
         
         effective_bot_id = self.meeting.bot_id
 
+        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
         async with httpx.AsyncClient(timeout=10) as client:
             try:
                 response = await client.post(
-                    f"http://localhost:8000/api/v1/bots/{effective_bot_id}/leave",
+                    f"{attendee_url}/api/v1/bots/{effective_bot_id}/leave",
                     headers={
                         "Authorization": f"Token {self._api_key}",
                         "Content-Type": "application/json",

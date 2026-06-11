@@ -122,16 +122,19 @@ async def receive_webhook(
     meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
 
     if not meeting:
-        print(f"No meeting found for bot_id: {bot_id}")
+        print(f" No meeting found for bot_id: {bot_id}")
         return JSONResponse({"message": "OK"}, status_code=200)
+        
+    print(f" Found meeting: {meeting.id} - {meeting.name}")
 
     if "bot.state_change" in trigger and "new_state" in data:
         await handle_state_change(meeting, data, background_task)
 
     elif "transcript.update" in trigger:
+        print(f" Processing transcript update for meeting {meeting.id}")
         await handle_transcript(meeting, data)
 
     else:
-        print(f"Unhandled trigger: {trigger}")
+        print(f" Unhandled trigger: {trigger}")
 
     return JSONResponse({"message": "OK"}, status_code=200)

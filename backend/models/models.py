@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
 from beanie import Document, Link
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
+import secrets
 
 # Models for User
 class UserRole(str, Enum):
@@ -19,6 +20,11 @@ class User(Document):
     hashed_password: str
     role: UserRole = UserRole.MEMBER
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # New fields for team functionality (non-breaking additions)
+    is_active: bool = True  # User account status
+    last_login: Optional[datetime] = None  # Track user activity
+    profile_picture: Optional[str] = None  # User avatar URL
     
     class Settings:
         name = "users"
@@ -150,6 +156,92 @@ class Embedding(Document):
         name = "embedding"  
 
 
+# TEAM INVITATION MODELS - New additions for team functionality
+
+class InvitationStatus(str, Enum):
+    """Status of team invitations"""
+    PENDING = "pending"      # Invitation sent, awaiting response
+    ACCEPTED = "accepted"    # User accepted the invitation
+    DECLINED = "declined"    # User declined the invitation
+    EXPIRED = "expired"      # Invitation expired (7 days)
+
+class TeamInvitation(Document):
+    """
+    Model for team meeting invitations
+    Tracks invitations sent to SumitUp users for specific meetings
+    """
+    # Core relationships
+    meeting: "Link[Meeting]"           # Which meeting they're invited to
+    invited_by: "Link[User]"          # Who sent the invitation (meeting host)
+    invited_user: "Link[User]"        # SumitUp user being invited
+    
+    # Invitation details
+    invitation_token: str             # Unique token for accepting/declining
+    custom_message: Optional[str] = None  # Optional message from host
+    status: InvitationStatus = InvitationStatus.PENDING
+    
+    # Timestamps
+    sent_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7))
+    responded_at: Optional[datetime] = None  # When user responded
+    
+    def __init__(self, **data):
+        """Initialize invitation with auto-expiration"""
+        super().__init__(**data)
+    
+    @property
+    def is_expired(self) -> bool:
+        """Check if invitation has expired"""
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires
+    
+    @property
+    def is_pending(self) -> bool:
+        """Check if invitation is still pending"""
+        return self.status == InvitationStatus.PENDING and not self.is_expired
+    
+    @staticmethod
+    def generate_invitation_token() -> str:
+        """Generate a secure invitation token"""
+        return secrets.token_urlsafe(32)
+    
+    class Settings:
+        name = "team_invitations"
+        indexes = [
+            "invitation_token",       # For quick token lookups
+            "invited_user",          # For user's invitation list
+            "meeting",               # For meeting's invitation list
+            "status"                 # For filtering by status
+        ]
+
+class MeetingParticipant(Document):
+    """
+    Model for confirmed meeting participants
+    Created when user accepts invitation or is added directly
+    """
+    # Core relationships
+    meeting: "Link[Meeting]"          # Which meeting
+    user: "Link[User]"               # Which user
+    
+    # Participation details
+    role: str = "participant"        # "host" or "participant"
+    invitation: Optional["Link[TeamInvitation]"] = None  # Link to original invitation
+    
+    # Activity tracking
+    joined_at: Optional[datetime] = None    # When they joined the meeting
+    left_at: Optional[datetime] = None      # When they left the meeting
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    class Settings:
+        name = "meeting_participants"
+        indexes = [
+            "meeting",               # For meeting participant lists
+            "user",                  # For user's meeting history
+            ("meeting", "user")      # Compound index for unique constraints
+        ]
+         
 # Model for Teams
 class Team(Document):
     user_id: "Link[Tenant]"

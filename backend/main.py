@@ -7,6 +7,7 @@ from middlewares.tenant_middleware import TenantMiddleware
 from controllers.auth_controllers import router as auth_router
 from controllers.pipeline_controllers import router as pipeline_router
 from controllers.meeting_controllers import router as meeting_router
+from controllers.teams_controller import router as teams_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
 from controllers.zoom_integation_controller import router as zoom_auth_router
 from controllers.rag_controllers import router as chatbot_router
@@ -49,6 +50,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(pipeline_router)
 app.include_router(meeting_router)
+app.include_router(teams_router)
 app.include_router(transcription_webhook)
 app.include_router(zoom_auth_router)
 app.include_router(chatbot_router)
