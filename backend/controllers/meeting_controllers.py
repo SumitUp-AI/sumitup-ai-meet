@@ -133,7 +133,7 @@ async def get_all_meetings_information(request: Request):
         "platform": m.platform,
         "meeting_link": m.meeting_link,
         "started_at": m.created_at.isoformat() if m.created_at else None,
-        "ended_at": m.ended_at.isoformat() if m.ended_at else None,
+        "ended_at": m.last_state_change_time.isoformat() if m.last_state_change_time else None,
         "state": m.state,
         "is_owner": True,
     } for m in meetings]
@@ -209,7 +209,7 @@ async def get_transcript(request: Request, meeting_id: str):
         if t.speaker_name != current_speaker:
             # Flush previous speaker's text
             if current_speaker is not None:
-                formatted_transcript.append(f"{current_speaker}: {' '.join(current_buffer)}")
+                formatted_transcript.append(f"[{time_str}], {current_speaker}: {' '.join(current_buffer)}")
             
             # Start new speaker
             current_speaker = t.speaker_name
@@ -220,7 +220,7 @@ async def get_transcript(request: Request, meeting_id: str):
     
     # Flush last buffer
     if current_speaker is not None:
-        formatted_transcript.append(f"{current_speaker}: {' '.join(current_buffer)}")
+        formatted_transcript.append(f"[{time_str}], {current_speaker}: {' '.join(current_buffer)}")
 
     full_text = "\n\n".join(formatted_transcript)
 

@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_dir))
-model_path = os.path.join(backend_dir, ".core", "utils", "model_for_grammar_correction")
+model_path = os.path.join(backend_dir, "core", "utils", "model_for_grammar_correction")
 
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
