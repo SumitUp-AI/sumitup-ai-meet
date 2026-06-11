@@ -5,6 +5,7 @@ import MeetingsPage from "../features/dashboard/MeetingsPage";
 import NewMeetingPage from "../features/dashboard/NewMeetingPage";
 import SettingsPage from "../features/dashboard/SettingsPage";
 import SummaryPage from "../features/dashboard/SummaryPage";
+import TeamsPage from "../features/dashboard/TeamsPage";
 import Dashboard from "../features/Dashboard";
 import { DashboardLayout } from "../layouts/dashboard/DashboardLayout";
 import { dashboardLoader } from "../loaders/dashboardLoader";
@@ -21,6 +22,7 @@ export function DashboardWrapper() {
           <Route path="new-meetings" element={<NewMeetingPage />} />
           <Route path="summary/:meetingId" element={<SummaryPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="teams" element={<TeamsPage />} />
         </Route>
       </Routes>
     </>

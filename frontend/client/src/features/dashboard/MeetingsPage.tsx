@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
+import { useMeetingStatus } from "../../hooks/useMeetingStatus";
 import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
 import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
 import ZoomIcon from "../../../public/zoom.avif";
@@ -14,60 +15,99 @@ const MeetingsPage: React.FC = () => {
 
   useEffect(()=> { AOS.refresh() }, [])
   const [searchQuery, setSearchQuery] = useState("");
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  
+  // Use polling hook for real-time status updates
+  const { 
+    meetings: rawMeetings, 
+    loading, 
+    error,
+    refreshMeetings,
+    setOnStatusChange 
+  } = useMeetingStatus({
+    pollingInterval: 3000, // Poll every 3 seconds
+    enabled: !!user // Only poll when user is authenticated
+  });
+
+  // Fetch shared meetings (accepted invitations from other hosts)
+  const [sharedMeetings, setSharedMeetings] = useState<any[]>([]);
+  const { token } = useAuth();
   const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
   useEffect(() => {
-    if (!user || !token) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setMeetings([]);
-
-    fetch(`${BASE_URL}/get_all_meetings`, {
+    if (!token || !user) return;
+    fetch(`${BASE_URL}/get_shared_meetings`, {
       headers: getAuthHeaders(token, user.tenant_id),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch meetings");
-        return res.json();
-      })
-      .then((data) => {
-        const mappedMeetings = data.map((m: any) => ({
-          id: m.id,
-          title: m.name,
-          team: "General",
-          platform: m.platform,
-          date: formatDate(m.started_at),
-          duration: getMeetingDuration(m.started_at, m.ended_at),
-          status: m.state,
-        }));
-        setMeetings(mappedMeetings);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, [user?.tenant_id, token]);
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setSharedMeetings(Array.isArray(data) ? data : []))
+      .catch(() => setSharedMeetings([]));
+  }, [token, user]);
+
+  // Transform meetings data for display (with safety check)
+  const ownedMeetings = (rawMeetings || []).map((m: any) => ({
+    id: m.id,
+    title: m.name,
+    team: "General",
+    platform: m.platform,
+    date: formatDate(m.started_at),
+    duration: getMeetingDuration(m.started_at, m.ended_at),
+    status: m.state,
+    isOwner: true,
+  }));
+
+  const invitedMeetings = sharedMeetings.map((m: any) => ({
+    id: m.id,
+    title: m.name,
+    team: "Shared",
+    platform: m.platform,
+    date: formatDate(m.started_at),
+    duration: getMeetingDuration(m.started_at, m.ended_at),
+    status: m.state,
+    isOwner: false,
+  }));
+
+  // Merge, deduplicate by id, owned meetings first
+  const seenIds = new Set(ownedMeetings.map((m) => m.id));
+  const meetings = [
+    ...ownedMeetings,
+    ...invitedMeetings.filter((m) => !seenIds.has(m.id)),
+  ];
+
+  // Optional: Handle status change notifications
+  useEffect(() => {
+    setOnStatusChange((changedMeetings) => {
+      // Safety check for changedMeetings
+      if (!changedMeetings || !Array.isArray(changedMeetings)) {
+        return;
+      }
+      
+      // You can add toast notifications here
+      changedMeetings.forEach(meeting => {
+        console.log(`Meeting "${meeting.name}" status updated to: ${meeting.state}`);
+        // Example: show toast notification
+        // toast.info(`Meeting "${meeting.name}" is now ${meeting.state}`);
+      });
+    });
+  }, [setOnStatusChange]);
 
   
   const getStatusBadge = (status: string) => {
-    const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+    const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-300";
     switch (status) {
       case "ended":
-        return <span className={`${base} bg-teal-100 text-teal-800`}>Ready</span>;
+        return <span className={`${base} bg-teal-100 text-teal-800 animate-pulse`}>Ready</span>;
       case "fatal_error":
         return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
       case "joining":
-        return <span className={`${base} bg-cyan-100 text-cyan-500`}>Joining</span>;
+        return <span className={`${base} bg-cyan-100 text-cyan-500 animate-pulse`}>Joining</span>;
       case "joined_recording":
-        return <span className={`${base} bg-cyan-100 text-cyan-800`}>Recording</span>;
+        return <span className={`${base} bg-cyan-100 text-cyan-800 animate-pulse`}>Recording</span>;
       case "post_processing":
-        return <span className={`${base} bg-gray-100 text-gray-800`}>Processing</span>;
+        return <span className={`${base} bg-gray-100 text-gray-800 animate-pulse`}>Processing</span>;
       case "waiting_room":
-        return <span className={`${base} bg-cyan-100 text-cyan-700`}>In Waiting Room</span>;
+        return <span className={`${base} bg-cyan-100 text-cyan-700 animate-pulse`}>In Waiting Room</span>;
       case "scheduled":
         return <span className={`${base} bg-blue-100 text-blue-700`}>Scheduled</span>;
       default:
@@ -201,6 +241,13 @@ const MeetingsPage: React.FC = () => {
               />
             </div>
             <div className="flex gap-2">
+              <button 
+                onClick={refreshMeetings}
+                className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Loader className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
               <button className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors">
                 Date Range <ChevronDown className="w-4 h-4" />
               </button>
@@ -209,6 +256,11 @@ const MeetingsPage: React.FC = () => {
               </button>
             </div>
           </div>
+          {error && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Meetings Table */}
@@ -240,7 +292,7 @@ const MeetingsPage: React.FC = () => {
                     <tr key={meeting.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center shrink-0">
                             <VideoIcon className="w-4 h-4" stroke="none" fill="darkcyan" />
                           </div>
                           <div>
