@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import SiteNavbar from "./SiteNavbar";
+import { Outlet } from 'react-router-dom'
+import SiteNavbar from './SiteNavbar'
 
 const Site = () => {
   return (
@@ -9,7 +9,7 @@ const Site = () => {
         <Outlet />
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default Site;
+export default Site

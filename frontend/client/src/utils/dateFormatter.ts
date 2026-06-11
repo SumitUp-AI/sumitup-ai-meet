@@ -1,33 +1,40 @@
 /**
- * Format ISO date string to readable format
- * Example: "2026-01-28T15:45:00Z" → "Jan 28, 2026, 3:45 PM"
+ * Format ISO date string to user's local timezone and regional format
+ * Automatically detects browser timezone and language
  */
 export const formatDate = (isoDateString: string): string => {
   try {
     const date = new Date(isoDateString);
-
-    const options: Intl.DateTimeFormatOptions = {
+    return new Intl.DateTimeFormat(navigator.language, {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    };
-
-    return date.toLocaleDateString("en-US", options);
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    }).format(date);
   } catch (error) {
     console.error("Date formatting error:", error);
-    return isoDateString; // Return original if formatting fails
+    return isoDateString;
   }
 };
 
 /**
  * Get meeting duration in readable format
- * For now, returns a placeholder. Update based on your API response
  */
-export const getMetingDuration = (): string => {
-  return "N/A"; // You can calculate this from ended_at - started_at if available
+export const getMeetingDuration = (startedAt?: string, endedAt?: string): string => {
+  if (!startedAt || !endedAt) return "N/A";
+  try {
+    const diff = new Date(endedAt).getTime() - new Date(startedAt).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours > 0) return `${hours}h ${remainingMinutes}m`;
+    return `${minutes}m`;
+  } catch {
+    return "N/A";
+  }
 };
 
 /**

@@ -1,42 +1,42 @@
 import {
-  BarChart3,
   Menu,
   Search,
   Bell,
-  Settings,
   LogOut,
   CircleUser,
+  BotIcon,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import Sumitupbg from "../../../public/sumitup-typography.svg";
 
 export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
   onMenuClick,
 }) => {
   return (
     <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between">
+
+      {/* LEFT SIDE */}
       <div className="flex items-center gap-2 sm:gap-4 flex-1">
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <Menu className="w-5 h-5 text-gray-600" />
-        </button>
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-transform duration-300"
+          >
+            <Menu className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+        <div className="hidden md:flex flex-1 gap-1 max-w-xl">
+          <div className="sm:hidden lg:flex items-center justify-center w-30">
+            <img src={Sumitupbg} />
           </div>
-          <span className="font-semibold text-base sm:text-lg">Sumitup.ai</span>
-        </div>
-
-        <div className="hidden md:flex flex-1 max-w-xl">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <BotIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-700" />
             <input
               type="text"
-              placeholder="Search transcripts, meetings, insights..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ask me anything about meetings..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
         </div>
@@ -54,6 +54,7 @@ export const DashboardNavbar: React.FC<{ onMenuClick: () => void }> = ({
         {/* Profile Photo and Dropdown with Settings Icon and Logout */}
         <ProfileDropdown />
       </div>
+
     </nav>
   );
 };
@@ -83,9 +84,8 @@ const ProfileDropdown: React.FC = () => {
   }, [isOpen]);
 
   const handleLogout = () => {
-    // Add logout logic here
-    logout();
     setIsOpen(false);
+    logout();
   };
 
   return (
@@ -94,14 +94,14 @@ const ProfileDropdown: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+        <CircleUser className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                 <CircleUser />
               </div>
               <div>

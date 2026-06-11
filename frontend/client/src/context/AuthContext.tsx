@@ -1,36 +1,49 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 interface User {
   id: string;
   name: string;
   email: string;
   tenant_id: string;
+  tenant_domain?: string;
+  tenant_settings?: Record<string, any>;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    remember_me: boolean,
+  ) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token"),
-  );
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
+  
   // Fetch user data from /me endpoint
   const fetchUser = async (authToken: string) => {
     try {
       const res = await fetch(`${BASE_URL}/me`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { 
+          Authorization: `Bearer ${authToken}`,
+        },
       });
 
       if (!res.ok) {
@@ -44,18 +57,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching user:", error);
       setUser(null);
       setToken(null);
-      localStorage.removeItem("token");
       throw error;
     }
   };
 
   // Login method
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    remember_me: boolean,
+  ) => {
     try {
       const res = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, remember_me }),
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -65,15 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const data = await res.json();
       const newToken = data.access_token;
-
       setToken(newToken);
-      localStorage.setItem("token", newToken);
 
       await fetchUser(newToken);
     } catch (error) {
       setUser(null);
       setToken(null);
-      localStorage.removeItem("token");
       throw error;
     }
   };
@@ -99,25 +113,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Refresh token method
+  const refreshToken = useCallback(async () => {
+    const res = await fetch(`${BASE_URL}/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Refresh failed");
+
+    const data = await res.json();
+    setToken(data.access_token);
+    return data.access_token;
+  }, []);
+
   // Logout method
-  const logout = () => {
+  const logout = useCallback(async () => {
+    await fetch(`${BASE_URL}/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+
     setUser(null);
     setToken(null);
-    localStorage.removeItem("token");
-  };
+    window.location.href = "/login";
+  }, []);
 
-  // On mount, check if token exists and fetch user
+  // Auto refresh token every 14 minutes (assuming 15 min expiry)
   useEffect(() => {
-    if (token) {
-      fetchUser(token).finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    const initAuth = async () => {
+      try {
+        const newToken = await refreshToken();
+        await fetchUser(newToken);
+      } catch {
+        setUser(null);
+        setToken(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, signup, logout }}
+      value={{ user, token, loading, login, signup, logout, refreshToken }}
     >
       {children}
     </AuthContext.Provider>
