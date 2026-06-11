@@ -1,7 +1,9 @@
-import React, {useState} from "react"
+import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardNavbar } from "./DashboardNavbar";
-export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -10,7 +12,7 @@ export const DashboardContainer: React.FC<{ children: React.ReactNode }> = ({ ch
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardNavbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

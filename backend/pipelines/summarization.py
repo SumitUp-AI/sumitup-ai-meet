@@ -4,8 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
-from huggingface_hub import InferenceClient
-from typing import List
+import asyncio
 
 import os
 import time
@@ -24,7 +23,8 @@ llm = ChatGroq(
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
-    chunk_overlap=100
+    chunk_overlap=100,
+    separators=["\n", ".", ","]
 )
 
 
@@ -34,11 +34,12 @@ initial_template = """You are an expert meeting analyst. Summarize the following
 
 {text}
 
-Create a concise, detailed summary focusing on:
-- Key discussion points
-- Decisions made
-- Action items
-- Important insights
+Here are the instructions following:
+- Generate the overall summary of a meeting, what's discussed only in a professional manner.
+- Don't assume on your own
+- It should not be in markdown style only simple PlainText
+- Agenda of meeting
+- Overall Confidence Score after generation of summary.
 
 Summary:"""
 
@@ -59,14 +60,16 @@ New information from the meeting:
 Instructions:
 - Combine the existing summary with the new information
 - Create a concise yet comprehensive summary
-- Focus on key decisions, action items, and important discussion points
-- Maintain a professional, clear tone
-- Organize information logically
+- Focus on the important points which are discussed only.
+- Do not include any special character including "**" also, focus on text only
+- Facts should be grounded not assumed.
+- Add refined summary and update the schema information.
+- Include Organization and Time Specified for the meeting conducted
 
 Refined Summary""")
 
 
-def summarize_meeting_transcripts(transcript: str):
+async def summarize_meeting_transcripts(transcript: str):
     """This Method breaks the transcripts into chunks and summarizes them using LLM provided through Groq API Inference
        and then combines the summary and then again summarizes the collected summary using refine method.
        
@@ -83,8 +86,8 @@ def summarize_meeting_transcripts(transcript: str):
         verbose=False # Set to True if you want to see logs what's going on
     )
     
-    result = refine_chain.invoke({"input_documents": docs})
+    result = await refine_chain.ainvoke({"input_documents": docs})
     final_summary = result["output_text"]
     
-    time.sleep(0.6) # Used for Rate Limiting
+    await asyncio.sleep(0.6) # Used for Rate Limiting
     return final_summary

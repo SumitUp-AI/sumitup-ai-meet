@@ -20,48 +20,6 @@ router = APIRouter(
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
 
 
-async def trigger_meeting_summarization(meeting: Meeting):
-    """Trigger automatic summarization when meeting ends"""
-    try:
-        print(f"Starting summarization for meeting {meeting.id}")
-        
-        # Get all transcripts for the meeting
-        transcripts = await Transcripts.find(
-            Transcripts.meeting_id.id == meeting.id
-        ).sort(+Transcripts.timestamp_ms).to_list()
-        
-        if not transcripts:
-            print(f"No transcripts found for meeting {meeting.id}")
-            return
-        
-        print(f"Found {len(transcripts)} transcripts for meeting {meeting.id}")
-        
-        # Combine transcripts
-        combined_text = "\n".join([f"{t.speaker_name}: {t.transcript}" for t in transcripts])
-        
-        # Update status to processing
-        meeting.summary_status = MeetingSummaryStatus.PROCESSING
-        await meeting.save()
-        print(f"Updated meeting {meeting.id} status to PROCESSING")
-        
-        # Generate summary
-        summary = await summarize_meeting_transcripts(combined_text)
-        final_summary = summary.replace("**", "")
-        
-        # Save summary
-        meeting.summary = final_summary
-        meeting.summary_status = MeetingSummaryStatus.READY
-        await meeting.save()
-        
-        print(f"Summary generated successfully for meeting {meeting.id}")
-        
-    except Exception as e:
-        print(f"Error generating summary for meeting {meeting.id}: {str(e)}")
-        meeting.summary_status = MeetingSummaryStatus.FAILED
-        meeting.summary_error = str(e)
-        await meeting.save()
-
-
 def verify_signature(payload_bytes: bytes, secret: str, received_signature: str) -> bool:
     try:
         secret_decoded = base64.b64decode(secret)
@@ -107,14 +65,7 @@ async def handle_state_change(meeting: Meeting, data: dict):
             print("Error parsing created_at timestamp")
 
     if should_update:
-        old_state = meeting.state
         meeting.state = data["new_state"]
-        
-        # If meeting just ended, trigger summarization
-        if data["new_state"] == "ended" and old_state != "ended":
-            meeting.ended_at = datetime.now(timezone.utc)
-            await trigger_meeting_summarization(meeting)
-        
         await meeting.save()
         print(f"Meeting {meeting.id} state → {data['new_state']}")
 
@@ -137,33 +88,27 @@ async def receive_webhook(
     x_webhook_signature: str = Header(None)
 ):
     body_bytes = await request.body()
-    
-    # Add debug logging
-    print(f" WEBHOOK RECEIVED: {len(body_bytes)} bytes")
-    print(f" Signature present: {bool(x_webhook_signature)}")
 
     # Signature checks — return 200 always so Attendee doesn't retry
     if not x_webhook_signature:
-        print(" Webhook received without signature header")
+        print("Webhook received without signature header")
         return JSONResponse({"message": "OK"}, status_code=200)
 
     if not WEBHOOK_SECRET:
-        print(" WEBHOOK_SECRET not configured")
+        print("WEBHOOK_SECRET not configured")
         return JSONResponse({"message": "OK"}, status_code=200)
 
     if not verify_signature(body_bytes, WEBHOOK_SECRET, x_webhook_signature):
-        print(" Invalid webhook signature")
+        print("Invalid webhook signature")
         return JSONResponse({"message": "OK"}, status_code=200)
 
     payload = json.loads(body_bytes)
     bot_id = payload.get("bot_id")
     trigger = payload.get("trigger", "")
     data = payload.get("data", {})
-    
-    print(f"Valid webhook - Bot ID: {bot_id}, Trigger: {trigger}")
 
     if not bot_id:
-        print(f" Webhook with no bot_id — trigger: {trigger}")
+        print(f"Webhook with no bot_id — trigger: {trigger}")
         return JSONResponse({"message": "OK"}, status_code=200)
 
     meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
