@@ -54,7 +54,6 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [usingCache, setUsingCache] = useState(false);
 
-  // ✅ Use useAuth instead of localStorage directly
   const { token, user } = useAuth();
   const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
@@ -156,10 +155,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
 
       const res = await fetch(`${BASE_URL}/generate-flow-diagram`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(token, user.tenant_id),
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(token, user?.tenant_id),
         body: JSON.stringify({
           meeting_id: meetingId,
           summary,
