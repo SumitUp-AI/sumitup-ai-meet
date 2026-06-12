@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # App's Secret and Refresh Token Config
     secret_key: str
     refresh_token_secret: str
+    encryption_key: str
+    sentry_dsn: str
+    environment: str = "deployment"
 
     # MongoDB Config
     mongo_uri: str = "mongodb://localhost:27017"

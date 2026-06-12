@@ -37,7 +37,7 @@ CLOUD_DOMAINS = ['outlook.com', 'gmail.com', 'hotmail.com']
 
 @router.post("/signup")
 @limiter.limit("60/minute")
-async def create_user_account(payload: CreateUserRequest):
+async def create_user_account(request: Request, payload: CreateUserRequest):
     
     if await User.find_one(User.email == payload.email):
         raise HTTPException(status_code=400, detail="This User Already Exists!")
@@ -75,7 +75,7 @@ async def create_user_account(payload: CreateUserRequest):
 
 @router.post("/login")
 @limiter.limit("60/minute")
-async def login_user(payload: LoginUser, response: Response):
+async def login_user(request: Request, payload: LoginUser, response: Response):
     # Check if password is correct or user exists
     user = await User.find_one(User.email == payload.email)
     if not user or not verify_user(payload.password, user.hashed_password):
