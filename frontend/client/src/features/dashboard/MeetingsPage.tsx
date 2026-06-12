@@ -1,52 +1,87 @@
-import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle} from "lucide-react";
+import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate, getMeetingDuration } from "../../utils/dateFormatter";
-import { useMeetingStatus } from "../../hooks/useMeetingStatus";
-import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
-import MicrosoftTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
-import ZoomIcon from "../../../public/zoom.avif";
+import GoogleMeetIcon from "../../assets/google-meet-svgrepo-com.svg";
+import MicrosoftTeamsIcon from "../../assets/icons8-microsoft-teams-96.png";
+import ZoomIcon from "../../assets/zoom.avif";
 import AOS from "aos";
 
 // Assigned to Murtaza
 const MeetingsPage: React.FC = () => {
 
-  useEffect(()=> { AOS.refresh() }, [])
+  useEffect(() => { AOS.refresh() }, [])
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  
-  // Use polling hook for real-time status updates
-  const { 
-    meetings: rawMeetings, 
-    loading, 
-    error,
-    refreshMeetings,
-    setOnStatusChange 
-  } = useMeetingStatus({
-    pollingInterval: 3000, // Poll every 3 seconds
-    enabled: !!user // Only poll when user is authenticated
-  });
-
-  // Fetch shared meetings (accepted invitations from other hosts)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [ownedMeetings, setOwnedMeetings] = useState<any[]>([]);
   const [sharedMeetings, setSharedMeetings] = useState<any[]>([]);
-  const { token } = useAuth();
+  const navigate = useNavigate();
+  const { user, token } = useAuth();
   const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
-  useEffect(() => {
-    if (!token || !user) return;
-    fetch(`${BASE_URL}/get_shared_meetings`, {
-      headers: getAuthHeaders(token, user.tenant_id),
-    })
-      .then((res) => res.ok ? res.json() : [])
-      .then((data) => setSharedMeetings(Array.isArray(data) ? data : []))
-      .catch(() => setSharedMeetings([]));
-  }, [token, user]);
+  // Fetch owned meetings
+  const fetchOwnedMeetings = async () => {
+    if (!token || !user) return [];
+    try {
+      const response = await fetch(`${BASE_URL}/get_all_meetings`, {
+        headers: getAuthHeaders(token, user.tenant_id),
+      });
+      if (!response.ok) throw new Error("Failed to fetch meetings");
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error("Error fetching owned meetings:", err);
+      return [];
+    }
+  };
 
-  // Transform meetings data for display (with safety check)
-  const ownedMeetings = (rawMeetings || []).map((m: any) => ({
+  // Fetch shared meetings
+  const fetchSharedMeetings = async () => {
+    if (!token || !user) return [];
+    try {
+      const response = await fetch(`${BASE_URL}/get_shared_meetings`, {
+        headers: getAuthHeaders(token, user.tenant_id),
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error("Error fetching shared meetings:", err);
+      return [];
+    }
+  };
+
+  // Load all meetings on mount
+  const loadMeetings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [owned, shared] = await Promise.all([
+        fetchOwnedMeetings(),
+        fetchSharedMeetings(),
+      ]);
+      setOwnedMeetings(owned);
+      setSharedMeetings(shared);
+    } catch (err) {
+      setError("Failed to load meetings. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    if (user && token) {
+      loadMeetings();
+    }
+  }, [user, token]);
+
+  // Transform meetings data for display
+  const ownedMeetingsTransformed = (ownedMeetings || []).map((m: any) => ({
     id: m.id,
     title: m.name,
     team: "General",
@@ -57,7 +92,7 @@ const MeetingsPage: React.FC = () => {
     isOwner: true,
   }));
 
-  const invitedMeetings = sharedMeetings.map((m: any) => ({
+  const invitedMeetingsTransformed = (sharedMeetings || []).map((m: any) => ({
     id: m.id,
     title: m.name,
     team: "Shared",
@@ -69,30 +104,12 @@ const MeetingsPage: React.FC = () => {
   }));
 
   // Merge, deduplicate by id, owned meetings first
-  const seenIds = new Set(ownedMeetings.map((m) => m.id));
+  const seenIds = new Set(ownedMeetingsTransformed.map((m) => m.id));
   const meetings = [
-    ...ownedMeetings,
-    ...invitedMeetings.filter((m) => !seenIds.has(m.id)),
+    ...ownedMeetingsTransformed,
+    ...invitedMeetingsTransformed.filter((m) => !seenIds.has(m.id)),
   ];
 
-  // Optional: Handle status change notifications
-  useEffect(() => {
-    setOnStatusChange((changedMeetings) => {
-      // Safety check for changedMeetings
-      if (!changedMeetings || !Array.isArray(changedMeetings)) {
-        return;
-      }
-      
-      // You can add toast notifications here
-      changedMeetings.forEach(meeting => {
-        console.log(`Meeting "${meeting.name}" status updated to: ${meeting.state}`);
-        // Example: show toast notification
-        // toast.info(`Meeting "${meeting.name}" is now ${meeting.state}`);
-      });
-    });
-  }, [setOnStatusChange]);
-
-  
   const getStatusBadge = (status: string) => {
     const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-300";
     switch (status) {
@@ -179,7 +196,6 @@ const MeetingsPage: React.FC = () => {
             </div>
             <span className="text-green-900">Meet</span>
           </div>
-          
         )
       case "MSTEAMS":
         return (
@@ -189,7 +205,6 @@ const MeetingsPage: React.FC = () => {
             </div>
             <span className="text-purple-900">Teams</span>
           </div>
-          
         )
       case "ZOOM":
         return (
@@ -199,12 +214,9 @@ const MeetingsPage: React.FC = () => {
             </div>
             <span className="text-blue-900">Zoom</span>
           </div>
-          
         )
       default:
-        return (
-          <></>
-        )
+        return <></>
     }
   }
 
@@ -242,7 +254,7 @@ const MeetingsPage: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={refreshMeetings}
+                onClick={loadMeetings}
                 className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Loader className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -279,7 +291,7 @@ const MeetingsPage: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {meetings.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
                     No meetings found
                   </td>
                 </tr>
