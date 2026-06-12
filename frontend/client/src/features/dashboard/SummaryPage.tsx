@@ -7,6 +7,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate } from "../../utils/dateFormatter";
+import MeetingFlowDiagram from "../../components/MeetingFlowDiagram";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -593,10 +594,17 @@ const SummaryPage: React.FC = () => {
 
         {/* Flow Diagram Tab */}
         {activeTab === "flowDiagram" && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Flow Diagram</h2>
-            <EmptyState label="Visual flow diagram coming soon." />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Decision Flow Diagram</h2>
+            <p className="text-xs text-gray-400">AI-generated from meeting summary and action items</p>
           </div>
+          <MeetingFlowDiagram 
+            meetingId={meetingId!}
+            summary={summary?.summary}
+            actionItems={items}
+          />
+        </div>
         )}
 
         {/* AI Chat Tab */}
