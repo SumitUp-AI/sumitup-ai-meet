@@ -33,6 +33,12 @@ class Settings(BaseSettings):
 
     # Cohere API Key for Reranking
     cohere_api_key: str
+
+    smtp_server: str
+    smtp_port: int = 587
+    smtp_email: str
+    smtp_password: str
+    client_url: str = "http://localhost:5173/"
     
 settings = Settings()
 

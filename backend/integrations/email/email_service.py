@@ -9,10 +9,7 @@ import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict
-from dotenv import load_dotenv, find_dotenv
-
-load_dotenv(find_dotenv())
-
+from config.settings import settings
 
 class EmailService:
     """
@@ -21,11 +18,11 @@ class EmailService:
     """
 
     def __init__(self):
-        self.smtp_server  = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port    = int(os.getenv("SMTP_PORT", "587"))
-        self.email        = os.getenv("SMTP_EMAIL")
-        self.password     = os.getenv("SMTP_PASSWORD")
-        self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        self.smtp_server  = settings.smtp_server
+        self.smtp_port    = settings.smtp_port
+        self.email        = settings.smtp_email
+        self.password     = settings.smtp_password
+        self.frontend_url = settings.client_url
 
         if not self.email or not self.password:
             print("Warning: SMTP credentials not configured. Emails will not be sent.")
