@@ -11,9 +11,27 @@ from controllers.teams_controller import router as teams_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
 from controllers.zoom_integation_controller import router as zoom_auth_router
 from controllers.rag_controllers import router as chatbot_router
+from config.settings import settings
 from contextlib import asynccontextmanager
 from database.connection import init_db
 from database.create_vector_index import create_vector_index_and_search_index
+
+import sentry_sdk
+import logging
+
+logger = logging.getLogger(__name__)
+
+if settings.environment == "production":
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        send_default_pii=True,
+        traces_sample_rate=0.1,
+        environment=settings.environment,
+        send_default_pii=True
+    )
+else:
+    logger.info("Sentry Disabled in Development")
+
 
 # Connect to DB and disconnect when server shutdown from Connection pool
 @asynccontextmanager
@@ -56,7 +74,11 @@ app.include_router(zoom_auth_router)
 app.include_router(chatbot_router)
 
 @app.get("/")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def root(request: Request):
     return {"message": "Server running!"}
 
+@app.get("/sentry-debug")
+@limiter.limit("10/minute")
+async def trigger_error(request: Request):
+    division_by_zero = 1 / 0

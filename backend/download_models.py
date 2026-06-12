@@ -20,7 +20,7 @@ def download_spacy_model():
 def download_grammar_model():
     print("Downloading grammar correction model")
     
-    model_path = ".core/utils/model_for_grammar_correction"
+    model_path = "core/utils/model_for_grammar_correction"
     
     if os.path.exists(model_path):
         print(f"Grammar model already exists at {model_path}")
@@ -71,7 +71,7 @@ def test_models():
         import torch
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, ".core", "utils", "model_for_grammar_correction")
+        model_path = os.path.join(current_dir, "core", "utils", "model_for_grammar_correction")
 
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
