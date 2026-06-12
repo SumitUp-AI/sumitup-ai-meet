@@ -6,6 +6,7 @@ from models.models import (
     MeetingPlatform, Meeting, Participants, MeetingState, Transcripts,
     TeamInvitation, MeetingParticipant, InvitationStatus
 )
+from middlewares.limiter import limiter
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import os
@@ -24,6 +25,7 @@ class LeaveMeetingPayload(BaseModel):
     meeting_id: str
 
 @router.post("/create_meeting")
+@limiter.limit("60/minute")
 async def create_meeting(request: Request, payload: CreateMeeting):
     meeting_url = payload.meeting_url
     meeting_processor = MeetingPostProcessing()
@@ -87,6 +89,7 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     
 
 @router.post("/leave_meeting")
+@limiter.limit("60/minute")
 async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
     meeting = await Meeting.get(payload.meeting_id)
     if not meeting:
@@ -119,6 +122,7 @@ async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload)
 
 
 @router.get("/get_all_meetings")
+@limiter.limit("60/minute")
 async def get_all_meetings_information(request: Request):
     # Filter meetings by current tenant
     tenant = request.state.tenant
@@ -179,6 +183,7 @@ async def get_shared_meetings(request: Request):
     
 # API Endpoints to show meeting transcription as a whole
 @router.get("/view-transcripts")
+@limiter.limit("60/minute")
 async def get_transcript(request: Request, meeting_id: str):
     # 1. Fetch meeting to ensure it exists and belongs to the tenant
     tenant = request.state.tenant
@@ -234,6 +239,7 @@ async def get_transcript(request: Request, meeting_id: str):
 # ============================================================================
 
 @router.get("/meeting/{meeting_id}/team")
+@limiter.limit("60/minute")
 async def get_meeting_team_info(request: Request, meeting_id: str):
     """
     Get comprehensive team information for a meeting
@@ -339,6 +345,7 @@ async def get_meeting_team_info(request: Request, meeting_id: str):
         )
 
 @router.get("/meeting/{meeting_id}/participants/summary")
+@limiter.limit("60/minute")
 async def get_meeting_participants_summary(request: Request, meeting_id: str):
     """
     Get a quick summary of meeting participants
@@ -391,6 +398,7 @@ async def get_meeting_participants_summary(request: Request, meeting_id: str):
 
 # API Endpoints to implement later
 @router.get("/get_participants/{meeting_id}")
+@limiter.limit("60/minute")
 async def get_meeting_participants(request: Request, meeting_id: str):
     """
     Legacy endpoint - redirects to new team endpoint

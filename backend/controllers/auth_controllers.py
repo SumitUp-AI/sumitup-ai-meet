@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
+from middlewares.limiter import limiter
 from models.models import User, Tenant, DEFAULT_SETTINGS
 from auth.security import hash_password, verify_user
 from auth.auth import create_access_token, create_refresh_token, decode_refresh_token
@@ -35,6 +36,7 @@ ORGANIZATION_SETTINGS = {
 CLOUD_DOMAINS = ['outlook.com', 'gmail.com', 'hotmail.com']
 
 @router.post("/signup")
+@limiter.limit("60/minute")
 async def create_user_account(payload: CreateUserRequest):
     
     if await User.find_one(User.email == payload.email):
@@ -72,6 +74,7 @@ async def create_user_account(payload: CreateUserRequest):
 
 
 @router.post("/login")
+@limiter.limit("60/minute")
 async def login_user(payload: LoginUser, response: Response):
     # Check if password is correct or user exists
     user = await User.find_one(User.email == payload.email)
@@ -119,6 +122,7 @@ async def login_user(payload: LoginUser, response: Response):
     }
 
 @router.post("/refresh")
+@limiter.limit("60/minute")
 async def refresh_access_token(request: Request, response: Response):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
@@ -154,6 +158,7 @@ async def refresh_access_token(request: Request, response: Response):
     }, status_code=200)
 
 @router.post("/logout")
+@limiter.limit("60/minute")
 async def logout_user(request: Request, response: Response):
     response.delete_cookie(
         "refresh_token",

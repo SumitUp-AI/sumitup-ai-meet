@@ -1,27 +1,29 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
+from middlewares.limiter import limiter
 from pydantic import BaseModel
 import httpx
 import base64
-import os
-from dotenv import load_dotenv
+from config.settings import settings
 
-load_dotenv()
 
 router = APIRouter(
     prefix="/api/v1/zoom",
     tags=["Zoom Integration APIs"]
 )
 
-ZOOM_CLIENT_ID = os.getenv("ZOOM_CLIENT_ID")
-ZOOM_CLIENT_SECRET = os.getenv("ZOOM_CLIENT_SECRET")
-ZOOM_REDIRECT_URI = os.getenv("ZOOM_REDIRECT_URI")
+ZOOM_CLIENT_ID = settings.zoom_client_id
+ZOOM_CLIENT_SECRET = settings.zoom_client_secret
+ZOOM_REDIRECT_URI = settings.zoom_redirect_uri
 
 class ZoomTokenPayload(BaseModel):
     access_token: str
     refresh_token: str
 
 @router.post("/save-token")
+@limiter.limit(
+    "60/minute"
+)
 async def save_zoom_token(request: Request, payload: ZoomTokenPayload):
     tenant = request.state.tenant
     tenant.zoom_connected = True
@@ -69,6 +71,7 @@ async def zoom_callback(code: str, request: Request):
     )
 
 @router.delete("/disconnect")
+@limiter.limit("60/minute")
 async def zoom_disconnect(request: Request):
     tenant = request.state.tenant
     if not tenant:
@@ -93,6 +96,7 @@ async def zoom_disconnect(request: Request):
     return JSONResponse({"message": "Zoom disconnected"})
 
 @router.get("/status")
+@limiter.limit("60/minute")
 async def zoom_status(request: Request):
     tenant = request.state.tenant
     if not tenant:

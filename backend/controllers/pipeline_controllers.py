@@ -1,11 +1,12 @@
 from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from pipelines.visual_summaries import generate_visual_summary
 from core.utils.meeting_postprocessing import MeetingPostProcessing
 from models.models import Meeting, MeetingSummaryStatus, ActionItems, Transcripts
 from middlewares.limiter import limiter
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import traceback
 import logging
 
@@ -19,6 +20,12 @@ class TranscriptData(BaseModel):
 
 class MeetingTranscriptPayload(BaseModel): 
     transcript: List[TranscriptData]
+
+class GenerateFlowPayload(BaseModel):
+    meeting_id: str
+    summary: Optional[str] = None
+    action_items: Optional[List[dict]] = None
+
 
 router = APIRouter(
     prefix="/api/v1",
@@ -165,3 +172,47 @@ async def view_transcripts(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/generate-flow-diagram")
+@limiter.limit("6/minute")
+async def generate_flow_diagram(
+    request: Request,
+    payload: GenerateFlowPayload
+) -> JSONResponse:
+    tenant = request.state.tenant
+
+    # Fetch meeting
+    meeting = await Meeting.get(payload.meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if meeting.created_by.ref.id != tenant.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Use provided data or fetch from DB
+    summary = payload.summary
+    action_items = payload.action_items
+
+    print(summary, action_items)
+    if not action_items:
+        db_items = await ActionItems.find(
+            ActionItems.meeting.id == meeting.id
+        ).to_list()
+        action_items = [
+            {"title": item.title, "assignee": item.assignee}
+            for item in db_items
+        ]
+
+    try:
+        diagram = await generate_visual_summary(
+            summary=summary or "",
+            action_items=action_items or [],
+            meeting_title=meeting.name or "Meeting"
+        )
+        return JSONResponse(content={**diagram, "cached": False})
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate diagram: {str(e)}"
+        )
