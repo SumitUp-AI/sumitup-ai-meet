@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import AOS from "aos";
@@ -11,14 +11,16 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, user } = useAuth();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated — honour ?redirect= param
   useEffect(() => {
     if (user) {
-      navigate("/dashboard", { replace: true });
+      const redirectTo = searchParams.get("redirect") || "/dashboard";
+      navigate(redirectTo, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,7 +35,8 @@ const LoginPage = () => {
 
     try {
       await login(email, password, rememberMe);
-      navigate("/dashboard", { replace: true });
+      const redirectTo = searchParams.get("redirect") || "/dashboard";
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.");
       setIsLoading(false);

@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { useMeeting } from "../../context/MeetingContext";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
-import GoogleMeetIcon from "../../assets/google-meet-svgrepo-com.svg";
-import MSTeamsIcon from "../../assets/icons8-microsoft-teams-96.png";
-import ZoomMeetIcon from "../../assets/zoomus-ar21.svg";
+import GoogleMeetIcon from "../../../public/google-meet-svgrepo-com.svg";
+import MSTeamsIcon from "../../../public/icons8-microsoft-teams-96.png";
+import ZoomMeetIcon from "../../../public/zoomus-ar21.svg";
+import InviteTeamModal from "../../components/InviteTeamModal";
 import AOS from "aos";
 
 const NewMeetingPage: React.FC = () => {
@@ -29,6 +30,10 @@ const NewMeetingPage: React.FC = () => {
   // Modal States
   const [showMeetModal, setShowMeetModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
+  // After a meeting is created, show the invite modal
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
+  const [createdMeetingName, setCreatedMeetingName] = useState<string>("");
   
   // Form States
   const [meetingLink, setMeetingLink] = useState("");
@@ -205,9 +210,10 @@ const NewMeetingPage: React.FC = () => {
 
       handleModalClose();
 
-      setTimeout(() => {
-        navigate("/dashboard/meetings");
-      }, 500);
+      // Show the invite modal so the host can immediately invite team members
+      setCreatedMeetingId(meetingId);
+      setCreatedMeetingName(meetingTitle);
+      setShowInviteModal(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
       setError(errorMessage);
@@ -349,7 +355,19 @@ const NewMeetingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Shared Modal Logic */}
+      {/* Invite Team Modal — shown after a meeting is successfully created */}
+      {showInviteModal && createdMeetingId && (
+        <InviteTeamModal
+          meetingId={createdMeetingId}
+          meetingName={createdMeetingName}
+          onClose={() => {
+            setShowInviteModal(false);
+            navigate("/dashboard/meetings");
+          }}
+        />
+      )}
+
+      {/* Meeting link modal (Google Meet / Teams / Zoom) */}
       {(showMeetModal || showZoomModal) && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-gray-100">

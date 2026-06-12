@@ -55,6 +55,11 @@ export const DashboardSidebar: React.FC<{
       label: "Insights",
       path: "/dashboard/insights",
     },
+    {
+      icon: <Users className="w-5 h-5" />,
+      label: "Teams",
+      path: "/dashboard/teams",
+    },
   ];
 
   const isActive = (path: string) => location.pathname === path;
