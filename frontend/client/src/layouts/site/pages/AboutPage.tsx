@@ -1,10 +1,9 @@
-import { Users, Shield, Cpu, Lock, CheckCircle2, ArrowRight, History, Zap } from "lucide-react";
+import { Shield, Cpu, Lock, CheckCircle2, ArrowRight, History, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import sarahImg from "../../../assets/about/sarah.png";
 import markImg from "../../../assets/about/mark.png";
 import elenaImg from "../../../assets/about/elena.png";
 import davidImg from "../../../assets/about/david.png";
-import transcriptTrapImg from "../../../assets/about/transcript-trap.png";
 
 const AboutPage = () => {
   return (

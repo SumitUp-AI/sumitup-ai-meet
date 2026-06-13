@@ -6,7 +6,6 @@ import {
   Code2, 
   Check, 
   AlertCircle, 
-  Info,
   CheckCircle2,
   Minus
 } from 'lucide-react';

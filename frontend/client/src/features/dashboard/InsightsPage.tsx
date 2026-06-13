@@ -1,4 +1,4 @@
-import { TrendingUp, BarChart3, PieChart, Calendar, Users, Clock, Target } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Users, Clock, Target } from "lucide-react";
 
 const InsightsPage: React.FC = () => {
   const insights = [

@@ -8,7 +8,6 @@ import {
   Zap, 
   ShieldCheck, 
   TrendingUp,
-  Cpu,
   GraduationCap,
   Briefcase,
   Rocket,
