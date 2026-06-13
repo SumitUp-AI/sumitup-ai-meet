@@ -6,6 +6,7 @@ from auth.security import hash_password, verify_user
 from auth.auth import create_access_token, create_refresh_token, decode_refresh_token
 from auth.dependencies import get_current_user
 from pydantic import BaseModel
+from config.settings import settings
 
 router = APIRouter(
     prefix="/api/v1",
@@ -112,7 +113,7 @@ async def login_user(request: Request, payload: LoginUser, response: Response):
         value=refresh_token,
         httponly=True,
         max_age=(7*24*60*60) if payload.remember_me else (1*24*60*60),
-        secure=False,
+        secure=True if settings.environment == "production" else False,
         samesite='lax' 
     )
     
@@ -163,7 +164,7 @@ async def logout_user(request: Request, response: Response):
     response.delete_cookie(
         "refresh_token",
         path="/",
-        secure=False,
+        secure=True if settings.environment == "production" else False,
         httponly=True,
         samesite='lax'
     )
