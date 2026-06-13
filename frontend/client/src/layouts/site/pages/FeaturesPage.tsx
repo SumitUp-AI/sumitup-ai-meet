@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import type { Variants } from "framer-motion"
 import { 
   BrainCircuit, 
   Network, 
@@ -8,11 +9,12 @@ import {
   Zap, 
   FileJson,
   ArrowRight,
-  Database,
-  Cpu
+  Database
 } from 'lucide-react';
 
-const containerVariants = {
+// Remove Cpu import since it's not used
+
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -22,12 +24,28 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 100, damping: 20 }
+    transition: { 
+      type: "spring" as const, 
+      stiffness: 100, 
+      damping: 20 
+    }
+  }
+};
+
+// Add animation for the connecting line
+const lineAnimation = {
+  animate: {
+    x: ['0%', '1000%'],
+    transition: { 
+      repeat: Infinity, 
+      duration: 3, 
+      ease: "linear" as const 
+    }
   }
 };
 
@@ -82,8 +100,7 @@ const FeaturesPage = () => {
             <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -translate-y-1/2 z-0">
                <motion.div 
                  className="h-full w-24 bg-primary rounded-full blur-sm"
-                 animate={{ x: ['0%', '1000%'] }}
-                 transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                 animate={lineAnimation.animate}
                />
             </div>
 
@@ -107,7 +124,7 @@ const FeaturesPage = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="w-14 h-14 mx-auto bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 mb-4 group-hover:rotate-12 transition-transform duration-300">
-                  <Cpu className="w-6 h-6 text-primary" />
+                  <BrainCircuit className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">Refine Chain</h3>
                 <p className="text-xs text-gray-500">Recursive character splitting processes chunks via Llama 3.1 LLM.</p>
