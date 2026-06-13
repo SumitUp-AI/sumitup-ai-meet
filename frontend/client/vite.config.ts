@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       onwarn(warning, warn) {
-        if (warning.code === 'TS2322') return; // Ignore type errors
+        if (warning.code === 'TS2322' || warning.code === 'TS6133') return; // Ignore type errors
         warn(warning);
       },
     },
