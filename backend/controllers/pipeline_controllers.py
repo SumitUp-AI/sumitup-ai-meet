@@ -141,38 +141,6 @@ async def get_action_items(
             detail=f"Failed to get action items: {str(e)}"
         )
 
-@router.get("/view-transcripts")
-@limiter.limit("6/minute")
-async def view_transcripts(
-    request: Request,
-    meeting_id: str
-) -> JSONResponse:
-    try:
-        
-
-        meeting = await Meeting.get(PydanticObjectId(meeting_id))
-        if not meeting:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Meeting not found"
-            )
-
-        transcripts = await Transcripts.find(
-            Transcripts.meeting_id.id == meeting.id
-        ).sort(+Transcripts.timestamp_ms).to_list()
-
-        combined = "\n".join([
-            f"{t.speaker_name}: {t.transcript}"
-            for t in transcripts
-        ])
-
-        return JSONResponse(content={"transcript": combined})
-
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 
 @router.post("/generate-flow-diagram")
 @limiter.limit("6/minute")

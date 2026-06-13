@@ -27,7 +27,6 @@ if settings.environment == "production":
         send_default_pii=True,
         traces_sample_rate=0.1,
         environment=settings.environment,
-        send_default_pii=True
     )
 else:
     logger.info("Sentry Disabled in Development")
@@ -59,9 +58,9 @@ async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.client_url],
-    allow_methods=["GET", "PUT", "POST", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Tenant-ID"],
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
     expose_headers=["X-Total-Count"],
     allow_credentials=True
     )

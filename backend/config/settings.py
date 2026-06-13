@@ -1,5 +1,9 @@
-# Config.py
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+import os
+
+# This line is CRITICAL - it loads your .env file
+load_dotenv()
 
 class Settings(BaseSettings):
     # Groq Inference and HuggingFaces
@@ -43,5 +47,8 @@ class Settings(BaseSettings):
     smtp_password: str
     client_url: str = "http://localhost:5173/"
     
-settings = Settings()
+    class Config:
+        env_file = ".env"  # This also helps
+        extra = "ignore"   # This prevents errors from extra .env vars
 
+settings = Settings()
