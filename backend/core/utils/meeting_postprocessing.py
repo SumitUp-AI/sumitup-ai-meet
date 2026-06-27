@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from .transcription_preprocess import TranscriptionPreProcessing
 from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus
 from pipelines.summarization import summarize_meeting_transcript
 from pipelines.action_items import create_action_items_json
@@ -26,9 +25,7 @@ async def get_meeting_and_transcripts(meeting_id):
     
     return meeting, transcripts
 
-class MeetingPostProcessing(TranscriptionPreProcessing):
-    def __init__(self):
-        super().__init__()
+class MeetingPostProcessing:
 
     def detect_meeting_platform(self, meeting_url):
         url = meeting_url.lower().strip()
@@ -46,11 +43,11 @@ class MeetingPostProcessing(TranscriptionPreProcessing):
         return "Invalid URL"
 
 
-    async def clean_transcripts(self, meeting_id):
+    async def return_raw_transcripts(self, meeting_id):
         meeting, transcripts = await get_meeting_and_transcripts(meeting_id)
         if not meeting or not transcripts:
             return None
-        return self.process_transcript_list(transcripts)
+        return transcripts
 
     async def create_summarization_from_transcription(self, meeting_id, results):
         meeting = await Meeting.get(PydanticObjectId(meeting_id))
@@ -109,16 +106,15 @@ class MeetingPostProcessing(TranscriptionPreProcessing):
             return None
 
     async def execute_complete_pipeline(self, meeting_id):
-        # 1. Cleaning
-        cleaned_results = await self.clean_transcripts(meeting_id)
-        if not cleaned_results:
-            return {"status": "failed", "error": "Cleaning/Transcripts failed"}
+        raw_transcripts = await self.return_raw_transcripts(meeting_id)
+        if not raw_transcripts:
+            return {"status": "failed", "error": "Transcripts not found for meeting"}
 
         ingested = await ingest_meeting_transcripts(meeting_id)
         if not ingested:
             return {"status": "failed", "error": "RAG Ingestion Failed"}
         
-        mid, summary = await self.create_summarization_from_transcription(meeting_id, cleaned_results)
+        mid, summary = await self.create_summarization_from_transcription(meeting_id, raw_transcripts)
         if not summary:
             return {"status": "failed", "error": "Summarization failed"}
 

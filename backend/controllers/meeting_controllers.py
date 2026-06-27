@@ -406,6 +406,3 @@ async def get_meeting_participants(request: Request, meeting_id: str):
     """
     return await get_meeting_team_info(request, meeting_id)
 
-@router.post("/create_physical_meeting")
-async def create_physical_meeting(request: Request):
-    pass

@@ -5,11 +5,13 @@ Uses Gmail SMTP with professional, responsive HTML templates. No emojis.
 """
 
 import smtplib
-import os
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict
 from config.settings import settings
+
+logger = logging.getLogger(__name__)
 
 class EmailService:
     """
@@ -25,7 +27,7 @@ class EmailService:
         self.frontend_url = settings.client_url
 
         if not self.email or not self.password:
-            print("Warning: SMTP credentials not configured. Emails will not be sent.")
+            logger.error("Email Credentials not configured!")
 
     # ──────────────────────────────────────────────────────────────────────────
     # Internal helpers
@@ -665,7 +667,7 @@ class EmailService:
                 f"\"{response_data.get('meeting_name', 'your meeting')}\"\n\n"
                 f"View responses in your dashboard: "
                 f"{self.frontend_url}/dashboard/teams\n\n"
-                f"(c) 2025 SumitUp-Labs. All rights reserved."
+                f"(c) 2026 SumitUp-Labs. All rights reserved."
             )
 
             msg.attach(MIMEText(plain, "plain"))
@@ -674,9 +676,9 @@ class EmailService:
             with self._create_smtp_connection() as server:
                 server.send_message(msg)
 
-            print(f"Response notification sent to: {to_email}")
+            logger.info(f"Response notification sent to: {to_email}")
             return True
 
         except Exception as e:
-            print(f"Failed to send response notification to {to_email}: {str(e)}")
+            logger.error(f"Failed to send response notification to {to_email}: {str(e)}")
             return False

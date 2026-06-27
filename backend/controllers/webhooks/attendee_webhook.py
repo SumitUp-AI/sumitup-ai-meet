@@ -2,6 +2,7 @@ import hmac
 import hashlib
 import base64
 import json
+import logging
 from models.models import Meeting, Transcripts, MeetingState
 from datetime import datetime, timezone
 from fastapi.responses import JSONResponse
@@ -15,6 +16,8 @@ router = APIRouter(
 )
 
 WEBHOOK_SECRET = settings.webhook_secret
+logger = logging.getLogger(__name__)
+
 
 processor = MeetingPostProcessing()
 
@@ -60,13 +63,13 @@ async def handle_state_change(meeting: Meeting, data: dict, background_task: Bac
             else:
                 meeting.last_state_change_time = event_time
         except ValueError:
-            print("Error parsing created_at timestamp")
+            logger.error("Error parsing created_at timestamp")
 
     if should_update:
         new_state = data["new_state"]
         meeting.state = new_state
         await meeting.save()
-        print(f"Meeting {meeting.id} state → {data['new_state']}")
+        logger.info(f"Meeting State :{new_state}")
         
         if new_state == MeetingState.ended:
             meeting.ended_at = event_time
@@ -99,42 +102,32 @@ async def receive_webhook(
     body_bytes = await request.body()
     # Signature checks — return 200 always so Attendee doesn't retry
     if not x_webhook_signature:
-        print("Webhook received without signature header")
-        return JSONResponse({"message": "OK"}, status_code=200)
-
-    if not WEBHOOK_SECRET:
-        print("WEBHOOK_SECRET not configured")
-        return JSONResponse({"message": "OK"}, status_code=200)
+        logger.error("Invalid or Missing Webhook Signature")
+        return JSONResponse({"message": "Missing Webhook Signature"}, status_code=404)
 
     if not verify_signature(body_bytes, WEBHOOK_SECRET, x_webhook_signature):
-        print("Invalid webhook signature")
-        return JSONResponse({"message": "OK"}, status_code=200)
+        logger.error("Webhook Authentication Failed for Bot Service")
+        return JSONResponse({"message": "Authentication Failed for Webhook"}, status_code=400)
 
     payload = json.loads(body_bytes)
     bot_id = payload.get("bot_id")
     trigger = payload.get("trigger", "")
     data = payload.get("data", {})
 
-    if not bot_id:
-        print(f"Webhook with no bot_id — trigger: {trigger}")
-        return JSONResponse({"message": "OK"}, status_code=200)
-
     meeting = await Meeting.find_one(Meeting.bot_id == bot_id)
 
     if not meeting:
-        print(f" No meeting found for bot_id: {bot_id}")
-        return JSONResponse({"message": "OK"}, status_code=200)
+        logger.error("Current Meeting Not Found")
+        return JSONResponse({"message": "Server Error"}, status_code=404)
         
-    print(f" Found meeting: {meeting.id} - {meeting.name}")
-
     if "bot.state_change" in trigger and "new_state" in data:
         await handle_state_change(meeting, data, background_task)
 
     elif "transcript.update" in trigger:
-        print(f" Processing transcript update for meeting {meeting.id}")
+        logger.info(f"Processing transcript update for Current Meeting")
         await handle_transcript(meeting, data)
 
-    else:
-        print(f" Unhandled trigger: {trigger}")
+    # else:
+    #     print(f" Unhandled trigger: {trigger}")
 
     return JSONResponse({"message": "OK"}, status_code=200)
