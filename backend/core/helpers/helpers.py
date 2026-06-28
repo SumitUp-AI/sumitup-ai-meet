@@ -137,7 +137,7 @@ class AttendeeBot(STTServiceProvider):
                             try:
                                 self.meeting.state = MeetingState(state_value.lower())
                             except (ValueError, AttributeError):
-                                print(f"Warning: Could not convert state '{state_value}' to MeetingState enum")
+                                raise AttributeError("Meeting State Config Not Matched")
                     if "created_at" in data:
                         try:
                             # handling simple iso format
@@ -152,20 +152,17 @@ class AttendeeBot(STTServiceProvider):
                 error_detail = e.response.text
                 if "credentials_not_found" in error_detail.lower():
                     raise RuntimeError(
-                        f"Credentials not found on bot service. "
-                        f"Ensure {self.provider.upper()}_API_KEY is set on the bot service. "
-                        f"Error: {error_detail}"
+                        "Bot Service Credentials Misconfigured / Missing"
                     )
                 raise RuntimeError(
                     f"Join meeting failed "
-                    f"(status={e.response.status_code}): {error_detail}"
+                    f"Contact us for error report"
                 )
 
             except httpx.RequestError as e:
             # Network / DNS / connection issues
                 raise RuntimeError(
-                    f"Could not connect to Bot at localhost:8000: {str(e)}. "
-                    f"Make sure the bot service is running."
+                    "Connecting to Zoom/Teams/Meet Failed, Contact us for error report!"
                 )
  
     async def leave_meeting(self):
@@ -196,7 +193,7 @@ class AttendeeBot(STTServiceProvider):
             except httpx.RequestError as e:
             # Network / DNS / connection issues
                 raise RuntimeError(
-                    f"Could not connect to Bot: {str(e)}"
+                    f"Bot Service Connection Failed or Not Running"
                 )
  
  

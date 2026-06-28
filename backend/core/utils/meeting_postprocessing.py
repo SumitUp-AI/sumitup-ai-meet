@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 async def get_meeting_and_transcripts(meeting_id):
     meeting = await Meeting.get(PydanticObjectId(meeting_id))
     if not meeting:
-        logger.error(f"Meeting {meeting_id} not found")
+        logger.error(f"Meeting not found")
         return None, None
     
     transcripts = await Transcripts.find(
@@ -20,7 +20,7 @@ async def get_meeting_and_transcripts(meeting_id):
     ).sort(+Transcripts.timestamp_ms).to_list()
     
     if not transcripts:
-        logger.warning(f"No transcripts found for meeting {meeting_id}")
+        logger.warning(f"No transcripts found for current meeting")
         return meeting, []
     
     return meeting, transcripts
@@ -66,7 +66,7 @@ class MeetingPostProcessing:
             await meeting.save()
             return meeting_id, meeting.summary
         except Exception as e:
-            logger.error(f"Summarization failed for {meeting_id}: {e}")
+            logger.error(f"Summarization failed for current meeting: {e}")
             meeting.summary_status = MeetingSummaryStatus.FAILED
             meeting.summary_error = str(e)
             await meeting.save()
@@ -118,7 +118,7 @@ class MeetingPostProcessing:
         if not summary:
             return {"status": "failed", "error": "Summarization failed"}
 
-        # 3. Action Items
+        # 3. Action Items{meeting_id}{meeting_id}
         action_items = await self.create_action_items_from_generated_summary(mid)
         if action_items is None:
             return {"status": "failed", "error": "Action items generation failed"}
