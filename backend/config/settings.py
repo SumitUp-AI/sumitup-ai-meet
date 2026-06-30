@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Zoom OAuth Config
     zoom_client_id: str
     zoom_client_secret: str
-    zoom_redirect_uri: str = "http://localhost:3000/api/v1/zoom/callback/"
+    zoom_redirect_uri: str = "http://localhost:8080/api/v1/zoom/callback/"
     
     # Google Gemini Config
     google_api_key: str
