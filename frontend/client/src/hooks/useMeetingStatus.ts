@@ -25,7 +25,7 @@ export const useMeetingStatus = (options: UseMeetingStatusOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const { token, user } = useAuth();
   
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
   
   // Track previous states to detect changes
   const previousStatesRef = useRef<Map<string, string>>(new Map());

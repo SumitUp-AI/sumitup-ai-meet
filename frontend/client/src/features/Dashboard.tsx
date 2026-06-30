@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
   const traverseToSummary = (id: string) => {
     navigate(`/dashboard/summary/${id}`);

@@ -30,7 +30,7 @@ export const useTeamMembers = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { token, user } = useAuth();
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
   // Fetch both registered members and sent invitations in parallel
   const fetchMembers = useCallback(async () => {

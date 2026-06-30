@@ -47,7 +47,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
   summary,
   actionItems = [],
 }) => {
-  // ✅ v12 — no generic type on hook call, inferred from initial value
+
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
   const [usingCache, setUsingCache] = useState(false);
 
   const { token, user } = useAuth();
-  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
   // ── Fallback diagram ───────────────────────────────────────────────────────
 
@@ -65,10 +65,9 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         id: 'start',
         type: 'input',
         position: { x: 250, y: 0 },
-        data: { label: '📋 Meeting Summary' },
+        data: { label: 'Meeting Summary' },
         style: {
           backgroundColor: '#e0f2fe',
-          border: '1px solid #0284c7',
           borderRadius: '8px',
           fontSize: '13px',
           fontWeight: 600,
@@ -94,7 +93,6 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         id: 'edge_start_no_actions',
         source: 'start',
         target: 'no_actions',
-        // ✅ v12 — correct field is markerEnd, not marker
         markerEnd: { type: MarkerType.ArrowClosed },
       });
     } else {
@@ -109,12 +107,11 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
           id: nodeId,
           position: { x: 250, y: 120 + idx * 90 },
           data: {
-            label: `✅ ${truncated}`,
+            label: `${truncated}`,
             assignee: item.assignee ?? undefined,
           },
           style: {
             backgroundColor: '#fef3c7',
-            border: '1px solid #d97706',
             borderRadius: '8px',
             fontSize: '12px',
           },
@@ -124,7 +121,6 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
           id: `edge_start_${idx}`,
           source: 'start',
           target: nodeId,
-          // ✅ correct field
           markerEnd: { type: MarkerType.ArrowClosed },
         });
       });
@@ -167,7 +163,6 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
 
       const data = await res.json();
 
-      // ✅ Validate before setting — API may return wrong shape
       if (Array.isArray(data.nodes) && Array.isArray(data.edges)) {
         setNodes(data.nodes as FlowNode[]);
         setEdges(data.edges as FlowEdge[]);
@@ -202,7 +197,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         addEdge(
           {
             ...params,
-            markerEnd: { type: MarkerType.ArrowClosed }, // ✅ correct field
+            markerEnd: { type: MarkerType.ArrowClosed }, 
           },
           eds
         )
@@ -219,7 +214,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
       setLoading(false);
       setError('No summary or action items available');
     }
-    // ✅ generateDiagram in deps — stable reference via useCallback
+
   }, [generateDiagram]);
 
   // ── Loading ────────────────────────────────────────────────────────────────
@@ -263,7 +258,6 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         </div>
       )}
 
-      {/* ✅ v12 — no generic on JSX element, types flow from useNodesState/useEdgesState */}
       <ReactFlow
         nodes={nodes}
         edges={edges}

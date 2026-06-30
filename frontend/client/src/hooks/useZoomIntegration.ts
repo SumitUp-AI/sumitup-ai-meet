@@ -8,7 +8,7 @@ export const useZoomIntegration = () => {
   const [saving, setSaving] = useState(false);
 
   const BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+    import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
   const { token, user } = useAuth();
 
   // ─── Fetch Status ───────────────────────────────────────────

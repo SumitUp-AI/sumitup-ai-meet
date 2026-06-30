@@ -101,7 +101,7 @@ const SummaryPage: React.FC = () => {
   const loadedTabs   = useRef<Set<TabKey>>(new Set());
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const authHeaders = () => getAuthHeaders(token!, user!.tenant_id);
