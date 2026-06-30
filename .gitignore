@@ -217,4 +217,3 @@ __marimo__/
 
 # VS Code
 .vscode/
-backend/pipelines/notebook/*.ipynb
