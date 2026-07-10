@@ -37,7 +37,7 @@ SumitUp is an AI Powered Solution that transcribes, generate summary and create 
    
 > Note: This App is in Beta Use and is in development for other users 
 
-## The Architecture Diagram of whole app working is given below as (Component Level Overview):
+## The Architecture Diagram of whole app working is given below as (Container Level Overview):
 <img width="916" height="1097" alt="ContainerC4-Fixed drawio" src="https://github.com/user-attachments/assets/e81202d0-b70d-4b8a-9a95-ad95f90cf7c4" />
 
 ## Some Highlights: 
