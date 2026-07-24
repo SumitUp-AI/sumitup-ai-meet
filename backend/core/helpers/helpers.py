@@ -48,14 +48,14 @@ class STTServiceProvider:
             self._openai_api_key = openai_key
         
         
-class AttendeeBot(STTServiceProvider):
+class AttendeeClientBot(STTServiceProvider):
     _language: str
     _api_key: str
     
     # Adding Multiple Settings for ASR Providers
-    def __init__(self, bot, api_key, meeting_url, provider, language, meeting=None):
+    def __init__(self, bot_name, api_key, meeting_url, provider, language, meeting=None):
         super().__init__(provider=provider)
-        self._bot = bot
+        self._bot_name = bot_name
         self._api_key = api_key
         self._language = language           
         self._meeting_url = meeting_url
@@ -110,7 +110,7 @@ class AttendeeBot(STTServiceProvider):
                     },
                     json={
                         "meeting_url": self._meeting_url,
-                        "bot_name": self._bot,
+                        "bot_name": self._bot_name,
                         "transcription_settings": settings,
                         "recording_settings":{
                             "format":"none"
@@ -195,6 +195,40 @@ class AttendeeBot(STTServiceProvider):
                 raise RuntimeError(
                     f"Bot Service Connection Failed or Not Running"
                 )
+
+    async def get_all_attendee_participants(self):
+        if not self.meeting or not self.meeting.bot_id:
+            raise ValueError("No Meeting Object with bot_id found")
+
+        effective_bot_id = self.meeting.bot_id
+        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
+        
+        async with httpx.AsyncClient(timeout=10) as client:
+            try:
+                res = await client.get(
+                    f"{attendee_url}/api/v1/bots/{effective_bot_id}/participants",
+                    headers={
+                        "Authorization": f"Token {self._api_key}",
+                        "Content-Type": "application/json"
+                    }
+                )
+
+                res.raise_for_status()
+                return res.json()
+              
+            except httpx.RequestError as e:
+                raise RuntimeError(
+                    "Bot Service Connection Failed or Not Running while getting participants"
+                )
+            except httpx.HTTPStatusError as he:
+                raise RuntimeError(
+                    "Failed to Fetch Participants from Current Meeting"
+                    f"(status={e.response.status_code}): {e.response.text}"
+                )
+
+            
+
+
  
  
  
