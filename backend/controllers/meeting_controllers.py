@@ -1,6 +1,6 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse
-from core.helpers.helpers import AttendeeBot
+from core.helpers.helpers import AttendeeClientBot
 from core.utils.meeting_postprocessing import MeetingPostProcessing
 from models.models import (
     MeetingPlatform, Meeting, Participants, MeetingState, Transcripts,
@@ -40,6 +40,10 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     tenant = request.state.tenant
     if not tenant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant Object Missing in Payload")
+    # 4. Trigger Bot
+    bot_api_key = os.getenv("ATTENDEE_API_KEY") 
+    if not bot_api_key:
+         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ATTENDEE_API_KEY not configured")
 
     meeting = Meeting(
         name=payload.name,
@@ -50,20 +54,8 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         ended_at=None,
     )
 
-    await meeting.save()
-
-    # Create Host Particpant
-    host = Participants(tenant=tenant, meeting=meeting, role="host")
-    await host.save()
-    
-
-    # 4. Trigger Bot
-    bot_api_key = os.getenv("ATTENDEE_API_KEY") 
-    if not bot_api_key:
-         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ATTENDEE_API_KEY not configured")
-
     try:
-        bot = AttendeeBot(
+        bot = AttendeeClientBot(
             bot="SumitUp Bot",
             api_key=bot_api_key,
             meeting_url=meeting_url,
@@ -86,39 +78,6 @@ async def create_meeting(request: Request, payload: CreateMeeting):
         meeting.state = MeetingState.fatal_error
         await meeting.save()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Meeting Processing Failed, Server error: {str(e)}")
-    
-
-@router.post("/leave_meeting")
-@limiter.limit("60/minute")
-async def leave_meeting_endpoint(request: Request, payload: LeaveMeetingPayload):
-    meeting = await Meeting.get(payload.meeting_id)
-    if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found")
-
-    bot_api_key = os.getenv("ATTENDEE_API_KEY") 
-    if not bot_api_key:
-         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ATTENDEE_API_KEY requested but not found")
-
-    bot = AttendeeBot(
-        bot="Sumitup Meeting Bot", 
-        api_key=bot_api_key, 
-        meeting_url=meeting.meeting_link, 
-        provider="deepgram", 
-        language="en",
-        meeting=meeting
-    )
-
-    try:
-        await bot.leave_meeting()
-        # Ensure meeting state is updated to ended
-        meeting.state = MeetingState.ended
-        meeting.ended_at = datetime.now(timezone.utc)
-        await meeting.save()
-        
-        return JSONResponse(content={"message": "Bot left the meeting"})
-    except Exception as e:
-         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to leave: {str(e)}")
-
 
 
 @router.get("/get_all_meetings")
