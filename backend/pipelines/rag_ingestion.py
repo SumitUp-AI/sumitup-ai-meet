@@ -8,11 +8,6 @@ from config.settings import settings
 mongodb_uri = settings.mongo_uri
 
 async def ingest_meeting_transcripts(meeting_id: str):
-    """
-    Fetches transcripts for a specific meeting, splits them semantically,
-    generates embeddings, and stores them in the Embedding MongoDB collection.
-    """
-    # print(f"Starting ingestion for meeting: {meeting_id}")
     
     meeting = await Meeting.get(meeting_id)
     if not meeting:
