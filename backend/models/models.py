@@ -81,6 +81,8 @@ class MeetingLanguage(str, Enum):
 
 
 class MeetingState(str, Enum):
+    launching = "launching"
+    completed = "completed"
     ready = "ready"
     joining = "joining"
     joined_not_recording = "joined_not_recording"
@@ -105,6 +107,12 @@ class MeetingSummaryStatus(str, Enum):
     PROCESSING = "processing"
     FAILED = "failed"
 
+class MeetingSTTProvider(str, Enum):
+    deepgram = "deepgram"
+    sarvam = "sarvam"
+    openai = "openai"
+    gladia = "gladia"
+    assemblyai = "assemblyai"
 
 class Meeting(Document):
     created_by: "Link[Tenant]"
@@ -215,7 +223,7 @@ class TeamInvitation(Document):
         ]
 
 
-class MeetingParticipant(Document):
+class MeetingInvitedParticipant(Document):
     meeting: "Link[Meeting]"
     user: "Link[User]"
     role: str = "participant"

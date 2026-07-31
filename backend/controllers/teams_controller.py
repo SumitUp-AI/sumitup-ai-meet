@@ -12,7 +12,7 @@ import secrets
 
 # Import models
 from models.models import (
-    User, Meeting, TeamInvitation, MeetingParticipant, 
+    User, Meeting, TeamInvitation, MeetingInvitedParticipant, 
     InvitationStatus, UserRole
 )
 
@@ -333,13 +333,13 @@ async def respond_to_invitation(payload: RespondToInvitationRequest) -> JSONResp
         # If accepted, create participant record
         if payload.response == "accept":
             # Check if participant already exists
-            existing_participant = await MeetingParticipant.find_one(
-                MeetingParticipant.meeting.id == invitation.meeting.id,
-                MeetingParticipant.user.id == invitation.invited_user.id
+            existing_participant = await MeetingInvitedParticipant.find_one(
+                MeetingInvitedParticipant.meeting.id == invitation.meeting.id,
+                MeetingInvitedParticipant.user.id == invitation.invited_user.id
             )
             
             if not existing_participant:
-                participant = MeetingParticipant(
+                participant = MeetingInvitedParticipant(
                     meeting=invitation.meeting,
                     user=invitation.invited_user,
                     role="participant",
@@ -462,8 +462,8 @@ async def get_meeting_participants(request: Request, meeting_id: str):
             )
 
         # Get confirmed participants
-        participants = await MeetingParticipant.find(
-            MeetingParticipant.meeting.id == meeting.id
+        participants = await MeetingInvitedParticipant.find(
+            MeetingInvitedParticipant.meeting.id == meeting.id
         ).to_list()
 
         # Get all invitations for this meeting, filter pending ones
