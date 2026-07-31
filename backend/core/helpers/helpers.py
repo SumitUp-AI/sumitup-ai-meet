@@ -121,32 +121,27 @@ class AttendeeClientBot(STTServiceProvider):
                 response.raise_for_status()
                 data = response.json()
 
-                if self.meeting:
-                    if "id" in data:
-                        self.meeting.bot_id = data["id"]
-                    if "meeting_url" in data:
-                        self.meeting.meeting_link = data["meeting_url"]
-                    if "state" in data:
-                        try:
-                            # Convert string state to MeetingState enum
-                            state_value = data["state"]
+                bot_data = {}
+                if "id" in data:
+                    bot_data["bot_id"] = data["id"]
+                if "state" in data:
+                    try:
+                    # Convert string state to MeetingState enum
+                        state_value = data["state"]
                             # Try to match the state value to MeetingState enum
-                            self.meeting.state = MeetingState(state_value)
-                        except (ValueError, KeyError):
+                        bot_data["state"] = MeetingState(state_value.lower())
+                    except (ValueError, KeyError):
                             # If conversion fails, try with lowercase
-                            try:
-                                self.meeting.state = MeetingState(state_value.lower())
-                            except (ValueError, AttributeError):
-                                raise AttributeError("Meeting State Config Not Matched")
+                        raise AttributeError("State Conversion Failed")
                     if "created_at" in data:
                         try:
                             # handling simple iso format
                             dt = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
-                            self.meeting.created_at = dt
+                            bot_data["created_at"] = dt
                         except ValueError:
                             pass # Fallback if format is unexpected
-                    await self.meeting.save()
-                return data
+                    
+                return bot_data
 
             except httpx.HTTPStatusError as e:
                 error_detail = e.response.text
