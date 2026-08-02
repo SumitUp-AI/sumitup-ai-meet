@@ -3,11 +3,11 @@ import hashlib
 import base64
 import json
 import logging
-from models.models import Meeting, Transcripts, MeetingState
-from datetime import datetime, timezone
+from models.models import Meeting
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, BackgroundTasks, Request, Header, BackgroundTasks
 from core.utils.meeting_postprocessing import MeetingPostProcessing
+from services.meeting_service import MeetingService
 from config.settings import settings
 
 router = APIRouter(
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 processor = MeetingPostProcessing()
+meet_service = MeetingService()
 
 def verify_signature(payload_bytes: bytes, secret: str, received_signature: str) -> bool:
     try:
@@ -40,57 +41,6 @@ def verify_signature(payload_bytes: bytes, secret: str, received_signature: str)
         return hmac.compare_digest(expected, received_signature)
     except Exception:
         return False
-
-
-async def handle_state_change(meeting: Meeting, data: dict, background_task: BackgroundTasks):
-    event_created_at_str = data.get("created_at")
-    should_update = True
-
-    if event_created_at_str:
-        try:
-            event_time = datetime.fromisoformat(
-                event_created_at_str.replace('Z', '+00:00')
-            )
-            if meeting.last_state_change_time:
-                current = meeting.last_state_change_time
-                if current.tzinfo is None:
-                    current = current.replace(tzinfo=timezone.utc)
-                if event_time < current:
-                    print(f"Out-of-order event ignored: {event_time}")
-                    should_update = False
-                else:
-                    meeting.last_state_change_time = event_time
-            else:
-                meeting.last_state_change_time = event_time
-        except ValueError:
-            logger.error("Error parsing created_at timestamp")
-
-    if should_update:
-        new_state = data["new_state"]
-        meeting.state = new_state
-        await meeting.save()
-        logger.info(f"Meeting State :{new_state}")
-        
-        if new_state == MeetingState.ended:
-            meeting.ended_at = event_time
-            await meeting.save()
-            background_task.add_task(
-                processor.execute_complete_pipeline,
-                meeting_id=str(meeting.id),
-            )
-
-
-async def handle_transcript(meeting: Meeting, data: dict):
-    transcript = Transcripts(
-        meeting_id=meeting,
-        speaker_id=data["speaker_uuid"],
-        speaker_name=data["speaker_name"],
-        duration_ms=data["duration_ms"],
-        timestamp_ms=data["timestamp_ms"],
-        transcript=data["transcription"]["transcript"]
-    )
-    await transcript.insert()
-
 
 
 @router.post("/webhook")
@@ -121,13 +71,63 @@ async def receive_webhook(
         return JSONResponse({"message": "Server Error"}, status_code=404)
         
     if "bot.state_change" in trigger and "new_state" in data:
-        await handle_state_change(meeting, data, background_task)
+        await meet_service.meeting_state_handler(meeting, data, background_task)
 
     elif "transcript.update" in trigger:
         logger.info(f"Processing transcript update for Current Meeting")
-        await handle_transcript(meeting, data)
-
-    # else:
-    #     print(f" Unhandled trigger: {trigger}")
+        await meet_service.transcript_handler(meeting, data)
 
     return JSONResponse({"message": "OK"}, status_code=200)
+
+
+
+# async def handle_state_change(meeting: Meeting, data: dict, background_task: BackgroundTasks):
+#     event_created_at_str = data.get("created_at")
+#     should_update = True
+
+#     if event_created_at_str:
+#         try:
+#             event_time = datetime.fromisoformat(
+#                 event_created_at_str.replace('Z', '+00:00')
+#             )
+#             if meeting.last_state_change_time:
+#                 current = meeting.last_state_change_time
+#                 if current.tzinfo is None:
+#                     current = current.replace(tzinfo=timezone.utc)
+#                 if event_time < current:
+#                     print(f"Out-of-order event ignored: {event_time}")
+#                     should_update = False
+#                 else:
+#                     meeting.last_state_change_time = event_time
+#             else:
+#                 meeting.last_state_change_time = event_time
+#         except ValueError:
+#             logger.error("Error parsing created_at timestamp")
+
+#     if should_update:
+#         new_state = data["new_state"]
+#         meeting.state = new_state
+#         await meeting.save()
+#         logger.info(f"Meeting State :{new_state}")
+        
+#         if new_state == MeetingState.ended:
+#             meeting.ended_at = event_time
+#             await meeting.save()
+#             background_task.add_task(
+#                 processor.execute_complete_pipeline,
+#                 meeting_id=str(meeting.id),
+#             )
+
+
+# async def handle_transcript(meeting: Meeting, data: dict):
+#     transcript = Transcripts(
+#         meeting_id=meeting,
+#         speaker_id=data["speaker_uuid"],
+#         speaker_name=data["speaker_name"],
+#         duration_ms=data["duration_ms"],
+#         timestamp_ms=data["timestamp_ms"],
+#         transcript=data["transcription"]["transcript"]
+#     )
+#     await transcript.insert()
+
+
