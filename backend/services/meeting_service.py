@@ -2,7 +2,8 @@ from enum import Enum
 from datetime import datetime, timezone
 from core.helpers.helpers import AttendeeClientBot
 from core.utils.meeting_postprocessing import MeetingPostProcessing
-from models.models import MeetingState, MeetingPlatform, MeetingSTTProvider, Meeting
+from models.models import MeetingState, MeetingPlatform, MeetingSTTProvider, Meeting, Transcripts
+from fastapi import BackgroundTasks
 
 import logging
 
@@ -10,16 +11,7 @@ logger = logging.getLogger(__name__)
 
 class MeetingService:
 
-    def __init__(self, meeting_title, tenant, meeting_url, attendee_api_key):
-        self.meeting_title = meeting_title
-        self.tenant = tenant
-        self.meeting_url = meeting_url
-        self.attendee_api_key = attendee_api_key
-
-    def check_for_meeting_status_and_duration(self):
-        pass
-
-    async def launch_meeting(self, meeting):
+    async def launch_bot(self, meeting, attendee_api_key):
         """Spins up a Bot to Join Meeting Platform such as Zoom / Microsoft Teams 
         / Google Meet via Attendee SDK"""
 
@@ -37,7 +29,7 @@ class MeetingService:
             )
 
             result = await bot_client.join_meeting()
-            
+            logger.info("Attendee Bot is Started in Background")        
 
             if not result:
                 raise AttributeError("No JSON Response Received from Attendee for Bot Data")
@@ -47,18 +39,17 @@ class MeetingService:
             meeting.created_at = result["created_at"]
 
             await meeting.save()
-                
-            return {"status": "success", "state": meeting.state, "created_at": meeting.created_at}
-        
+
+            
         except Exception as e:
-            logger.error(f"Failed to Launch Meeting, {e}")
-            raise
-            return {"status": "Failed to Launch Bot For Meeting Platform"}
+            logger.error(f"Failed to Launch Bot for Meeting, {e}")
+            raise RuntimeError("Failed to Launch Attendee Bot")
+            
 
     def add_all_mapped_participants(self):
         pass
 
-    async def create_meeting(self) -> Meeting:
+    async def create_meeting(self, meeting_title, meeting_url, tenant) -> Meeting:
         """Creates Meeting Instance Before Launching Bot"""
         meeting_processor = MeetingPostProcessing()
         detected_platform = meeting_processor.detect_meeting_platform(self.meeting_url)
@@ -69,10 +60,10 @@ class MeetingService:
             raise
 
         meeting = Meeting(
-            name=self.meeting_title,
-            meeting_link=self.meeting_url,
+            name=meeting_title,
+            meeting_link=meeting_url,
             platform=detected_platform,
-            created_by=self.tenant,
+            created_by=tenant,
             started_at=datetime.now(timezone.utc),
             ended_at=None,
             state=MeetingState.launching
@@ -80,23 +71,24 @@ class MeetingService:
 
         await meeting.save()
 
-        return {
-            "name": meeting.title,
-            "meeting_link": meeting.meeting_link,
-            "platform": meeting.platform,
-            "state": meeting.state,
-            "created_by": meeting.created_by
-        }
+        return meeting
 
 
-    def transcript_handler(self):
-        pass
+    async def transcript_handler(self, meeting: Meeting, data: dict):
+        """Listen for Transcript Data Event from Attendee Webhook"""
+        transcript = Transcripts(
+                meeting_id=meeting,
+                speaker_id=data["speaker_uuid"],
+                speaker_name=data["speaker_name"],
+                duration_ms=data["duration_ms"],
+                timestamp_ms=data["timestamp_ms"],
+                transcript=data["transcription"]["transcript"]
+            )
+        await transcript.insert()
 
-    async def meeting_state_handler(self, meeting: Meeting, payload: dict):
-        bot_id = payload.get("bot_id")
-        trigger = payload.get("trigger", "")
-        data = payload.get("data", {})
 
+    async def meeting_state_handler(self, meeting: Meeting, data: dict, background_task: BackgroundTasks):
+        """Listen for Meeting State Handling Event and other Trigger events from Attendee Webhook"""
         event_created_at_str = data.get("created_at")
         should_update = True
 
@@ -120,11 +112,16 @@ class MeetingService:
                 logger.error("Error parsing created_at timestamp")
 
         if should_update:
-            new_state = data["new_state"]
+            new_state = MeetingState(data["new_state"])
             meeting.state = new_state
             await meeting.save()
             logger.info(f"Meeting State :{new_state}")
-            
+
+        # If state is joined_recording , record the time as entry time for bot
+        # If state is ended, trigger post processing
+
+        def check_for_meeting_status_and_duration(self):
+            pass   
 
 
 
