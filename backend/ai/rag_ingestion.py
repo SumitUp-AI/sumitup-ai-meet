@@ -2,7 +2,7 @@ from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from models.models import Meeting, Transcripts, Embedding
 from typing import List
-from pipelines.embedding_model import embeddings
+from ai.embedding_model import embeddings
 from config.settings import settings
 
 mongodb_uri = settings.mongo_uri
