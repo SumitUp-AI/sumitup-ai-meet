@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from pipelines.rag_retrieval import retrieve_answer, update_summary
+from ai.rag_retrieval import retrieve_answer, update_summary
 from middlewares.limiter import limiter
 
 router = APIRouter(

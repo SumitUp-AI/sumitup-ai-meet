@@ -1,6 +1,6 @@
 from langchain_mongodb.index import create_fulltext_search_index
 from langchain_mongodb import MongoDBAtlasVectorSearch
-from pipelines.embedding_model import embeddings
+from ai.embedding_model import embeddings
 from pymongo import MongoClient
 from config.settings import settings
 import logging

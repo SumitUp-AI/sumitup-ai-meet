@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus
-from pipelines.summarization import summarize_meeting_transcript
-from pipelines.action_items import create_action_items_json
-from pipelines.rag_ingestion import ingest_meeting_transcripts
+from ai.summarization import summarize_meeting_transcript
+from ai.action_items import create_action_items_json
+from ai.rag_ingestion import ingest_meeting_transcripts
 from beanie import PydanticObjectId
 import re
 import logging
