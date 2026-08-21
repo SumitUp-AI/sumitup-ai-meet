@@ -1,12 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
 from middlewares.limiter import limiter
-from models.models import User, Tenant, DEFAULT_SETTINGS
+from models.models import User, Tenant, TenantSettings
 from auth.security import hash_password, verify_user
 from auth.auth import create_access_token, create_refresh_token, decode_refresh_token
 from auth.dependencies import get_current_user
 from pydantic import BaseModel
 from config.settings import settings
+
+import logging 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/v1",
@@ -23,16 +27,6 @@ class LoginUser(BaseModel):
     password: str
     remember_me: bool
 
-# This is for only simulating organization and normal user, later to be replaced by another robust logic
-# For now we would keep it as it should be
-
-ORGANIZATION_SETTINGS = {
-   "max_meetings": 100,
-   "recording_enabled" : False,
-   "realtime_transcription": True,
-   "summarization_and_action_items": True,
-   "billing_mode": True
-}
 
 CLOUD_DOMAINS = ['outlook.com', 'gmail.com', 'hotmail.com']
 
@@ -50,18 +44,26 @@ async def create_user_account(request: Request, payload: CreateUserRequest):
         # Personal email — always create a new tenant per user
         tenant = Tenant(
             domain=payload.email,  # use full email as domain, not just gmail.com
-            settings=DEFAULT_SETTINGS.copy()
         )
         await tenant.insert()
+        tenant_settings = TenantSettings(
+            tenant=tenant,
+            max_meeting_mins=15
+        )
+        await tenant_settings.insert()
     else:
         # Corporate email — share tenant per domain
         tenant = await Tenant.find_one(Tenant.domain == tenant_domain)
         if not tenant:
             tenant = Tenant(
                 domain=tenant_domain,
-                settings=ORGANIZATION_SETTINGS.copy()
             )
             await tenant.insert()
+            tenant_settings = TenantSettings(
+                tenant=tenant,
+                max_meeting_mins=30
+            )
+            await tenant_settings.insert()
 
     user = User(
         name=payload.name,
@@ -182,16 +184,17 @@ async def me(user=Depends(get_current_user), request: Request = None):
             tenant = await Tenant.get(tenant_id)
             if not tenant:
                 raise HTTPException(status_code=404, detail="Tenant not found")
+          
         
         return JSONResponse({
             "id": str(user.id),
             "name": user.name,
             "email": user.email,
             "tenant_id": str(tenant.id),
-            "tenant_domain": tenant.domain,
-            "tenant_settings": tenant.settings
+            "tenant_domain": tenant.domain if tenant.domain else None,
         })
-    except HTTPException:
+    except HTTPException as he:
+        logger.error(f"Error: {he}")
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error retrieving user information")
