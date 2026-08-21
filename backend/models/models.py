@@ -1,18 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 from beanie import Document, Link
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import secrets
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-# ============================================
-# MODELS
-# ============================================
 
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
@@ -24,7 +16,6 @@ class User(Document):
     tenant_id: "Link[Tenant]"
     name: str
     email: str
-    profile_url: Optional[str] = None
     hashed_password: str
     role: UserRole = UserRole.MEMBER
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -42,26 +33,22 @@ class TenantType(str, Enum):
     education = "education"
     organization = "organization"
 
-
-DEFAULT_SETTINGS = {
-    "max_meetings": 15,
-    "recording_enabled": False,
-    "realtime_transcription": False,
-    "summarization_and_action_items": True,
-    "billing_mode": True
-}
-
-
 class Tenant(Document):
     tenant_type: TenantType = TenantType.normal
     domain: str
-    settings: dict = Field(default_factory=lambda: DEFAULT_SETTINGS)
+
+    class Settings:
+        name = "tenants"
+
+class TenantSettings(Document):
+    tenant: "Link[Tenant]"
+    max_meeting_mins: int
     zoom_connected: bool = False
     zoom_access_token: Optional[str] = None
     zoom_refresh_token: Optional[str] = None
-    
+
     class Settings:
-        name = "tenants"
+        name = "tenant_settings"
 
 
 class MeetingPlatform(str, Enum):
@@ -115,7 +102,8 @@ class MeetingSTTProvider(str, Enum):
     assemblyai = "assemblyai"
 
 class Meeting(Document):
-    created_by: "Link[Tenant]"
+    created_by: "Link[User]"
+    tenant: "Link[Tenant]"
     name: Optional[str] = None
     platform: MeetingPlatform
     language: MeetingLanguage = MeetingLanguage.english
@@ -125,14 +113,19 @@ class Meeting(Document):
     state: Optional[MeetingState] = None
     last_state_change_time: Optional[datetime] = None
     ended_at: Optional[datetime] = None
-    
-    # Plain text fields - no encryption
-    summary: Optional[str] = None
-    summary_status: MeetingSummaryStatus = MeetingSummaryStatus.PENDING
-    summary_error: Optional[str] = None
-    
+    team: Optional["Link[Team]"] = None
+
     class Settings:
         name = "meeting"
+
+class MeetingSummary(Document):
+    meeting: "Link[Meeting]"
+    summary_text: Optional[str] = None
+    summary_status: MeetingSummaryStatus = MeetingSummaryStatus.PENDING
+    summary_error: Optional[str] = None
+
+    class Settings:
+        name = "meeting_summary"
 
 
 class ActionItems(Document):
@@ -140,20 +133,11 @@ class ActionItems(Document):
     title: str
     assignee: Optional[str] = None
     description: Optional[str] = None
-    deadline: datetime
-    confidence: int = None
+    deadline: Optional[datetime] = None
+    confidence: Optional[int] = None
     
     class Settings:
         name = "action_items"
-
-
-class Participants(Document):
-    tenant: "Link[Tenant]"
-    meeting: "Link[Meeting]"
-    role: str
-    
-    class Settings:
-        name = "participants"
 
 
 class Transcripts(Document):
@@ -240,36 +224,50 @@ class MeetingInvitedParticipant(Document):
             ("meeting", "user")
         ]
 
+class TeamRole(str, Enum):
+    member = 'member'
+    leader = 'leader'
+    moderator = 'moderator'
 
 class Team(Document):
-    user_id: "Link[Tenant]"
+    tenant: "Link[Tenant]"
     team_name: str
-    organization: str
-    role: str
     
     class Settings:
         name = "team"
 
+class TeamMember(Document):
+    team: "Link[Team]"
+    user: "Link[User]"
+    role: TeamRole = TeamRole.member
 
-class Mode(str, Enum):
-    self_host = "Self_Hosted"
-    cloud = "Cloud"
-    partial_self_hosted = "Partial_Self_Hosted"
+    class Settings:
+        name = "team_members"
 
+class BillingPlan(str, Enum):
+    freemium = 'freemium'
+    pro = 'pro'
+    enterprise = 'enterprise'
+    default = 'default'
 
-class MinimumHour(int, Enum):
-    cloud_version = 6
-    self_hosted = 0
-    pro_plan = 24
+class Currency(str, Enum):
+    pkr = "PKR"
+    us = "US"
+    inr = "INR"
+    yen = "YEN"
+    dinar = "DINAR"
+    euro = "EURO"
+    default = "NONE"
 
-
-class Billing(Document):
-    tenant_id: "Link[Tenant]"
-    stripe_id: str
+class BillingSubscription(Document):
+    tenant: "Link[Tenant]"
+    gateway_name: str # Paddle and Lemon Squeezy for US Debit Card and PayPal Transaction, PayFast for Easypaisa, Jazzcash 
+    gateway_subscription_id: str
+    current_period_end: Optional[datetime] = None
+    currency: Currency = Currency.default
+    plan_selected: BillingPlan = BillingPlan.default
+    amount: Optional[float] = 0.0
     payment_processed: bool
-    plan_selected: str
-    mode: Mode = Mode.cloud
-    limited_hours: MinimumHour = MinimumHour.cloud_version
     
     class Settings:
         name = "Billing"
