@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 from datetime import datetime, timezone
 from core.helpers.helpers import AttendeeClientBot
@@ -9,7 +10,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+processor = MeetingPostProcessing()
+
 class MeetingService:
+
+    BETA_15_MINS_LIMIT = 15 * 60
 
     async def launch_bot(self, meeting, attendee_api_key):
         """Spins up a Bot to Join Meeting Platform such as Zoom / Microsoft Teams 
@@ -21,7 +26,7 @@ class MeetingService:
         try:
             bot_client = AttendeeClientBot(
                 bot_name="Sumitup Meeting Bot",
-                api_key=self.attendee_api_key,
+                api_key=attendee_api_key,
                 meeting_url=meeting.meeting_url,
                 provider=MeetingSTTProvider.assemblyai,
                 language="en", # English Only
@@ -42,6 +47,8 @@ class MeetingService:
 
             
         except Exception as e:
+            meeting.state = MeetingState.fatal_error
+            await meeting.save()
             logger.error(f"Failed to Launch Bot for Meeting, {e}")
             raise RuntimeError("Failed to Launch Attendee Bot")
             
@@ -87,7 +94,7 @@ class MeetingService:
         await transcript.insert()
 
 
-    async def meeting_state_handler(self, meeting: Meeting, data: dict, background_task: BackgroundTasks):
+    async def meeting_state_handler(self, meeting: Meeting, data: dict, attendee_api_key: str, background_task: BackgroundTasks):
         """Listen for Meeting State Handling Event and other Trigger events from Attendee Webhook"""
         event_created_at_str = data.get("created_at")
         should_update = True
@@ -102,7 +109,7 @@ class MeetingService:
                     if current.tzinfo is None:
                         current = current.replace(tzinfo=timezone.utc)
                     if event_time < current:
-                        print(f"Out-of-order event ignored: {event_time}")
+                        logger.info(f"Out-of-order event ignored: {event_time}")
                         should_update = False
                     else:
                         meeting.last_state_change_time = event_time
@@ -117,11 +124,53 @@ class MeetingService:
             await meeting.save()
             logger.info(f"Meeting State :{new_state}")
 
-        # If state is joined_recording , record the time as entry time for bot
         # If state is ended, trigger post processing
+        if new_state == MeetingState.leaving:
+            background_task.add_task(
+                auto_leave_meeting,
+                meeting,
+                
+            )
 
-        def check_for_meeting_status_and_duration(self):
-            pass   
+        if new_state == MeetingState.ended:
+            meeting.ended_at = event_time
+            await meeting.save()
+            background_task.add_task(
+                processor.execute_complete_pipeline,
+                meeting_id=str(meeting.id),
+            )
+
+        async def auto_leave_meeting(self, meeting, attendee_api_key):
+            """Auto Leave Meeting After 15 Mins.."""
+            if not meeting:
+                raise AttributeError("Meeting Object expected but got NoneType")
+
+            await asyncio.sleep(self.BETA_15_MINS_LIMIT)
+
+            if meeting.state == MeetingState.ended:
+                logger.info("Meeting Already Ended, Aborting Auto Leave")
+                return
+
+            if meeting.state == MeetingState.joined_recording:
+                try:
+                    bot_client = AttendeeClientBot(
+                                    bot_name="Sumitup Meeting Bot",
+                                    api_key=attendee_api_key,
+                                    meeting_url=meeting.meeting_url,
+                                    provider=MeetingSTTProvider.assemblyai,
+                                    language="en", # English Only
+                                    meeting=meeting
+                                )
+
+                    result = await bot_client.leave_meeting()
+
+                    logger.info(f"Prompting Bot to Leave Meeting, Recording State: {result["recording_state"]}, Transcription Status: {result["transcription_state"]}, Meeting State: {result["meeting_state"]}")
+                
+                except Exception as e:
+                    logger.error(f"Error Occured while requesting bot to leave, exception msg {e}")
+                    raise RuntimeError("Error Occured while requesting Attendee Client to leave the meeting")
+            else:
+                logger.info("Can't Leave Meeting if bot state is not in recording mode")
 
 
 
