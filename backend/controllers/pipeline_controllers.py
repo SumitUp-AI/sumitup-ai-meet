@@ -3,7 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from ai.visual_summaries import generate_visual_summary
 from core.utils.meeting_postprocessing import MeetingPostProcessing
-from models.models import Meeting, MeetingSummaryStatus, ActionItems, Transcripts
+from models.models import Meeting, MeetingSummaryStatus, ActionItems, Transcripts, MeetingSummary
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 from typing import List, Optional
@@ -59,14 +59,17 @@ async def get_summary(
     background_tasks: BackgroundTasks
 ) -> JSONResponse:
     try:
-        meeting = await Meeting.get(PydanticObjectId(meeting_id))  
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))
         if not meeting:
-            raise HTTPException(status_code=404, detail="Meeting not found!")
+            raise HTTPException(status_code=404, detail="Meeting Not Found")
+        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting_id) 
+        if not summary:
+            raise HTTPException(status_code=404, detail="Summary for Meeting Not Found")
 
         # Trigger logic: If pending, start the pipeline
-        if meeting.summary_status == MeetingSummaryStatus.PENDING:
-            meeting.summary_status = MeetingSummaryStatus.PROCESSING
-            await meeting.save()
+        if summary.summary_status == MeetingSummaryStatus.PENDING:
+            summary.summary_status = MeetingSummaryStatus.PROCESSING
+            await summary.save()
             background_tasks.add_task(
                 processor.execute_complete_pipeline,
                 meeting_id=meeting_id
@@ -77,20 +80,20 @@ async def get_summary(
             )
 
         # Handle existing states
-        if meeting.summary_status == MeetingSummaryStatus.PROCESSING:
+        if summary.summary_status == MeetingSummaryStatus.PROCESSING:
             return JSONResponse(status_code=202, content={"status": "processing"})
 
-        if meeting.summary_status == MeetingSummaryStatus.FAILED:
-            return JSONResponse(content={"status": "failed", "error": meeting.summary_error})
+        if summary.summary_status == MeetingSummaryStatus.FAILED:
+            return JSONResponse(content={"status": "failed", "error": summary.summary_error})
         
         # If READY, return the data
         return JSONResponse(content={
-            "meeting_id": str(meeting.id),
-            "summary": meeting.summary,
+            "meeting_id": str(meeting_id),
+            "summary": summary.summary_text,
             "title": meeting.name,
             "platform": meeting.platform,
             "started_at": str(meeting.created_at),
-            "summary_status": meeting.summary_status
+            "summary_status": summary.summary_status
         })
 
     except Exception as e:
@@ -161,7 +164,6 @@ async def generate_flow_diagram(
     summary = payload.summary
     action_items = payload.action_items
 
-    print(summary, action_items)
     if not action_items:
         db_items = await ActionItems.find(
             ActionItems.meeting.id == meeting.id

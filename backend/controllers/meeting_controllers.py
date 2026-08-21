@@ -1,11 +1,10 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse
-from core.helpers.helpers import AttendeeClientBot
-from core.utils.meeting_postprocessing import MeetingPostProcessing
 from models.models import (
-    MeetingPlatform, Meeting, Participants, MeetingState, Transcripts,
-    TeamInvitation, MeetingParticipant, InvitationStatus
+    Meeting, Transcripts,
+    TeamInvitation, MeetingInvitedParticipant, InvitationStatus
 )
+from services.meeting_service import MeetingService
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -16,10 +15,10 @@ router = APIRouter(
     tags=["Meeting Processing and Action Items"]
 )
 
+
 class CreateMeeting(BaseModel):
-    name: str
+    title: str
     meeting_url: str
-    provider: str
 
 class LeaveMeetingPayload(BaseModel):
     meeting_id: str
@@ -27,16 +26,8 @@ class LeaveMeetingPayload(BaseModel):
 @router.post("/create_meeting")
 @limiter.limit("60/minute")
 async def create_meeting(request: Request, payload: CreateMeeting):
-    meeting_url = payload.meeting_url
-    meeting_processor = MeetingPostProcessing()
-    detected_platform = meeting_processor.detect_meeting_platform(payload.meeting_url)
-
-    try: 
-        detected_platform = MeetingPlatform(detected_platform)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Url invalid or Platform not supported")
-    
-    # Get tenant from request state (set by middleware)
+    meet_service = MeetingService()
+    meeting_url = payload.meeting_url   
     tenant = request.state.tenant
     if not tenant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant Object Missing in Payload")
@@ -45,38 +36,23 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     if not bot_api_key:
          raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ATTENDEE_API_KEY not configured")
 
-    meeting = Meeting(
-        name=payload.name,
-        meeting_link=meeting_url,
-        platform=detected_platform,
-        created_by=tenant,
-        started_at=datetime.now(timezone.utc),
-        ended_at=None,
-    )
+    meeting = await meet_service.create_meeting(payload.title, meeting_url, tenant)
+
+    if not meeting:
+        raise HTTPException("Failed to Instantiate Meeting Data", status_code=status.HTTP_400_BAD_REQUEST)
 
     try:
-        bot = AttendeeClientBot(
-            bot="SumitUp Bot",
-            api_key=bot_api_key,
-            meeting_url=meeting_url,
-            provider=payload.provider,
-            meeting=meeting,
-            language="en"
-        )
-        
-        result = await bot.join_meeting()
-        # Refresh meeting object from database to get updated state
-        updated_meeting = await Meeting.get(str(meeting.id))
-        
+        await meet_service.launch_bot(meeting, bot_api_key)
+
         return JSONResponse(content={
-            "message": "Meeting has created, See your Meeting Tab for Bot requesting to join meeting!", 
-            "meeting_id": str(meeting.id), 
-            "bot_data": result,
-            "meeting_state": updated_meeting.state if updated_meeting else meeting.state
+            "message": "Meeting Bot has launched, Navigate to Zoom / Teams / Google Meet Tab for Bot requesting to join meeting!", 
+            "meeting_id": str(meeting.id),
+            "meeting_title": meeting.name if meeting.name else None,
+            "meeting_link": meeting.meeting_link if meeting.meeting_link else None,
+            "meeting_state": meeting.state if meeting.state else None
         })
+    
     except Exception as e:
-        meeting.state = MeetingState.fatal_error
-        await meeting.save()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Meeting Processing Failed, Server error: {str(e)}")
 
 
@@ -84,8 +60,8 @@ async def create_meeting(request: Request, payload: CreateMeeting):
 @limiter.limit("60/minute")
 async def get_all_meetings_information(request: Request):
     # Filter meetings by current tenant
-    tenant = request.state.tenant
-    meetings = await Meeting.find(Meeting.created_by.id == tenant.id).sort(-Meeting.created_at).to_list()
+    current_tenant = request.state.tenant
+    meetings = await Meeting.find(Meeting.tenant.id == current_tenant.id).sort(-Meeting.created_at).to_list()
     
     if not meetings:
         return []
@@ -114,9 +90,9 @@ async def get_shared_meetings(request: Request):
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User authentication required")
 
-    # Find all MeetingParticipant records for this user
-    participants = await MeetingParticipant.find(
-        MeetingParticipant.user.id == user_id
+    # Find all MeetingInvitedParticipant records for this user
+    participants = await MeetingInvitedParticipant.find(
+        MeetingInvitedParticipant.user.id == user_id
     ).to_list()
 
     if not participants:
@@ -151,7 +127,7 @@ async def get_transcript(request: Request, meeting_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
     
     # Ensure meeting belongs to the current tenant
-    if meeting.created_by.ref.id != tenant.id:
+    if meeting.tenant.ref.id != tenant.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied: This meeting does not belong to your tenant")
 
     # 2. Fetch all transcript segments sorted by timestamp
@@ -215,15 +191,15 @@ async def get_meeting_team_info(request: Request, meeting_id: str):
                 detail="Meeting not found"
             )
 
-        if meeting.created_by.ref.id != tenant.id:
+        if meeting.tenant.ref.id != tenant.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this meeting"
             )
 
         # Get confirmed participants
-        participants = await MeetingParticipant.find(
-            MeetingParticipant.meeting.id == meeting.id
+        participants = await MeetingInvitedParticipant.find(
+            MeetingInvitedParticipant.meeting.id == meeting.id
         ).to_list()
 
         # Get all invitations (pending, accepted, declined)
@@ -321,15 +297,15 @@ async def get_meeting_participants_summary(request: Request, meeting_id: str):
                 detail="Meeting not found"
             )
 
-        if meeting.created_by.ref.id != tenant.id:
+        if meeting.tenant.ref.id != tenant.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this meeting"
             )
 
         # Count participants and invitations
-        confirmed_count = await MeetingParticipant.find(
-            MeetingParticipant.meeting.id == meeting.id
+        confirmed_count = await MeetingInvitedParticipant.find(
+            MeetingInvitedParticipant.meeting.id == meeting.id
         ).count()
         
         pending_count = await TeamInvitation.find(

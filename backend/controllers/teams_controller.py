@@ -148,7 +148,7 @@ async def invite_team_members(
             )
 
         # Check if current user created the meeting (only hosts can invite)
-        if str(meeting.created_by.ref.id) != str(tenant.id):
+        if str(meeting.tenant.ref.id) != str(tenant.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only meeting creators can invite participants"
@@ -455,7 +455,7 @@ async def get_meeting_participants(request: Request, meeting_id: str):
                 detail="Meeting not found"
             )
 
-        if meeting.created_by.ref.id != tenant.id:
+        if meeting.tenant.ref.id != tenant.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this meeting"
