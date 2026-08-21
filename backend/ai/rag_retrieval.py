@@ -75,7 +75,7 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     """
     Retrieves chunks from MongoDB Atlas Hybrid Search for a given query and maintains contextual chat history.
     """
-    llm_smart = ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=groq_api_key, temperature=0.0, max_retries=2)
+    llm_smart = ChatGroq(model="openai/gpt-oss-120b", groq_api_key=groq_api_key, temperature=0.0, max_retries=2)
 
     expansion_prompt = ChatPromptTemplate.from_messages([
         ("system", "Given the following chat history and a follow up user question, formulate 3 distinct variations of the user's question to maximize search retrieval over a vector database.\n"
@@ -84,7 +84,7 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
         ("user", "{query}")
     ])
     
-    groq_llm = ChatGroq(model="llama-3.1-8b-instant", groq_api_key=groq_api_key, temperature=0.0)
+    groq_llm = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key, temperature=0.0)
     expansion_chain = expansion_prompt | groq_llm | StrOutputParser()
     
     response_text = await expansion_chain.ainvoke({

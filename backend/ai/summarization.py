@@ -5,7 +5,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.documents import Document
 from langchain_classic.chains.summarize import load_summarize_chain
 from enum import Enum
-from pydantic import BaseModel
 import os
 import time
 import logging
@@ -40,7 +39,7 @@ def detect_meeting_length(transcript: str) -> MeetingLength:
 # Fast model for chunk summarization
 llm_fast = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
     temperature=0.0,
     max_retries=2
 )
@@ -48,7 +47,7 @@ llm_fast = ChatGroq(
 # Smarter model for final synthesis (optional — uses less tokens)
 llm_smart = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     temperature=0.0,
     max_retries=2
 )
