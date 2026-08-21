@@ -1,4 +1,4 @@
-import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle } from "lucide-react";
+import { Search, ChevronDown, CircleX, Clock, VideoIcon, Loader, Ellipsis, Sparkle, LoaderCircle, Rocket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -117,6 +117,8 @@ const MeetingsPage: React.FC = () => {
         return <span className={`${base} bg-teal-100 text-teal-800 animate-pulse`}>Ready</span>;
       case "fatal_error":
         return <span className={`${base} bg-red-100 text-red-800`}>Failed</span>;
+      case "launching":
+        return <span className={`${base} bg-cyan-100 text-cyan-500 animate-pulse`}>Launching</span>;
       case "joining":
         return <span className={`${base} bg-cyan-100 text-cyan-500 animate-pulse`}>Joining</span>;
       case "joined_recording":
@@ -149,6 +151,13 @@ const MeetingsPage: React.FC = () => {
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
           <Ellipsis className="w-4 h-4" />
           Joining
+        </div>
+      );
+    } else if (status === "launching") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-cyan-600 hover:text-cyan-700 cursor-wait transition-colors">
+          <Rocket className="w-4 h-4" />
+          Launching
         </div>
       );
     } 

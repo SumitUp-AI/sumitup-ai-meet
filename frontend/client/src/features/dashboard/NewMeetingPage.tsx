@@ -14,8 +14,11 @@ import { getAuthHeaders } from "../../utils/apiHeaders";
 import GoogleMeetIcon from "../../assets/google-meet-svgrepo-com.svg";
 import MSTeamsIcon from "../../assets/icons8-microsoft-teams-96.png";
 import ZoomMeetIcon from "../../assets/zoomus-ar21.svg";
+import SumitupIcon from "../../assets/Sumitup_logo.svg";
 import InviteTeamModal from "../../components/InviteTeamModal";
 import AOS from "aos";
+
+type NotificationPermission = "granted" | "denied" | "default"
 
 const NewMeetingPage: React.FC = () => {
 
@@ -164,6 +167,17 @@ const NewMeetingPage: React.FC = () => {
     setError(null);
   };
 
+  const triggerDesktopNotification = function(title: string) {
+    const notification = new Notification('Meeting Bot Launched', {
+      body: title,
+      icon: SumitupIcon
+    })
+
+    notification.onclick = () => {
+      window.focus()
+    }
+  }
+
   const handleSubmitMeetingLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!meetingLink.trim() || !meetingTitle.trim()) {
@@ -186,9 +200,8 @@ const NewMeetingPage: React.FC = () => {
           method: "POST",
           headers: getAuthHeaders(token, user?.tenant_id),
           body: JSON.stringify({
-            name: meetingTitle,
+            title: meetingTitle,
             meeting_url: meetingLink,
-            provider: "assemblyai" 
           }),
         }
       );
@@ -199,20 +212,29 @@ const NewMeetingPage: React.FC = () => {
       }
 
       const data = await response.json();
-      const meetingId = data.meeting_id;
-
+      
       setCurrentMeeting({
-        id: meetingId,
-        name: meetingTitle,
-        meeting_link: meetingLink,
-        state: "joining",
+        id: data.meeting_id,
+        name: data.meeting_title,
+        meeting_link: data.meeting_link,
+        state: data.meeting_state,
       });
+
+      if (Notification.permission === "granted") {
+        triggerDesktopNotification(data.message)
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((permission: NotificationPermission) => {
+          if (permission === "granted") {
+            triggerDesktopNotification(data.message)
+          }
+        })
+      }
 
       handleModalClose();
 
       // Show the invite modal so the host can immediately invite team members
-      setCreatedMeetingId(meetingId);
-      setCreatedMeetingName(meetingTitle);
+      setCreatedMeetingId(data.meeting_id);
+      setCreatedMeetingName(data.meeting_title);
       setShowInviteModal(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
@@ -230,10 +252,10 @@ const NewMeetingPage: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              New Meeting Session
+              New Meeting Session (Beta 15 Mins Limit for Recording)
             </h1>
             <p className="text-gray-600">
-              Upload a recording or connect your calendar to get started with AI insights
+              Upload a recording or connect your calendar to get started with AI insights (Future Feature)
             </p>
           </div>
 
@@ -254,7 +276,7 @@ const NewMeetingPage: React.FC = () => {
               accept=".mp4,.mov,.mp3,.wav,video/mp4,video/quicktime,audio/mpeg,audio/wav"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={handleChange}
-              disabled={uploadStatus === 'uploading' || uploadStatus === 'success'}
+              disabled={true}
             />
 
             {uploadStatus === 'idle' || uploadStatus === 'error' ? (
@@ -272,8 +294,8 @@ const NewMeetingPage: React.FC = () => {
                 )}
                 
                 <div className="block">
-                  <button type="button" className="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors pointer-events-none">
-                    <Folder className="w-5 h-5 mr-2" /> Browse Files
+                  <button type="button" className="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors pointer-events-none" disabled>
+                    <Folder className="w-5 h-5 mr-2" /> Browse Files (Future Feature)
                   </button>
                 </div>
               </>
