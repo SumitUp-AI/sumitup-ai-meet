@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getAuthHeaders } from '../utils/apiHeaders';
-import { usePolling } from './usePolling';
 
 interface Meeting {
   id: string;
@@ -13,13 +12,7 @@ interface Meeting {
   state: string;
 }
 
-interface UseMeetingStatusOptions {
-  pollingInterval?: number; // Default: 5 seconds
-  enabled?: boolean; // Default: true
-}
-
-export const useMeetingStatus = (options: UseMeetingStatusOptions = {}) => {
-  const { pollingInterval = 5000, enabled = true } = options;
+export const useMeetingStatus = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,17 +86,6 @@ export const useMeetingStatus = (options: UseMeetingStatusOptions = {}) => {
     }
   }, [token, user, BASE_URL]);
 
-  // Set up polling
-  const { startPolling, stopPolling } = usePolling(fetchMeetings, {
-    interval: pollingInterval,
-    enabled: enabled && !!token && !!user,
-    immediate: true
-  });
-
-  const refreshMeetings = useCallback(() => {
-    fetchMeetings();
-  }, [fetchMeetings]);
-
   const setOnStatusChange = useCallback((callback: ((meetings: Meeting[]) => void) | null) => {
     onStatusChangeRef.current = callback;
   }, []);
@@ -112,9 +94,7 @@ export const useMeetingStatus = (options: UseMeetingStatusOptions = {}) => {
     meetings,
     loading,
     error,
-    refreshMeetings,
-    startPolling,
-    stopPolling,
+    fetchMeetings,
     setOnStatusChange
   };
 };
