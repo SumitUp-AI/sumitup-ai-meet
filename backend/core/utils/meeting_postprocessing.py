@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus
+from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus, MeetingSummary
 from ai.summarization import summarize_meeting_transcript
 from ai.action_items import create_action_items_json
 from ai.rag_ingestion import ingest_meeting_transcripts
@@ -45,31 +45,40 @@ class MeetingPostProcessing:
 
     async def return_raw_transcripts(self, meeting_id):
         meeting, transcripts = await get_meeting_and_transcripts(meeting_id)
-        if not meeting or not transcripts:
-            return None
-        return transcripts
+        if not meeting and not transcripts:
+            logger.error("Transcripts for Meeting not Found, Error in Executing Pipeline")
+            return []
+        
+        transcript_list = []
+        for t in transcripts:
+            transcript_text = f"{t.speaker_name}: {t.transcript}"
+            transcript_list.append(transcript_text)
+        return transcript_list
 
     async def create_summarization_from_transcription(self, meeting_id, results):
         meeting = await Meeting.get(PydanticObjectId(meeting_id))
         if not meeting:
             return None, None
         
-        meeting.summary_status = MeetingSummaryStatus.PROCESSING
-        await meeting.save() 
+        summary = MeetingSummary(
+            meeting=meeting,
+            summary_status=MeetingSummaryStatus.PROCESSING
+        )
+        await summary.save() 
         
         try:
             combined_transcript = " ".join(results)
             generated_summary = summarize_meeting_transcript(combined_transcript)
             
-            meeting.summary = generated_summary["summary"].replace("**", "")
-            meeting.summary_status = MeetingSummaryStatus.READY
-            await meeting.save()
-            return meeting_id, meeting.summary
+            summary.summary_text = generated_summary["summary"]
+            summary.summary_status = MeetingSummaryStatus.READY
+            await summary.save()
+            return meeting_id, summary.summary_text
         except Exception as e:
             logger.error(f"Summarization failed for current meeting: {e}")
-            meeting.summary_status = MeetingSummaryStatus.FAILED
-            meeting.summary_error = str(e)
-            await meeting.save()
+            summary.summary_status = MeetingSummaryStatus.FAILED
+            summary.summary_error = str(e)
+            await summary.save()
             return None, None
 
     async def create_action_items_from_generated_summary(self, meeting_id):
