@@ -114,6 +114,10 @@ class AttendeeClientBot(STTServiceProvider):
                         "transcription_settings": settings,
                         "recording_settings":{
                             "format":"none"
+                        },
+                        "deduplication_key": self._meeting_url,
+                        "automatic_leave_settings": {
+                            "max_uptime_seconds": 900, # 15 Mins = 15 * 60 = 900 for Beta Testing
                         }
                     }
                 )
@@ -177,8 +181,15 @@ class AttendeeClientBot(STTServiceProvider):
                     }
                 )
                 response.raise_for_status()
-                return response.json()
+                data = response.json()
 
+                return {
+                    "join_at": data["join_at"],
+                    "recording_state": data["recording_state"],
+                    "transcription_state": data["transcription_state"],
+                    "meeting_state": MeetingState(data["state"]),
+                }
+            
             except httpx.HTTPStatusError as e:
                 raise RuntimeError(
                     f"Failed to leave the meeting "
