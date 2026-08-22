@@ -39,7 +39,7 @@ def create_action_items_json(summary):
     """
     llm = ChatGroq(
         api_key=groq_apikey,
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         temperature=0.0,
         max_retries=2
     )

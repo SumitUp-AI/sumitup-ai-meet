@@ -37,14 +37,14 @@ class FlowDiagram(BaseModel):
 
 visual_llm = ChatGroq(
     api_key=settings.groq_api_key,
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
     temperature=0.2,
     max_retries=2
 )
 
 capable_llm = ChatGroq(
     api_key=settings.groq_api_key,
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     temperature=0.2,
     max_retries=2
 )
