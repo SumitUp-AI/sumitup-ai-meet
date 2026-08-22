@@ -83,11 +83,18 @@ class MeetingPostProcessing:
 
     async def create_action_items_from_generated_summary(self, meeting_id):
         meeting = await Meeting.get(PydanticObjectId(meeting_id))
-        if not meeting or not meeting.summary:
+        if not meeting:
+            logger.error(f"Meeting doesn't exist")
+            return None
+
+        
+        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting.id)
+        if not summary:
+            logger.error(f"Summary doesn't exist for this meeting")
             return None
         
         try:
-            action_items = create_action_items_json(meeting.summary)
+            action_items = create_action_items_json(summary.summary_text)
             filtered_items = [item for item in action_items["items"] if item["confidence"] >= 0.7]
 
             saved_items = []

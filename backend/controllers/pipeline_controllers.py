@@ -62,7 +62,7 @@ async def get_summary(
         meeting = await Meeting.get(PydanticObjectId(meeting_id))
         if not meeting:
             raise HTTPException(status_code=404, detail="Meeting Not Found")
-        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting_id) 
+        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting.id) 
         if not summary:
             raise HTTPException(status_code=404, detail="Summary for Meeting Not Found")
 
@@ -157,9 +157,7 @@ async def generate_flow_diagram(
     meeting = await Meeting.get(payload.meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
-    if meeting.created_by.ref.id != tenant.id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
+    
     # Use provided data or fetch from DB
     summary = payload.summary
     action_items = payload.action_items
