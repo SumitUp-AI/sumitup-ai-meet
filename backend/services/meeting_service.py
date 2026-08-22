@@ -27,7 +27,7 @@ class MeetingService:
             bot_client = AttendeeClientBot(
                 bot_name="Sumitup Meeting Bot",
                 api_key=attendee_api_key,
-                meeting_url=meeting.meeting_url,
+                meeting_url=meeting.meeting_link,
                 provider=MeetingSTTProvider.assemblyai,
                 language="en", # English Only
                 meeting=meeting
@@ -41,7 +41,6 @@ class MeetingService:
 
             meeting.state = result["state"]
             meeting.bot_id = result["bot_id"]
-            meeting.created_at = result["created_at"]
 
             await meeting.save()
 
@@ -56,11 +55,11 @@ class MeetingService:
     def add_all_mapped_participants(self):
         pass
 
-    async def create_meeting(self, meeting_title, meeting_url, tenant) -> Meeting:
+    async def create_meeting(self, meeting_title, meeting_url, user, tenant) -> Meeting:
         """Creates Meeting Instance Before Launching Bot"""
         meeting_processor = MeetingPostProcessing()
-        detected_platform = meeting_processor.detect_meeting_platform(self.meeting_url)
-        try: 
+        detected_platform = meeting_processor.detect_meeting_platform(meeting_url)
+        try:
             detected_platform = MeetingPlatform(detected_platform)
         except (ValueError, TypeError) as e:
             logger.error(f"Meeting Platform conversion failed, {e}")
@@ -70,7 +69,8 @@ class MeetingService:
             name=meeting_title,
             meeting_link=meeting_url,
             platform=detected_platform,
-            created_by=tenant,
+            tenant=tenant,
+            created_by=user,
             started_at=datetime.now(timezone.utc),
             ended_at=None,
             state=MeetingState.launching
@@ -124,14 +124,6 @@ class MeetingService:
             await meeting.save()
             logger.info(f"Meeting State :{new_state}")
 
-        # If state is ended, trigger post processing
-        if new_state == MeetingState.leaving:
-            background_task.add_task(
-                auto_leave_meeting,
-                meeting,
-                
-            )
-
         if new_state == MeetingState.ended:
             meeting.ended_at = event_time
             await meeting.save()
@@ -140,39 +132,7 @@ class MeetingService:
                 meeting_id=str(meeting.id),
             )
 
-        async def auto_leave_meeting(self, meeting, attendee_api_key):
-            """Auto Leave Meeting After 15 Mins.."""
-            if not meeting:
-                raise AttributeError("Meeting Object expected but got NoneType")
-
-            await asyncio.sleep(self.BETA_15_MINS_LIMIT)
-
-            if meeting.state == MeetingState.ended:
-                logger.info("Meeting Already Ended, Aborting Auto Leave")
-                return
-
-            if meeting.state == MeetingState.joined_recording:
-                try:
-                    bot_client = AttendeeClientBot(
-                                    bot_name="Sumitup Meeting Bot",
-                                    api_key=attendee_api_key,
-                                    meeting_url=meeting.meeting_url,
-                                    provider=MeetingSTTProvider.assemblyai,
-                                    language="en", # English Only
-                                    meeting=meeting
-                                )
-
-                    result = await bot_client.leave_meeting()
-
-                    logger.info(f"Prompting Bot to Leave Meeting, Recording State: {result["recording_state"]}, Transcription Status: {result["transcription_state"]}, Meeting State: {result["meeting_state"]}")
-                
-                except Exception as e:
-                    logger.error(f"Error Occured while requesting bot to leave, exception msg {e}")
-                    raise RuntimeError("Error Occured while requesting Attendee Client to leave the meeting")
-            else:
-                logger.info("Can't Leave Meeting if bot state is not in recording mode")
-
-
+        
 
 
         

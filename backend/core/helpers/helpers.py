@@ -137,13 +137,6 @@ class AttendeeClientBot(STTServiceProvider):
                     except (ValueError, KeyError):
                             # If conversion fails, try with lowercase
                         raise AttributeError("State Conversion Failed")
-                    if "created_at" in data:
-                        try:
-                            # handling simple iso format
-                            dt = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
-                            bot_data["created_at"] = dt
-                        except ValueError:
-                            pass # Fallback if format is unexpected
                     
                 return bot_data
 
@@ -163,44 +156,7 @@ class AttendeeClientBot(STTServiceProvider):
                 raise RuntimeError(
                     "Connecting to Zoom/Teams/Meet Failed, Contact us for error report!"
                 )
- 
-    async def leave_meeting(self):
-        if not self.meeting or not self.meeting.bot_id:
-            raise ValueError("No meeting object with bot_id found.")
-        
-        effective_bot_id = self.meeting.bot_id
 
-        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
-        async with httpx.AsyncClient(timeout=10) as client:
-            try:
-                response = await client.post(
-                    f"{attendee_url}/api/v1/bots/{effective_bot_id}/leave",
-                    headers={
-                        "Authorization": f"Token {self._api_key}",
-                        "Content-Type": "application/json",
-                    }
-                )
-                response.raise_for_status()
-                data = response.json()
-
-                return {
-                    "join_at": data["join_at"],
-                    "recording_state": data["recording_state"],
-                    "transcription_state": data["transcription_state"],
-                    "meeting_state": MeetingState(data["state"]),
-                }
-            
-            except httpx.HTTPStatusError as e:
-                raise RuntimeError(
-                    f"Failed to leave the meeting "
-                    f"(status={e.response.status_code}): {e.response.text}"
-                )
-
-            except httpx.RequestError as e:
-            # Network / DNS / connection issues
-                raise RuntimeError(
-                    f"Bot Service Connection Failed or Not Running"
-                )
 
     async def get_all_attendee_participants(self):
         if not self.meeting or not self.meeting.bot_id:
