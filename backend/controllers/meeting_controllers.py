@@ -2,7 +2,7 @@ from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from models.models import (
     Meeting, Transcripts,
-    TeamInvitation, MeetingInvitedParticipant, InvitationStatus
+    TeamInvitation, MeetingInvitedParticipant, InvitationStatus, User
 )
 from services.meeting_service import MeetingService
 from middlewares.limiter import limiter
@@ -29,14 +29,21 @@ async def create_meeting(request: Request, payload: CreateMeeting):
     meet_service = MeetingService()
     meeting_url = payload.meeting_url   
     tenant = request.state.tenant
+
     if not tenant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant Object Missing in Payload")
     # 4. Trigger Bot
     bot_api_key = os.getenv("ATTENDEE_API_KEY") 
-    if not bot_api_key:
-         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ATTENDEE_API_KEY not configured")
 
-    meeting = await meet_service.create_meeting(payload.title, meeting_url, tenant)
+    if not bot_api_key:
+         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ATTENDEE_API_KEY not configured")
+
+    user = await User.find_one(User.tenant_id == tenant)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found for this Tenant")
+    
+    meeting = await meet_service.create_meeting(payload.title, meeting_url, user, tenant)
 
     if not meeting:
         raise HTTPException("Failed to Instantiate Meeting Data", status_code=status.HTTP_400_BAD_REQUEST)
