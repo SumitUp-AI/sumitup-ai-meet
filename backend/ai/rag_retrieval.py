@@ -52,8 +52,8 @@ async def update_summary(current_summary: str, popped_exchange) -> str:
                    "- ONLY output the updated summary, nothing else.")
     ])
     
-    groq_llm = ChatGroq(model="llama-3.1-8b-instant", groq_api_key=groq_api_key, temperature=0.0, max_tokens=200)
-    summary_chain = summary_prompt | groq_llm | StrOutputParser()
+    llm_fast = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key, temperature=0.0, max_tokens=200)
+    summary_chain = summary_prompt | llm_fast | StrOutputParser()
     
     exchange_text = ""
     if isinstance(popped_exchange, tuple) or isinstance(popped_exchange, list):
@@ -65,8 +65,8 @@ async def update_summary(current_summary: str, popped_exchange) -> str:
          exchange_text = f"{role}: {content}"
 
     new_summary = await summary_chain.ainvoke({
-        "current_summary": current_summary if current_summary else "No previous summary.",
-        "exchange_text": exchange_text
+        "current_summary": current_summary.strip() if current_summary else "No previous summary.",
+        "exchange_text": exchange_text.strip()
     })
     
     return new_summary.strip()
@@ -84,8 +84,8 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
         ("user", "{query}")
     ])
     
-    groq_llm = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key, temperature=0.0)
-    expansion_chain = expansion_prompt | groq_llm | StrOutputParser()
+    llm_fast = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=groq_api_key, temperature=0.0)
+    expansion_chain = expansion_prompt | llm_fast | StrOutputParser()
     
     response_text = await expansion_chain.ainvoke({
         "chat_history": format_chat_history(chat_history) if chat_history else "No history yet.",

@@ -4,6 +4,10 @@ from models.models import Meeting, Transcripts, Embedding
 from typing import List
 from ai.embedding_model import embeddings
 from config.settings import settings
+from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 mongodb_uri = settings.mongo_uri
 
@@ -31,8 +35,14 @@ async def ingest_meeting_transcripts(meeting_id: str):
     Duration: {(meeting.ended_at - meeting.created_at).total_seconds() // 60 if meeting.ended_at else 'Ongoing'} minutes
     ---
     """
-    
-    full_meeting_text = " ".join([t.transcript for t in transcripts])
+    transcript_info_list = []
+    for t in transcripts:
+        duration = t.timestamp_ms / 1000
+        extracted_date = datetime.fromtimestamp(duration, tz=timezone.utc())
+        each_chunk = f"[{extracted_date}] {t.speaker_name}: {t.transcript}"
+        transcript_info_list.append(each_chunk)
+
+    full_meeting_text = " ".join([chunk for chunk in transcript_info_list])
     
     doc = Document(
         page_content=full_meeting_text,
@@ -41,7 +51,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
         }
     )
 
-    # print("Chunking meeting document using SemanticChunker...")
+    logger.info("Chunking Content using Semantic Chunking")
     text_splitter = SemanticChunker(
         embeddings,
         breakpoint_threshold_type="percentile",
@@ -50,7 +60,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
     )
 
     chunks = text_splitter.split_documents([doc])
-    # print(f"Created {len(chunks)} semantic chunks. Generating embeddings...")
+    logger.info("Generating Embeddings for each document chunk")
 
     # Enrich each chunk with metadata
     enriched_texts = []
@@ -61,7 +71,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
     # Generate embeddings for enriched chunks
     embedding_vectors = embeddings.embed_documents(enriched_texts)
     
-    # print(f"Storing {len(enriched_texts)} embeddings in MongoDB...")
+    
     # Delete existing embeddings for this meeting to avoid duplicates if re-ingested
     await Embedding.find(Embedding.meeting_id.id == meeting.id).delete()
     
