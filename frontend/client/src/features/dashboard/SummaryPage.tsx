@@ -154,7 +154,7 @@ const SummaryPage: React.FC = () => {
     try {
       setSummaryLoading(true);
       const res = await fetch(
-        `${BASE_URL}/create_summary?meeting_id=${meetingId}`,
+        `${BASE_URL}/get_summary?meeting_id=${meetingId}`,
         { headers: authHeaders() }
       );
 
@@ -190,7 +190,7 @@ const SummaryPage: React.FC = () => {
     try {
       setItemsLoading(true);
       const res = await fetch(
-        `${BASE_URL}/create_action_items?meeting_id=${meetingId}`,
+        `${BASE_URL}/get_action_items?meeting_id=${meetingId}`,
         { headers: authHeaders() }
       );
       if (!res.ok) throw new Error("Failed to load action items");

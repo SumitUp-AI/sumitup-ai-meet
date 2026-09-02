@@ -84,7 +84,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         data: { label: 'No action items extracted' },
         style: {
           backgroundColor: '#f3f4f6',
-          border: '1px solid #9ca3af',
+          border: '1px solid #008b85',
           borderRadius: '8px',
           fontSize: '12px',
         },
@@ -111,7 +111,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
             assignee: item.assignee ?? undefined,
           },
           style: {
-            backgroundColor: '#fef3c7',
+            backgroundColor: '#00f7ff',
             borderRadius: '8px',
             fontSize: '12px',
           },
@@ -149,7 +149,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`${BASE_URL}/generate-flow-diagram`, {
+      const res = await fetch(`${BASE_URL}/get_meeting_flow`, {
         method: 'POST',
         headers: getAuthHeaders(token, user?.tenant_id),
         body: JSON.stringify({
@@ -225,7 +225,7 @@ const MeetingFlowDiagram: React.FC<FlowDiagramProps> = ({
         <LoaderCircle className="w-8 h-8 animate-spin text-cyan-600 mb-3" />
         <p className="text-gray-500 text-sm">Generating visual diagram...</p>
         <p className="text-gray-400 text-xs mt-1">
-          AI is mapping decisions and action items
+          AI is mapping your summary and action items
         </p>
       </div>
     );
