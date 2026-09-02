@@ -11,7 +11,7 @@ from config.settings import settings
 
 router = APIRouter(
     prefix="/api/v1",
-    tags=["Attendee Webhooks"]
+    tags=["Attendee SDK Webhook API"]
 )
 
 WEBHOOK_SECRET = settings.webhook_secret

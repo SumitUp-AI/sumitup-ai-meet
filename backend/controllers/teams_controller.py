@@ -3,6 +3,7 @@ Teams Controller - Handles team member invitations and management
 Provides APIs for inviting SumitUp users to meetings and managing team interactions
 """
 
+from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -24,7 +25,7 @@ from middlewares.limiter import limiter
 
 router = APIRouter(
     prefix="/api/v1",
-    tags=["Teams & Invitations"]
+    tags=["Teams & Invitations Utility APIs"]
 )
 
 # ============================================================================
@@ -87,7 +88,7 @@ async def get_team_members(request: Request) -> List[TeamMemberResponse]:
         current_user_id = getattr(request.state, 'user_id', None)
         
         # Find all users in the same tenant (excluding current user)
-        users = await User.find(User.tenant_id.id == tenant.id).to_list()
+        users = await User.find(User.tenant_id == tenant).to_list()
         
         # Filter out the current user client-side (simpler than chaining queries)
         if current_user_id:
@@ -148,14 +149,14 @@ async def invite_team_members(
             )
 
         # Check if current user created the meeting (only hosts can invite)
-        if str(meeting.tenant.ref.id) != str(tenant.id):
+        if str(meeting.created_by.ref.id) != current_user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only meeting creators can invite participants"
             )
 
         # Get current user for invitation details
-        current_user = await User.get(current_user_id)
+        current_user = await User.get(PydanticObjectId(current_user_id))
         if not current_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -437,6 +438,7 @@ async def get_my_invitations(request: Request) -> List[InvitationResponse]:
 # MEETING PARTICIPANT ENDPOINTS
 # ============================================================================
 
+# This endpoint is needed to be implemented in frontend and hasn't implemented yet
 @router.get("/meeting/{meeting_id}/participants")
 @limiter.limit("10/minute")
 async def get_meeting_participants(request: Request, meeting_id: str):
@@ -455,7 +457,7 @@ async def get_meeting_participants(request: Request, meeting_id: str):
                 detail="Meeting not found"
             )
 
-        if meeting.tenant.ref.id != tenant.id:
+        if meeting.tenant != tenant:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this meeting"

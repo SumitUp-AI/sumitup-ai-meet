@@ -1,5 +1,6 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
+from backend.models.models import TenantSettings
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 import httpx
@@ -9,7 +10,7 @@ from config.settings import settings
 
 router = APIRouter(
     prefix="/api/v1/zoom",
-    tags=["Zoom Integration APIs"]
+    tags=["Zoom Integration APIs (In Development)"]
 )
 
 ZOOM_CLIENT_ID = settings.zoom_client_id
@@ -26,10 +27,15 @@ class ZoomTokenPayload(BaseModel):
 )
 async def save_zoom_token(request: Request, payload: ZoomTokenPayload):
     tenant = request.state.tenant
-    tenant.zoom_connected = True
-    tenant.zoom_access_token = payload.access_token
-    tenant.zoom_refresh_token = payload.refresh_token
-    await tenant.save()
+    tenant_settings = await TenantSettings.find_one(TenantSettings.tenant == tenant)
+
+    if not tenant_settings:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant Settings for this Tenant Not Found")
+    
+    tenant_settings.zoom_connected = True
+    tenant_settings.zoom_access_token = payload.access_token
+    tenant_settings.zoom_refresh_token = payload.refresh_token
+    await tenant_settings.save()
     return JSONResponse({"message": "Zoom token saved"})
 
 @router.get('/authorize')
@@ -77,8 +83,14 @@ async def zoom_disconnect(request: Request):
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
+    tenant_settings = await TenantSettings.find_one(TenantSettings.tenant == tenant)
+    
+    if not tenant_settings:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant Settings for this Tenant Not Found")
+        
+    
     # Revoke token from Zoom
-    if tenant.zoom_access_token:
+    if tenant_settings.zoom_access_token:
         encoded = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
         async with httpx.AsyncClient() as client:
             await client.post(
@@ -88,10 +100,10 @@ async def zoom_disconnect(request: Request):
             )
 
     # Clear from DB
-    tenant.zoom_connected = False
-    tenant.zoom_access_token = None
-    tenant.zoom_refresh_token = None
-    await tenant.save()
+    tenant_settings.zoom_connected = False
+    tenant_settings.zoom_access_token = None
+    tenant_settings.zoom_refresh_token = None
+    await tenant_settings.save()
 
     return JSONResponse({"message": "Zoom disconnected"})
 
@@ -102,7 +114,13 @@ async def zoom_status(request: Request):
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found!")
     
-    return JSONResponse({"zoom_connected": tenant.zoom_connected})
+    tenant_settings = await TenantSettings.find_one(TenantSettings.tenant == tenant)
+    
+    if not tenant_settings:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant Settings for this Tenant Not Found")
+        
+    
+    return JSONResponse({"zoom_connected": tenant_settings.zoom_connected})
 
 
 

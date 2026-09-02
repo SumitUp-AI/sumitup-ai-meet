@@ -12,7 +12,7 @@ import os
 
 router = APIRouter(
     prefix="/api/v1",
-    tags=["Meeting Processing and Action Items"]
+    tags=["Meeting Related Data APIs"]
 )
 
 

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/v1",
-    tags=["Authentication and Authorization"]
+    tags=["Authentication and Authorization APIs"]
 )
 
 class CreateUserRequest(BaseModel):
@@ -181,17 +181,19 @@ async def me(user=Depends(get_current_user), request: Request = None):
             tenant_id = user.tenant_id.id if user.tenant_id else None
             if not tenant_id:
                 raise HTTPException(status_code=404, detail="Tenant not found")
+            
             tenant = await Tenant.get(tenant_id)
             if not tenant:
                 raise HTTPException(status_code=404, detail="Tenant not found")
-          
+            tenant_settings = await TenantSettings.find_one(TenantSettings.tenant.id == tenant.id)
+            if not tenant_settings:
+                raise HTTPException(status_code=404, detail="Tenant Settings not Found")
         
         return JSONResponse({
             "id": str(user.id),
             "name": user.name,
             "email": user.email,
             "tenant_id": str(tenant.id),
-            "tenant_domain": tenant.domain if tenant.domain else None,
         })
     except HTTPException as he:
         logger.error(f"Error: {he}")
