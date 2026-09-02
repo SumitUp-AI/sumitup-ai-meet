@@ -5,12 +5,12 @@ from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
 from middlewares.tenant_middleware import TenantMiddleware
 from controllers.auth_controllers import router as auth_router
-from controllers.pipeline_controllers import router as pipeline_router
+from backend.controllers.llm_orchestration_controllers import router as llm_orchestration_router
 from controllers.meeting_controllers import router as meeting_router
 from controllers.teams_controller import router as teams_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
 from controllers.zoom_integation_controller import router as zoom_auth_router
-from controllers.rag_controllers import router as chatbot_router
+from backend.controllers.chatbot_controller import router as chatbot_router
 from config.settings import settings
 from contextlib import asynccontextmanager
 from database.connection import init_db
@@ -66,7 +66,7 @@ app.add_middleware(
     )
 
 app.include_router(auth_router)
-app.include_router(pipeline_router)
+app.include_router(llm_orchestration_router)
 app.include_router(meeting_router)
 app.include_router(teams_router)
 app.include_router(transcription_webhook)
@@ -77,6 +77,11 @@ app.include_router(chatbot_router)
 @limiter.limit("10/minute")
 async def root(request: Request):
     return {"message": "Server running!"}
+
+@app.get("/health")
+@limiter.limit("10/minute")
+async def check_server_health(request: Request):
+    return {"details": "Server Endpoint Healthy"}
 
 @app.get("/sentry-debug")
 @limiter.limit("10/minute")

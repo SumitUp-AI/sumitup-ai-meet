@@ -1,6 +1,7 @@
-from pydantic import Field
+from pydantic import BaseModel, Field
 from beanie import Document, Link
-from typing import Optional
+from typing import List, Optional
+from pymongo import ASCENDING, IndexModel
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import secrets
@@ -50,6 +51,7 @@ class TenantSettings(Document):
     class Settings:
         name = "tenant_settings"
 
+from pymongo import ASCENDIN
 
 class MeetingPlatform(str, Enum):
     zoom = "ZOOM"
@@ -155,7 +157,8 @@ class Transcripts(Document):
 
 
 class Embedding(Document):
-    meeting_id: "Link[Meeting]"
+    meeting: "Link[Meeting]"
+    meeting_id: str
     chunk: str
     vector_embedding: list[float]
 
@@ -243,6 +246,30 @@ class TeamMember(Document):
 
     class Settings:
         name = "team_members"
+
+class ChatMessageRole(str, Enum):
+    assistant = 'assistant'
+    user = 'user'
+
+class ChatMessage(BaseModel):
+    role: ChatMessageRole = ChatMessageRole.user
+    content: str
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ChatMessageSession(Document):
+    user: Link[User]
+    summary: Optional[str] = ""
+    messages: List[ChatMessage] = []
+    updated_at: datetime
+
+    class Settings:
+        name = "chat_sessions"
+        indexes = [
+            IndexModel(
+                [("updated_at", ASCENDING)], 
+                expireAfterSeconds=604800  # Auto-deletes after 7 days of inactivity
+            )
+        ]
 
 class BillingPlan(str, Enum):
     freemium = 'freemium'
