@@ -5,12 +5,12 @@ from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
 from middlewares.tenant_middleware import TenantMiddleware
 from controllers.auth_controllers import router as auth_router
-from backend.controllers.llm_orchestration_controllers import router as llm_orchestration_router
+from controllers.llm_orchestration_controllers import router as llm_orchestration_router
 from controllers.meeting_controllers import router as meeting_router
 from controllers.teams_controller import router as teams_router
 from controllers.webhooks.attendee_webhook import router as transcription_webhook
 from controllers.zoom_integation_controller import router as zoom_auth_router
-from backend.controllers.chatbot_controller import router as chatbot_router
+from controllers.chatbot_controller import router as chatbot_router
 from config.settings import settings
 from contextlib import asynccontextmanager
 from database.connection import init_db

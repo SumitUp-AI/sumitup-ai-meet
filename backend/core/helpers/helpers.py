@@ -98,7 +98,7 @@ class AttendeeClientBot(STTServiceProvider):
             raise ValueError("ATTENDEE_API_KEY is missing. Please set ATTENDEE_API_KEY in environment variables")
 
         # Get Attendee service URL from environment
-        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
+        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "https://app.attendee.dev")
         
         async with httpx.AsyncClient(timeout=10) as client:
             try:
@@ -147,14 +147,13 @@ class AttendeeClientBot(STTServiceProvider):
                         "Bot Service Credentials Misconfigured / Missing"
                     )
                 raise RuntimeError(
-                    f"Join meeting failed "
-                    f"Contact us for error report"
+                    f"Join meeting failed ({e.response.status_code}): {error_detail}"
                 )
 
             except httpx.RequestError as e:
-            # Network / DNS / connection issues
+                # Network / DNS / connection issues
                 raise RuntimeError(
-                    "Connecting to Zoom/Teams/Meet Failed, Contact us for error report!"
+                    f"Connecting to Attendee Bot Service failed ({attendee_url}): {e}"
                 )
 
 
@@ -163,7 +162,7 @@ class AttendeeClientBot(STTServiceProvider):
             raise ValueError("No Meeting Object with bot_id found")
 
         effective_bot_id = self.meeting.bot_id
-        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "http://localhost:8000")
+        attendee_url = os.getenv("ATTENDEE_SERVICE_URL", "https://app.attendee.dev")
         
         async with httpx.AsyncClient(timeout=10) as client:
             try:

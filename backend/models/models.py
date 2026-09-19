@@ -51,8 +51,6 @@ class TenantSettings(Document):
     class Settings:
         name = "tenant_settings"
 
-from pymongo import ASCENDIN
-
 class MeetingPlatform(str, Enum):
     zoom = "ZOOM"
     meet = "GMEET"

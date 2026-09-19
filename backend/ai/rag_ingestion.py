@@ -38,7 +38,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
     transcript_info_list = []
     for t in transcripts:
         duration = t.timestamp_ms / 1000
-        extracted_date = datetime.fromtimestamp(duration, tz=timezone.utc())
+        extracted_date = datetime.fromtimestamp(duration, tz=timezone.utc)
         each_chunk = f"[{extracted_date}] {t.speaker_name}: {t.transcript}"
         transcript_info_list.append(each_chunk)
 
@@ -73,14 +73,15 @@ async def ingest_meeting_transcripts(meeting_id: str):
     
     
     # Delete existing embeddings for this meeting to avoid duplicates if re-ingested
-    await Embedding.find(Embedding.meeting_id.id == meeting.id).delete()
+    await Embedding.find(Embedding.meeting.id == meeting.id).delete()
     
     # Store new embeddings with enriched text
     embedding_docs = []
     for enriched_text, embedding_vector in zip(enriched_texts, embedding_vectors):
         embedding_docs.append(
             Embedding(
-                meeting_id=meeting,
+                meeting=meeting,
+                meeting_id=str(meeting.id),
                 chunk=enriched_text,
                 vector_embedding=embedding_vector
             )

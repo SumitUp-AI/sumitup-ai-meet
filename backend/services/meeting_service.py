@@ -121,16 +121,16 @@ class MeetingService:
         if should_update:
             new_state = MeetingState(data["new_state"])
             meeting.state = new_state
-            await meeting.save()
             logger.info(f"Meeting State :{new_state}")
 
-        if new_state == MeetingState.ended:
-            meeting.ended_at = event_time
+            if new_state == MeetingState.ended:
+                meeting.ended_at = event_time if 'event_time' in locals() else datetime.now(timezone.utc)
+                background_task.add_task(
+                    processor.execute_complete_pipeline,
+                    meeting_id=str(meeting.id),
+                )
+
             await meeting.save()
-            background_task.add_task(
-                processor.execute_complete_pipeline,
-                meeting_id=str(meeting.id),
-            )
 
         
 

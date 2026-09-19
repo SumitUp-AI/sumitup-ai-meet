@@ -8,7 +8,8 @@ from langchain_mongodb import MongoDBAtlasVectorSearch
 from langchain_mongodb.retrievers.hybrid_search import MongoDBAtlasHybridSearchRetriever
 from pymongo import MongoClient
 
-client = MongoClient(settings.mongodb_atlas_uri)
+mongo_uri = settings.mongodb_atlas_uri or settings.mongo_uri or "mongodb://localhost:27017"
+client = MongoClient(mongo_uri)
 db = client[settings.db_name]
 collection = db["embedding"]
 
