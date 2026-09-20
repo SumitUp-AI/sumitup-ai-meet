@@ -57,14 +57,25 @@ async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
     })
 
 
+# Configure CORS: Allow localhost, LAN IPs, and remote instances dynamically
+client_origin = settings.client_url.rstrip("/") if settings.client_url else ""
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+]
+if client_origin and client_origin not in allowed_origins:
+    allowed_origins.append(client_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://.*$",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Total-Count"],
-    allow_credentials=True
-    )
+)
 
 app.include_router(auth_router)
 app.include_router(llm_orchestration_router)

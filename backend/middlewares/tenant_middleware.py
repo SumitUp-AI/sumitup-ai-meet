@@ -8,15 +8,18 @@ from bson.errors import InvalidId
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        
-        # Debug - remove after fixing
-        # print(f"PATH HIT: '{request.url.path}'")
-        
+        # Allow CORS preflight requests without tenant check
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         allowed_urls = [
             "/docs",
             "/redoc",
             "/openapi.json",
             "/",
+            "/health",
+            "/sentry-debug",
+            "/webhook",
             "/favicon.ico",          # Browser icon requests — no tenant needed
             "/api/v1/zoom/authorize",
             "/api/v1/zoom/callback",
