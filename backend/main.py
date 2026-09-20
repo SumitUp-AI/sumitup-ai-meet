@@ -1,3 +1,4 @@
+import torch  # Preload PyTorch early to avoid 'cannot allocate memory in static TLS block' on Linux/ARM64
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
