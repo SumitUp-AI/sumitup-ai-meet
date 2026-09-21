@@ -3,7 +3,7 @@ name: Deploy to OCI
 on:
   push:
     branches:
-      - main
+      - stage-fixes-beta-experiment
 
 jobs:
   deploy:
