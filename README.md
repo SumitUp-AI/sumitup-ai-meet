@@ -28,3 +28,4 @@ sumitup-ai-meet/
 The application is FARM Stack App, Basically (FastAPI as backend, React as Frontend and MongoDB as the DB).
 Make sure you have installed nodejs, npm, python and mongodb to get started :)
 
+.
