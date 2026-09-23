@@ -9,10 +9,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and Run Deploy Script
-
-
-	run: |
+      - name: Verify Secret Presence
+        run: |
           if [ -z "${{ secrets.OCI_HOST }}" ]; then
             echo "OCI_HOST is EMPTY or NOT FOUND!"
             exit 1
@@ -20,7 +18,7 @@ jobs:
             echo "OCI_HOST is detected."
           fi
 
-	
+      - name: SSH and Run Deploy Script
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.OCI_HOST }}
