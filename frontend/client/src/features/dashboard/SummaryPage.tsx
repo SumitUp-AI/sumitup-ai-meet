@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
 import { formatDate } from "../../utils/dateFormatter";
 import MeetingFlowDiagram from "../../components/MeetingFlowDiagram";
+import TextMarkdownRenderer from "../../components/MarkDownRenderer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ const SummaryPage: React.FC = () => {
     try {
       setSummaryLoading(true);
       const res = await fetch(
-        `${BASE_URL}/get_summary?meeting_id=${meetingId}`,
+        `${BASE_URL}/get_meeting_summary?meeting_id=${meetingId}`,
         { headers: authHeaders() }
       );
 
@@ -291,7 +292,7 @@ const SummaryPage: React.FC = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50">
 
       {/* Top Nav */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
@@ -342,11 +343,6 @@ const SummaryPage: React.FC = () => {
                 {summary?.title ?? "Meeting Summary"}
               </h1>
 
-              {summary?.host && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Host: <span className="font-semibold text-cyan-600">{summary.host}</span>
-                </p>
-              )}
 
               <div className="flex items-center gap-2 mt-4">
                 <button
@@ -421,8 +417,8 @@ const SummaryPage: React.FC = () => {
                 ) : isProcessing ? (
                   <EmptyState label="Summary is being generated. Please wait..." />
                 ) : summary?.summary ? (
-                  <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">
-                    {summary.summary}
+                  <p className="prose prose-slate max-w-none dark:prose-invert text-gray-700 leading-tight text-sm whitespace-pre-wrap">
+                    <TextMarkdownRenderer content={summary.summary} />  
                   </p>
                 ) : (
                   <EmptyState label="No summary available yet." />
