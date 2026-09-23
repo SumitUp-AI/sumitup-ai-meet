@@ -29,3 +29,4 @@ The application is FARM Stack App, Basically (FastAPI as backend, React as Front
 Make sure you have installed nodejs, npm, python and mongodb to get started :)
 
 .
+.
