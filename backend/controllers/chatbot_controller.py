@@ -1,16 +1,15 @@
 from beanie import PydanticObjectId
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from ai.rag_retrieval import retrieve_answer, update_summary
+from ai.conversational_summary import get_or_create_chat_session, trim_recent_messages, add_exchange, build_memory_context
+from auth.dependencies import get_current_user
 from models.models import (
     User,
+    Meeting,
     MeetingInvitedParticipant,
-    ChatMessage,
-    ChatMessageSession
 )
-from langchain.messages import AIMessage, HumanMessage
-from langchain_classic.memory import ConversationSummaryBufferMemory
 from middlewares.limiter import limiter
 
 router = APIRouter(
@@ -19,66 +18,82 @@ router = APIRouter(
 )
 
 class ChatPayload(BaseModel):
-    user_id: str
     query: str
 
-async def get_meeting_scoped_ids(user_id: str):
+async def get_meeting_scoped_ids(current_user: User):
     # Get Meeting Ids related to Participant Ids and The owner who owns it
-    # current_user = await User.get(PydanticObjectId(user_id))
-    pass
+    if not current_user:
+        raise AttributeError('User not Found or User Object is NoneType')
+    
+    owned_meetings = await Meeting.find(Meeting.created_by.id == current_user.id).to_list()
+    participant_records = await MeetingInvitedParticipant.find(
+        MeetingInvitedParticipant.user.id == current_user.id
+    ).to_list()
 
-# Replace Global Chat with other ChatMemory by summarizing only last N messages
-# Save Session in DB
+    meeting_ids = {
+        meeting.id
+        for meeting in owned_meetings
+    }
+
+    meeting_ids.update(
+        participant.meeting.id
+        for participant in participant_records
+    )
+
+    return list(meeting_ids)
+    
+
+
 @router.post("/chat")
 @limiter.limit("6/minute")
-async def chat_with_meeting(request: Request, payload: ChatPayload):
+async def chat_with_meeting(
+    request: Request,
+    payload: ChatPayload,
+    current_user: User = Depends(get_current_user),
+):
     """
     Chat with the global meeting transcripts using RAG.
     """
-    global chat_history
-    if 'chat_history' not in globals():
-        chat_history = []
-    
     try:
+        
+        meeting_ids = await get_meeting_scoped_ids(current_user)
+        
+        # Get this user's persistent chat session
+        session = await get_or_create_chat_session(current_user)
+        
+        # Build conversation memory for this request
+        memory_context = build_memory_context(session)
+        
         answer, used_queries = await retrieve_answer(
             query=payload.query.strip(),
-            chat_history=chat_history
+            chat_history=memory_context,
+            meeting_ids=meeting_ids,
+        )
+    
+        # Persist this exchange
+        if answer:
+            await add_exchange(
+                session=session,
+                user_message=payload.query.strip(),
+                assistant_message=answer.strip(),
+            )
+
+        return JSONResponse(
+            content={
+                "answer": answer.strip()
+            }
         )
 
-        combined_queries = payload.query + " " + " ".join(used_queries) if used_queries else payload.query
-        
-        if answer and combined_queries:
-            new_exchange = (combined_queries, answer)
-            
-            if len(chat_history) < 2:
-                # 0 items -> [new]
-                # 1 item -> [new, old]
-                chat_history.insert(0, new_exchange)
-            else:
-                # We have at least 2 exchanges
-                oldest_exchange = chat_history[1]
-                current_summary = chat_history[2] if len(chat_history) == 3 else ""
-                
-                # Update the summary with the oldest exchange
-                new_summary = await update_summary(current_summary, oldest_exchange)
-                
-                # Pop index 1 (oldest exchange)
-                chat_history.pop(1)
-                
-                # Insert new exchange at index 0
-                chat_history.insert(0, new_exchange)
-                
-                # Store the summary at index 2
-                if len(chat_history) == 2:
-                    chat_history.append(new_summary)
-                else:
-                    chat_history[2] = new_summary
-            
-        return JSONResponse(content={
-            "answer": answer.strip()
-        })
     except ValueError as ve:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+
     except Exception as e:
-        print(e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve answer: {str(e)}")
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve answer: {str(e)}",
+        )

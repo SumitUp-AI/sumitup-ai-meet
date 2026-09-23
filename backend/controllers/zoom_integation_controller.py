@@ -1,6 +1,6 @@
 from fastapi import HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
-from backend.models.models import TenantSettings
+from models.models import TenantSettings
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 import httpx

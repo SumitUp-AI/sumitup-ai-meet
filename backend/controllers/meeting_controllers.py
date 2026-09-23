@@ -1,10 +1,11 @@
-from fastapi import HTTPException, APIRouter, Request, status
+from fastapi import Depends, HTTPException, APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from models.models import (
     Meeting, Transcripts,
     TeamInvitation, MeetingInvitedParticipant, InvitationStatus, User
 )
 from services.meeting_service import MeetingService
+from auth.dependencies import get_current_user
 from middlewares.limiter import limiter
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -65,10 +66,12 @@ async def create_meeting(request: Request, payload: CreateMeeting):
 
 @router.get("/get_all_meetings")
 @limiter.limit("60/minute")
-async def get_all_meetings_information(request: Request):
+async def get_all_meetings_information(request: Request, user: User = Depends(get_current_user)):
     # Filter meetings by current tenant
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     current_tenant = request.state.tenant
-    meetings = await Meeting.find(Meeting.tenant.id == current_tenant.id).sort(-Meeting.created_at).to_list()
+    meetings = await Meeting.find(Meeting.tenant.id == current_tenant.id, Meeting.created_by.id == user.id).sort(-Meeting.created_at).to_list()
     
     if not meetings:
         return []

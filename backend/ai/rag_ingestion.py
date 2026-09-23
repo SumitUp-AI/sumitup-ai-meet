@@ -22,7 +22,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
     ).sort(+Transcripts.timestamp_ms).to_list()
 
     if not transcripts:
-        print("No transcripts found for this meeting. Aborting ingestion.")
+        logger.warning("No transcripts found for this meeting. Aborting ingestion.")
         return None
 
     speaker_names = list(set([t.speaker_name for t in transcripts if t.speaker_name]))
@@ -73,14 +73,15 @@ async def ingest_meeting_transcripts(meeting_id: str):
     
     
     # Delete existing embeddings for this meeting to avoid duplicates if re-ingested
-    await Embedding.find(Embedding.meeting_id.id == meeting.id).delete()
+    await Embedding.find(Embedding.meeting.id == meeting.id).delete()
     
     # Store new embeddings with enriched text
     embedding_docs = []
     for enriched_text, embedding_vector in zip(enriched_texts, embedding_vectors):
         embedding_docs.append(
             Embedding(
-                meeting_id=meeting,
+                meeting=meeting,
+                meeting_id=meeting.id,
                 chunk=enriched_text,
                 vector_embedding=embedding_vector
             )

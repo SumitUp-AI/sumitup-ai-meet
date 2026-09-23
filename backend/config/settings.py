@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     refresh_token_secret: str
     encryption_key: str
     sentry_dsn: str
-    environment: str = "deployment"
+    production: bool = False
 
     # MongoDB Config
     mongo_uri: str = "mongodb://localhost:27017"

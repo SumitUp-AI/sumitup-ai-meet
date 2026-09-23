@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from beanie import Document, Link
+from beanie import Document, Link, PydanticObjectId
 from typing import List, Optional
 from pymongo import ASCENDING, IndexModel
 from datetime import datetime, timezone, timedelta
@@ -51,7 +51,6 @@ class TenantSettings(Document):
     class Settings:
         name = "tenant_settings"
 
-from pymongo import ASCENDIN
 
 class MeetingPlatform(str, Enum):
     zoom = "ZOOM"
@@ -158,7 +157,7 @@ class Transcripts(Document):
 
 class Embedding(Document):
     meeting: "Link[Meeting]"
-    meeting_id: str
+    meeting_id: PydanticObjectId
     chunk: str
     vector_embedding: list[float]
 
@@ -259,15 +258,17 @@ class ChatMessage(BaseModel):
 class ChatMessageSession(Document):
     user: Link[User]
     summary: Optional[str] = ""
-    messages: List[ChatMessage] = []
-    updated_at: datetime
+    messages: List[ChatMessage] = Field(default_factory=list)
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
     class Settings:
         name = "chat_sessions"
         indexes = [
             IndexModel(
-                [("updated_at", ASCENDING)], 
-                expireAfterSeconds=604800  # Auto-deletes after 7 days of inactivity
+                [("updated_at", ASCENDING)],
+                expireAfterSeconds=604800
             )
         ]
 

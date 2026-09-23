@@ -66,7 +66,7 @@ async def get_summary(
         meeting = await Meeting.get(PydanticObjectId(meeting_id))
         if not meeting:
             raise HTTPException(status_code=404, detail="Meeting Not Found")
-        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting.id) 
+        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting.id)
         if not summary:
             raise HTTPException(status_code=404, detail="Summary for Meeting Not Found")
 

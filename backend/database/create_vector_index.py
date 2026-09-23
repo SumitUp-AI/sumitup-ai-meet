@@ -21,7 +21,11 @@ def create_vector_index_and_search_index():
             embedding_key="vector_embedding",
             relevance_score_fn="cosine"
         )
-        vector_store.create_vector_search_index(dimensions=384)
+        vector_store.create_vector_search_index(
+            dimensions=384,
+            filters=["meeting_id"],
+            update=True
+        )
 
         create_fulltext_search_index(
             collection=collection,

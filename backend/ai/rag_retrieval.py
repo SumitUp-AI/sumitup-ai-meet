@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 from config.settings import settings
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
@@ -71,7 +73,7 @@ async def update_summary(current_summary: str, popped_exchange) -> str:
     
     return new_summary.strip()
 
-async def retrieve_answer(query: str, chat_history: list, k: int = 10):
+async def retrieve_answer(query: str, chat_history: str, meeting_ids: list, k: int = 10):
     """
     Retrieves chunks from MongoDB Atlas Hybrid Search for a given query and maintains contextual chat history.
     """
@@ -88,7 +90,7 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
     expansion_chain = expansion_prompt | llm_fast | StrOutputParser()
     
     response_text = await expansion_chain.ainvoke({
-        "chat_history": format_chat_history(chat_history) if chat_history else "No history yet.",
+        "chat_history": chat_history if chat_history else "No history yet.",
         "query": query
     })
     
@@ -118,6 +120,11 @@ async def retrieve_answer(query: str, chat_history: list, k: int = 10):
         top_k=20,
         fulltext_penalty=50,
         vector_penalty=50,
+        pre_filter={
+            "meeting_id": {
+                "$in": [ObjectId(meeting_id) for meeting_id in meeting_ids]
+            }
+        },
         post_filter=[
             {
                 "$project": {
