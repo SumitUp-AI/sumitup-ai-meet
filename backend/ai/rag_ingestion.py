@@ -38,7 +38,7 @@ async def ingest_meeting_transcripts(meeting_id: str):
     transcript_info_list = []
     for t in transcripts:
         duration = t.timestamp_ms / 1000
-        extracted_date = datetime.fromtimestamp(duration, tz=timezone.utc())
+        extracted_date = datetime.fromtimestamp(duration, tz=timezone.utc)
         each_chunk = f"[{extracted_date}] {t.speaker_name}: {t.transcript}"
         transcript_info_list.append(each_chunk)
 
