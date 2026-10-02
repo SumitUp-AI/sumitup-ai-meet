@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from ai.visual_summaries import generate_visual_summary
+from services.ai.visual_summaries import generate_visual_summary
 from core.utils.meeting_postprocessing import MeetingPostProcessing
 from models.models import Meeting, MeetingSummaryStatus, ActionItems, Transcripts, MeetingSummary
 from middlewares.limiter import limiter

@@ -2,8 +2,8 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from ai.rag_retrieval import retrieve_answer, update_summary
-from ai.conversational_summary import get_or_create_chat_session, trim_recent_messages, add_exchange, build_memory_context
+from services.ai.rag_retrieval import retrieve_answer, update_summary
+from services.ai.conversational_summary import get_or_create_chat_session, trim_recent_messages, add_exchange, build_memory_context
 from auth.dependencies import get_current_user
 from models.models import (
     User,

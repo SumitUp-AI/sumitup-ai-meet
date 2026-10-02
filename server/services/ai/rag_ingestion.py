@@ -2,7 +2,7 @@ from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from models.models import Meeting, Transcripts, Embedding
 from typing import List
-from ai.embedding_model import embeddings
+from services.ai.embedding_model import embeddings
 from config.settings import settings
 from datetime import datetime, timezone
 import logging
