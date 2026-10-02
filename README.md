@@ -1,3 +1,4 @@
+
 <img width="259" height="65" alt="Brand Logo White" src="https://github.com/user-attachments/assets/353bf5c5-7b22-43eb-ab09-aa03bfe012d1" />
 
 
@@ -12,7 +13,7 @@ Sumitup is an open source meeting assistant that records you meetings/sessions o
 
 ## Architecture Diagram:
 The whole working process of this app is described in the diagram attached below as:
-<img width="992" height="731" alt="ArchitectureSumitup" src="https://github.com/user-attachments/assets/5c47b0df-cb7e-4dd1-bde2-2624aa4d3761" />
+<img width="992" height="731" alt="ArchitectureSumitup" src="https://github.com/user-attachments/assets/48dd4e56-9fd9-4b02-be50-b03275dc8fcc" />
 
 
 ## Boilerplate (Folder Structure)
