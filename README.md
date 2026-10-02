@@ -26,6 +26,7 @@ The whole working process of this app is described in the diagram attached below
 - ```middleware``` tenant aware middleware, rate limiting etc
 - ```models``` MongoDB Document Models, Schemas
 - ```services``` Meeting Services, other services later etc
+- ```router``` API Endpoints Routes
 
 **Frontend (Client) Important Ones**:
 - ```features``` represents featured pages such as Dashboard, AI Chatbot Interface etc
@@ -42,8 +43,6 @@ The whole working process of this app is described in the diagram attached below
 │   ├── ai
 │   ├── auth
 │   ├── config
-│   ├── controllers
-│   │   └── webhooks
 │   ├── core
 │   │   ├── helpers
 │   │   └── utils
@@ -52,6 +51,9 @@ The whole working process of this app is described in the diagram attached below
 │   │   └── email
 │   ├── middlewares
 │   ├── models
+│   ├── router
+│   │   ├── apis
+│   │   └── webhooks
 │   └── services
 └── frontend
     └── client

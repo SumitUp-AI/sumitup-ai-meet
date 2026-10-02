@@ -4,13 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from middlewares.limiter import limiter
 from middlewares.tenant_middleware import TenantMiddleware
-from controllers.auth_controllers import router as auth_router
-from controllers.llm_orchestration_controllers import router as llm_orchestration_router
-from controllers.meeting_controllers import router as meeting_router
-from controllers.teams_controller import router as teams_router
-from controllers.webhooks.attendee_webhook import router as transcription_webhook
-from controllers.zoom_integation_controller import router as zoom_auth_router
-from controllers.chatbot_controller import router as chatbot_router
+from router.apis.auth import router as auth_router
+from router.apis.summarization import router as summarization_and_actionitems_router
+from router.apis.meeting import router as meeting_router
+from router.apis.teams import router as teams_router
+from router.apis.zoom_oauth import router as zoom_oauth_router
+from router.apis.chatbot import router as chatbot_router
+from router.webhooks.attendee_webhook import router as transcription_webhook
 from config.settings import settings
 from contextlib import asynccontextmanager
 from database.connection import init_db
@@ -69,11 +69,11 @@ app.add_middleware(
     )
 
 app.include_router(auth_router)
-app.include_router(llm_orchestration_router)
+app.include_router(summarization_and_actionitems_router)
 app.include_router(meeting_router)
 app.include_router(teams_router)
 app.include_router(transcription_webhook)
-app.include_router(zoom_auth_router)
+app.include_router(zoom_oauth_router)
 app.include_router(chatbot_router)
 
 @app.get("/")
