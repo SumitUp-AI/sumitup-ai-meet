@@ -17,7 +17,7 @@ The whole working process of this app is described in the diagram attached below
 
 
 ## Boilerplate (Folder Structure)
-**Backend**:
+**Backend (Server)**:
 -  ```core``` represents the business logic of our app.
 - ```ai``` represents the code for RAG, Summarization using Langchain
 - ```config``` represents all environment variables plus blob storage config and others
@@ -28,8 +28,9 @@ The whole working process of this app is described in the diagram attached below
 - ```models``` MongoDB Document Models, Schemas
 - ```services``` Meeting Services, other services later etc
 - ```router``` API Endpoints Routes
+- ```tests``` API Testing and other tests
 
-**Frontend (Client) Important Ones**:
+**Frontend (Client)**:
 - ```features``` represents featured pages such as Dashboard, AI Chatbot Interface etc
 - ```hooks``` represents custom hooks for context, data etc
 - ```context``` represents user auth context, meeting context etc
@@ -40,44 +41,44 @@ The whole working process of this app is described in the diagram attached below
 
 ```
 .
-├── backend
-│   ├── ai
-│   ├── auth
-│   ├── config
-│   ├── core
-│   │   ├── helpers
-│   │   └── utils
-│   ├── database
-│   ├── integrations
-│   │   └── email
-│   ├── middlewares
-│   ├── models
-│   ├── router
-│   │   ├── apis
-│   │   └── webhooks
-│   └── services
-└── frontend
-    └── client
-        ├── public
-        └── src
-            ├── assets
-            │   ├── about
-            │   └── home
-            ├── components
-            ├── context
-            ├── features
-            │   └── dashboard
-            │       └── teams
-            ├── hooks
-            ├── layouts
-            │   ├── dashboard
-            │   └── site
-            │       ├── authentication
-            │       └── pages
-            ├── loaders
-            ├── routes
-            ├── types
-            └── utils
+├── client
+│   ├── public
+│   └── src
+│       ├── assets
+│       │   ├── about
+│       │   └── home
+│       ├── components
+│       ├── context
+│       ├── features
+│       │   └── dashboard
+│       │       └── teams
+│       ├── hooks
+│       ├── layouts
+│       │   ├── dashboard
+│       │   └── site
+│       │       ├── authentication
+│       │       └── pages
+│       ├── loaders
+│       ├── routes
+│       ├── types
+│       └── utils
+└── server
+    ├── ai
+    ├── auth
+    ├── config
+    ├── core
+    │   ├── helpers
+    │   └── utils
+    ├── database
+    ├── integrations
+    │   └── email
+    ├── middlewares
+    ├── models
+    ├── router
+    │   ├── apis
+    │   └── webhooks
+    ├── services
+    └── tests
   ```
 
 ## Releases:
