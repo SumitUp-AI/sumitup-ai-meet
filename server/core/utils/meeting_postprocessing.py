@@ -1,0 +1,147 @@
+from datetime import datetime, timezone
+from models.models import ActionItems, Meeting, Transcripts, MeetingSummaryStatus, MeetingSummary
+from ai.summarization import summarize_meeting_transcript
+from ai.action_items import create_action_items_json
+from ai.rag_ingestion import ingest_meeting_transcripts
+from beanie import PydanticObjectId
+import re
+import logging
+
+logger = logging.getLogger(__name__)
+
+async def get_meeting_and_transcripts(meeting_id):
+    meeting = await Meeting.get(PydanticObjectId(meeting_id))
+    if not meeting:
+        logger.error(f"Meeting not found")
+        return None, None
+    
+    transcripts = await Transcripts.find(
+        Transcripts.meeting_id.id == meeting.id
+    ).sort(+Transcripts.timestamp_ms).to_list()
+    
+    if not transcripts:
+        logger.warning(f"No transcripts found for current meeting")
+        return meeting, []
+    
+    return meeting, transcripts
+
+class MeetingPostProcessing:
+
+    def detect_meeting_platform(self, meeting_url):
+        url = meeting_url.lower().strip()
+        
+        patterns = {
+            "GMEET": r"(https?://)?meet\.google\.com\/[a-z0-9\-]+",
+            "ZOOM": r"(https?://)?zoom\.us\/(j|my|s)\/[a-z0-9]+",
+            "MSTEAMS": r"https?://teams\.live\.com/meet/[0-9]+(?:\?p=[a-zA-Z0-9]+)?",
+        }
+
+        for platform_name, pattern in patterns.items():
+            if re.search(pattern, url, re.IGNORECASE):
+                return platform_name 
+                
+        return "Invalid URL"
+
+
+    async def return_raw_transcripts(self, meeting_id):
+        meeting, transcripts = await get_meeting_and_transcripts(meeting_id)
+        if not meeting and not transcripts:
+            logger.error("Transcripts for Meeting not Found, Error in Executing Pipeline")
+            return []
+        
+        transcript_list = []
+        for t in transcripts:
+            transcript_text = f"{t.speaker_name}: {t.transcript}"
+            transcript_list.append(transcript_text)
+        return transcript_list
+
+    async def create_summarization_from_transcription(self, meeting_id, results):
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))
+        if not meeting:
+            return None, None
+        
+        summary = MeetingSummary(
+            meeting=meeting,
+            summary_status=MeetingSummaryStatus.PROCESSING
+        )
+        await summary.save() 
+        
+        try:
+            combined_transcript = " ".join(results)
+            generated_summary = summarize_meeting_transcript(combined_transcript)
+            
+            summary.summary_text = generated_summary["summary"]
+            summary.summary_status = MeetingSummaryStatus.READY
+            await summary.save()
+            return meeting_id, summary.summary_text
+        except Exception as e:
+            logger.error(f"Summarization failed for current meeting: {e}")
+            summary.summary_status = MeetingSummaryStatus.FAILED
+            summary.summary_error = str(e)
+            await summary.save()
+            return None, None
+
+    async def create_action_items_from_generated_summary(self, meeting_id):
+        meeting = await Meeting.get(PydanticObjectId(meeting_id))
+        if not meeting:
+            logger.error(f"Meeting doesn't exist")
+            return None
+
+        
+        summary = await MeetingSummary.find_one(MeetingSummary.meeting.id == meeting.id)
+        if not summary:
+            logger.error(f"Summary doesn't exist for this meeting")
+            return None
+        
+        try:
+            action_items = create_action_items_json(summary.summary_text)
+            filtered_items = [item for item in action_items["items"] if item["confidence"] >= 0.7]
+
+            saved_items = []
+            for item in filtered_items:
+                deadline = None
+                if item.get("deadline"):
+                    try:
+                        deadline = datetime.fromisoformat(item["deadline"].replace("Z", "+00:00"))
+                    except (ValueError, AttributeError):
+                        deadline = None
+            
+                action_item_doc = ActionItems(
+                    meeting=meeting,
+                    title=item["title"],
+                    assignee=item.get("assignee"),
+                    description=item.get("description"),
+                    deadline=deadline or datetime.now(timezone.utc),
+                    confidence=int(item["confidence"] * 100)
+                )
+                await action_item_doc.insert()
+                saved_items.append(item)
+            return saved_items
+        except Exception as e:
+            logger.error(f"Action item generation failed: {e}")
+            return None
+
+    async def execute_complete_pipeline(self, meeting_id):
+        raw_transcripts = await self.return_raw_transcripts(meeting_id)
+        if not raw_transcripts:
+            return {"status": "failed", "error": "Transcripts not found for meeting"}
+
+        ingested = await ingest_meeting_transcripts(meeting_id)
+        if not ingested:
+            return {"status": "failed", "error": "RAG Ingestion Failed"}
+        
+        mid, summary = await self.create_summarization_from_transcription(meeting_id, raw_transcripts)
+        if not summary:
+            return {"status": "failed", "error": "Summarization failed"}
+
+        # 3. Action Items{meeting_id}{meeting_id}
+        action_items = await self.create_action_items_from_generated_summary(mid)
+        if action_items is None:
+            return {"status": "failed", "error": "Action items generation failed"}
+            
+        return {
+            "meeting_id": mid,
+            "summary": summary,
+            "action_items": action_items,
+            "status": "completed"
+        }
