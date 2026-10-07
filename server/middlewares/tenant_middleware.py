@@ -1,7 +1,7 @@
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from models.models import Tenant, User
-from backend.auth.jwt import decode_access_token
+from models.models import Tenant
+from auth.jwt import decode_access_token
 from bson import ObjectId
 from bson.errors import InvalidId
 
