@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 @import "tailwindcss";
 
+@theme {
+  /* Base primary teal from your logo */
+  --color-primary: #08586d;
+  
+  /* Lighter/darker thematic variations for backgrounds, cards, and borders */
+  --color-primary-5: #f0f7f9;
+  --color-primary-10: #d1e4ea;
+  --color-primary-20: #8abecb;
+  --color-primary-30: #4397ad;
+}
+
 body {
     font-family: "Rethink Sans", sans-serif;
     box-sizing: border-box;

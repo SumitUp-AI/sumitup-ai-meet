@@ -62,26 +62,23 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex mt-24">
+    <div className="min-h-screen bg-white flex mt-24">
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div data-aos="fade-up">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Get started with SumItUp
+              Get started with us.
             </h2>
             <p className="text-gray-600 mb-1">
               Join thousands of teams saving time with AI meeting notes.
-            </p>
-            <p className="text-gray-600 mb-8">
-              No credit card required.
             </p>
           </div>
 
           {/* Social Sign Up Buttons */}
           <div data-aos="fade-up" className="space-y-3">
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" disabled>
               <img 
                 src="https://developers.google.com/identity/images/g-logo.png" 
                 alt="Google" 
@@ -90,13 +87,12 @@ const SignupPage = () => {
               Sign up with Google
             </button>
             
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.5 12.2c0-.8-.1-1.6-.2-2.4H12v4.5h6.5c-.3 1.6-1.2 3-2.5 3.9v3.2h4c2.4-2.2 3.8-5.4 3.8-9.2z" fill="#4285F4"/>
-                <path d="M12 24c3.2 0 6-1.1 8-2.9l-4-3.2c-1.1.7-2.5 1.1-4 1.1-3.1 0-5.7-2.1-6.6-4.9H1.2v3.3C3.2 21.1 7.3 24 12 24z" fill="#34A853"/>
-                <path d="M5.4 14.1c-.2-.7-.4-1.4-.4-2.1s.1-1.4.4-2.1V6.6H1.2C.4 8.2 0 10 0 12s.4 3.8 1.2 5.4l4.2-3.3z" fill="#FBBC05"/>
-                <path d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.1 0 12 0 7.3 0 3.2 2.9 1.2 6.6l4.2 3.3C6.3 6.9 8.9 4.8 12 4.8z" fill="#EA4335"/>
-              </svg>
+            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" disabled>
+              <img 
+                src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/960px-Microsoft_logo.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail" 
+                alt="Microsoft" 
+                className="w-5 h-5 mr-3"
+              />
               Sign up with Microsoft
             </button>
           </div>

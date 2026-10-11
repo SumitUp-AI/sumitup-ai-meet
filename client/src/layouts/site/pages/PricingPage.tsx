@@ -14,7 +14,7 @@ const PricingPage = () => {
   const [sliderValue, setSliderValue] = useState(20);
 
   return (
-    <div className="bg-white min-h-screen font-sans">
+    <div className="bg-white min-h-screen">
       {/* Hero Section */}
       <section className="pt-32 pb-24 text-center max-w-4xl mx-auto px-4">
         <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-6 tracking-tight leading-tight">

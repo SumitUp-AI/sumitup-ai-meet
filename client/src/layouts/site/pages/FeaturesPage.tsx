@@ -51,7 +51,7 @@ const lineAnimation = {
 
 const FeaturesPage = () => {
   return (
-    <div className="bg-white min-h-screen font-sans selection:bg-primary/20">
+    <div className="bg-white min-h-screen  selection:bg-primary/20">
       
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 max-w-6xl mx-auto text-center relative">
