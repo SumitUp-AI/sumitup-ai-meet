@@ -6,5 +6,6 @@ __pycache__
 .gitignore
 env/
 venv/
+.venv/
 *.ipynb
 .DS_Store
