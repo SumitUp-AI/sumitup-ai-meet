@@ -2,6 +2,7 @@ import { Send, Bot, User } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAuthHeaders } from "../../utils/apiHeaders";
+import TextMarkdownRenderer from "../../components/MarkDownRenderer";
 
 interface ChatMessage {
   id: number;
@@ -213,7 +214,7 @@ const AIChatPage: React.FC = () => {
                       <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   ) : (
-                    <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                    <TextMarkdownRenderer content={msg.content} />
                   )}
                   <p
                     className={`text-xs mt-1 ${

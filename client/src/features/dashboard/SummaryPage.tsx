@@ -398,7 +398,7 @@ const SummaryPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-cyan-500 text-lg">✦</span>
-                    <h2 className="text-lg font-bold text-gray-900">Executive Summary</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Here is your Meeting Summary</h2>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={handleCopy} className="p-1.5 text-gray-400 hover:text-gray-600 transition">
@@ -446,7 +446,7 @@ const SummaryPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <EmptyState label="No decisions tracked for this meeting." />
+                  <EmptyState label="Decisions coming soon" />
                 )}
               </div>
             </div>
@@ -473,7 +473,7 @@ const SummaryPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">No topics detected.</p>
+                  <p className="text-sm text-gray-400 italic">Key Topics Coming Soon</p>
                 )}
               </div>
 
@@ -504,7 +504,7 @@ const SummaryPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">No open questions recorded.</p>
+                  <p className="text-sm text-gray-400 italic">Open Questions Coming Soon</p>
                 )}
                 <button className="mt-4 w-full py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition font-medium">
                   Ask AI a question

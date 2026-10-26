@@ -184,8 +184,8 @@ async def invite_team_members(
         for user in invited_users:
             # Skip if this user already has a pending invitation for this meeting
             existing_invitation = await TeamInvitation.find_one(
-                TeamInvitation.meeting.id == meeting.id,
-                TeamInvitation.invited_user.id == user.id
+                TeamInvitation.meeting == meeting,
+                TeamInvitation.invited_user == user
             )
             if existing_invitation and existing_invitation.status == InvitationStatus.PENDING:
                 continue
@@ -335,8 +335,8 @@ async def respond_to_invitation(payload: RespondToInvitationRequest) -> JSONResp
         if payload.response == "accept":
             # Check if participant already exists
             existing_participant = await MeetingInvitedParticipant.find_one(
-                MeetingInvitedParticipant.meeting.id == invitation.meeting.id,
-                MeetingInvitedParticipant.user.id == invitation.invited_user.id
+                MeetingInvitedParticipant.meeting == invitation.meeting,
+                MeetingInvitedParticipant.user == invitation.invited_user
             )
             
             if not existing_participant:
@@ -465,12 +465,12 @@ async def get_meeting_participants(request: Request, meeting_id: str):
 
         # Get confirmed participants
         participants = await MeetingInvitedParticipant.find(
-            MeetingInvitedParticipant.meeting.id == meeting.id
+            MeetingInvitedParticipant.meeting == meeting
         ).to_list()
 
         # Get all invitations for this meeting, filter pending ones
         all_invitations = await TeamInvitation.find(
-            TeamInvitation.meeting.id == meeting.id
+            TeamInvitation.meeting == meeting
         ).to_list()
         pending_invitations = [
             inv for inv in all_invitations

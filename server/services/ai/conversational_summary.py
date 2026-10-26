@@ -18,7 +18,6 @@ async def get_or_create_chat_session(
     session = await ChatMessageSession.find_one(
         ChatMessageSession.user.id == current_user.id
     )
-    print(session, "Before Creation")
     if session:
         return session
 
@@ -28,7 +27,7 @@ async def get_or_create_chat_session(
         messages=[],
         updated_at=datetime.now(timezone.utc),
     )
-    print(session, "After creation")
+    
     await session.insert()
 
     return session
