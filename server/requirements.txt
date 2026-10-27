@@ -1,5 +1,5 @@
---index-url https://download.pytorch.org/whl/cpu
---extra-index-url https://pypi.org/simple
+--index-url https://pypi.org/simple
+--extra-index-url https://download.pytorch.org/whl/cpu
 aiohappyeyeballs>=2.5.0
 aiohttp>=3.10.0
 aiosignal>=1.4.0
@@ -89,7 +89,7 @@ msgpack>=1.1.2
 multidict>=6.7.1
 murmurhash>=1.0.15
 nest-asyncio>=1.6.0
-numpy>=2.4.4
+numpy<2.0.0
 orjson>=3.11.8
 ormsgpack>=1.12.2
 packageurl-python>=0.17.6
