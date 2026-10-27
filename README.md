@@ -81,8 +81,21 @@ The whole working process of this app is described in the diagram attached below
     └── tests
   ```
 
-## Releases:
-- ```v0.1.0 (Beta)```: Currently in Progress (Backend Testing and Deployment)
+# Releases:
+## ```v0.1.0 (Beta)```: 
+- English Supported for Transcription
+- Google Meet and Teams supported
+- Summary Generation, Action Items and Visual Diagram
+- QA Chatbot
+
+**What's Not:**
+- Urdu Language not supported, we are working on that.
+- Zoom not Working, we are working for publishing Zoom OAuth App.
+- Teams and Management
+- UI and Server Side Fixes
+
+## ```v0.1.1 (Beta)```:
+Awaiting!!
 
 ## Contribute / Support :
 For your contribution, you can contact us [for Support / Contribution](mailto:alhaanahmed68@outlook.com), we will guide you related to your first contribution on Github or Support.
