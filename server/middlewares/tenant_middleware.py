@@ -17,6 +17,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/redoc",
             "/openapi.json",
             "/",
+            "/health",
             "/favicon.ico",          # Browser icon requests — no tenant needed
             "/api/v1/zoom/authorize",
             "/api/v1/zoom/callback",
