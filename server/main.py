@@ -61,7 +61,7 @@ async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", settings.client_url],
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Total-Count"],
@@ -93,9 +93,9 @@ async def check_server_health(request: Request):
     }
     try:
         admin_client = client["admin"]
-        ping_response = admin_client.command("ping")
+        ping_response = await admin_client.command("ping")
 
-        if ping_response.get("ok") == 1.0:
+        if ping_response and ping_response.get("ok") == 1.0:
             health_status["services"]["database"] = "ok"
             return health_status
         else:
@@ -103,7 +103,7 @@ async def check_server_health(request: Request):
             
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
-        health_status["status"] = "unhealthy"
+        health_status["server"] = "unhealthy"
         health_status["services"]["database"] = "down"
         
         return JSONResponse(
