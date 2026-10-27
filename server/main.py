@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -13,7 +13,7 @@ from router.apis.chatbot import router as chatbot_router
 from router.webhooks.attendee_webhook import router as transcription_webhook
 from config.settings import settings
 from contextlib import asynccontextmanager
-from database.connection import init_db
+from database.connection import init_db, client, db
 from database.create_vector_index import create_vector_index_and_search_index
 
 import sentry_sdk
@@ -28,7 +28,7 @@ if settings.production:
         dsn=settings.sentry_dsn,
         send_default_pii=True,
         traces_sample_rate=0.1,
-        environment=settings.environment,
+        environment="production",
     )
     logger.info("Enabled Sentry in Production")
 else:
@@ -84,9 +84,31 @@ async def root(request: Request):
 @app.get("/health")
 @limiter.limit("10/minute")
 async def check_server_health(request: Request):
-    return {"details": "Server Endpoint Healthy"}
+    health_status = {
+        "server": "healthy",
+        "services": {
+            "api": "ok",
+            "database": "unknown"
+        }
+    }
+    try:
+        admin_client = client["admin"]
+        ping_response = admin_client.command("ping")
 
-@app.get("/sentry-debug")
-@limiter.limit("10/minute")
-async def trigger_error(request: Request):
-    division_by_zero = 1 / 0
+        if ping_response.get("ok") == 1.0:
+            health_status["services"]["database"] = "ok"
+            return health_status
+        else:
+            raise Exception("MongoDB ping did not return success payload")
+            
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        health_status["status"] = "unhealthy"
+        health_status["services"]["database"] = "down"
+        
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=health_status
+        )
+    
+
