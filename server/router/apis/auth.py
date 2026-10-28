@@ -116,6 +116,7 @@ async def login_user(request: Request, payload: LoginUser, response: Response):
         httponly=True,
         max_age=(7*24*60*60) if payload.remember_me else (1*24*60*60),
         secure=settings.production,
+        domain=".sumitupai.me",
         samesite='lax' 
     )
     
@@ -168,6 +169,7 @@ async def logout_user(request: Request, response: Response):
         path="/",
         secure=settings.production,
         httponly=True,
+        domain=".sumitupai.me",
         samesite='lax'
     )
     return {"message": "Logged out successfully"}
