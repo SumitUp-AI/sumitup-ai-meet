@@ -42,7 +42,14 @@ async def lifespan(app: FastAPI):
     create_vector_index_and_search_index()
     yield
 
-app = FastAPI(lifespan=lifespan, title="SumitUp AI Powered Meeting Assistant API Docs", description="RESTful APIs and Webhooks for Sumitup.ai Application")
+app = FastAPI(
+        lifespan=lifespan,
+        title="SumitUp AI Powered Meeting Assistant API Docs",
+        description="RESTful APIs and Webhooks for Sumitup.ai Application",
+        docs_url=None if settings.production else "/docs",
+        redoc_url=None if settings.production else "/redoc",
+        openapi_url=None if settings.production else "/openapi.json",
+      )
 
 # Add TenantMiddleware to validate tenant for all requests
 app.add_middleware(TenantMiddleware)
@@ -61,7 +68,10 @@ async def rate_limit_handler(request: Request, exception: RateLimitExceeded):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", settings.client_url],
+    allow_origins=[
+        "http://localhost:5173",
+         settings.client_url
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Total-Count"],
